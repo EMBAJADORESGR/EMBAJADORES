@@ -1,0 +1,22 @@
+# Sistema operativo
+.DS_Store
+Thumbs.db
+*.swp
+
+# Editores
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Variables de entorno locales (NUNCA subir al repo)
+.env
+.env.local
+.env.*.local
+
+# Node (si usas npm localmente)
+node_modules/
