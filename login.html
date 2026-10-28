@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acceso — Programa Embajadores Grupo Randazzo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  /* ─── SUPABASE — lee env vars desde /api/config (Vercel) ─── */
+  let _sb;
+  const _sbReady = fetch('/api/config')
+    .then(r => r.json())
+    .then(cfg => { _sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey); })
+    .catch(() => { console.error('No se pudo cargar la config de Supabase'); });
+</script>
+<style>
+:root{
+  --ink:#060705;--ink1:#0A0C08;
+  --lime:#B4D000;--lime10:rgba(180,208,0,.10);--lime20:rgba(180,208,0,.20);--lime30:rgba(180,208,0,.30);
+  --cream:#ECEFE0;--muted:rgba(236,239,224,.42);--faint:rgba(236,239,224,.06);--border:rgba(236,239,224,.08);
+  --red-bg:rgba(239,68,68,.08);--red-bd:rgba(239,68,68,.25);--red-tx:#FCA5A5;
+  --ff-d:"Cormorant Garamond",serif;--ff-u:"Space Grotesk",sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{font-size:16px;}
+body{font-family:var(--ff-u);background:var(--ink);color:var(--cream);min-height:100svh;display:grid;grid-template-columns:1fr 1fr;-webkit-font-smoothing:antialiased;}
+@media(max-width:720px){body{grid-template-columns:1fr;} .login-visual{display:none;}}
+
+/* ── LEFT — visual ── */
+.login-visual{
+  background:var(--ink1);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:48px;position:relative;overflow:hidden;
+}
+.lv-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 0%,transparent 70%);}
+.lv-glow{position:absolute;top:30%;left:10%;width:80%;height:50%;background:radial-gradient(ellipse,rgba(180,208,0,.09) 0%,transparent 65%);}
+.lv-logo{display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+.lv-mark{width:34px;height:34px;background:var(--lime10);border:1px solid var(--lime20);border-radius:5px;display:flex;align-items:center;justify-content:center;}
+.lv-mark svg{width:19px;height:19px;}
+.lv-brand{font-size:14px;font-weight:600;}
+.lv-quote{position:relative;z-index:1;}
+.lv-q{font-family:var(--ff-d);font-size:clamp(32px,3.5vw,52px);font-weight:300;line-height:1.1;color:var(--cream);margin-bottom:16px;}
+.lv-q em{font-style:italic;color:var(--lime);}
+.lv-q-sub{font-size:13px;color:var(--muted);line-height:1.6;max-width:36ch;}
+.lv-stats{display:flex;flex-direction:column;gap:10px;position:relative;z-index:1;}
+.lv-stat{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--faint);border:1px solid var(--border);border-radius:4px;font-size:12px;}
+.lv-stat-l{color:var(--muted);}
+.lv-stat-v{font-weight:600;color:var(--cream);}
+.lv-stat-v.lime{color:var(--lime);}
+
+/* ── RIGHT — form ── */
+.login-form-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;min-height:100svh;}
+.lf-inner{width:100%;max-width:360px;}
+.lf-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:40px;}
+.lf-logo-mark{width:34px;height:34px;background:var(--lime10);border:1px solid var(--lime20);border-radius:5px;display:flex;align-items:center;justify-content:center;}
+.lf-logo-mark svg{width:19px;height:19px;}
+.lf-h{font-family:var(--ff-d);font-size:34px;font-weight:300;text-align:center;margin-bottom:6px;line-height:1.15;}
+.lf-h em{font-style:italic;color:var(--lime);}
+.lf-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:32px;line-height:1.5;}
+.f-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.f-label{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted);}
+.f-input{background:var(--faint);border:1px solid var(--border);border-radius:3px;padding:12px 16px;font-size:14px;font-family:var(--ff-u);color:var(--cream);outline:none;width:100%;transition:border-color .2s,background .2s;}
+.f-input::placeholder{color:rgba(236,239,224,.18);}
+.f-input:focus{border-color:var(--lime30);background:var(--lime10);}
+.f-btn{width:100%;margin-top:8px;padding:14px;background:var(--lime);color:var(--ink);font-size:14px;font-weight:700;font-family:var(--ff-u);border:none;border-radius:3px;cursor:pointer;letter-spacing:.02em;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.f-btn:hover{opacity:.85;}
+.f-btn:disabled{opacity:.5;cursor:not-allowed;}
+.spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(6,7,5,.3);border-top-color:var(--ink);animation:spin .7s linear infinite;display:none;}
+.f-btn.loading .spinner{display:block;}
+.f-btn.loading .btn-text{opacity:.6;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.f-err{display:none;margin-top:14px;background:var(--red-bg);border:1px solid var(--red-bd);border-radius:3px;padding:10px 14px;font-size:12px;color:var(--red-tx);line-height:1.5;text-align:center;}
+.f-err.show{display:block;}
+.f-divider{display:flex;align-items:center;gap:12px;margin:20px 0;font-size:11px;color:var(--muted);}
+.f-divider::before,.f-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.f-magic{width:100%;padding:12px;background:var(--faint);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:13px;font-family:var(--ff-u);color:var(--muted);transition:color .2s,border-color .2s;}
+.f-magic:hover{color:var(--cream);border-color:rgba(236,239,224,.2);}
+.f-magic:disabled{opacity:.5;cursor:not-allowed;}
+.magic-sent-box{display:none;background:var(--lime10);border:1px solid var(--lime20);border-radius:4px;padding:14px 16px;margin-top:0;text-align:center;}
+.magic-sent-box p{font-size:13px;color:var(--muted);line-height:1.6;}
+.magic-sent-box strong{color:var(--cream);}
+.lf-foot{font-size:11px;color:var(--muted);text-align:center;margin-top:24px;line-height:1.6;}
+.lf-foot a{color:var(--muted);text-decoration:underline;text-underline-offset:3px;}
+.lf-foot a:hover{color:var(--cream);}
+</style>
+</head>
+<body>
+
+<!-- LEFT — visual -->
+<div class="login-visual">
+  <div class="lv-grid"></div>
+  <div class="lv-glow"></div>
+  <div class="lv-logo">
+    <div class="lv-mark"><svg viewBox="0 0 28 28" fill="none"><path d="M6 8h11l-9 12h12" stroke="#B4D000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <span class="lv-brand">Grupo Randazzo</span>
+  </div>
+  <div class="lv-quote">
+    <h2 class="lv-q">Refer&iacute;.<br>Gan&aacute;.<br><em>$500.000.</em></h2>
+    <p class="lv-q-sub">Recomend&aacute; a alguien que quiera un auto y cob&aacute;rs cuando se concrete la venta.</p>
+  </div>
+  <div class="lv-stats">
+    <div class="lv-stat"><span class="lv-stat-l">Embajadores activos</span><span class="lv-stat-v lime">280</span></div>
+    <div class="lv-stat"><span class="lv-stat-l">Ventas generadas</span><span class="lv-stat-v">29</span></div>
+    <div class="lv-stat"><span class="lv-stat-l">Beneficio por referido</span><span class="lv-stat-v lime">$500.000</span></div>
+  </div>
+</div>
+
+<!-- RIGHT — form -->
+<div class="login-form-wrap">
+  <div class="lf-inner">
+    <div class="lf-logo">
+      <div class="lf-logo-mark"><svg viewBox="0 0 28 28" fill="none"><path d="M6 8h11l-9 12h12" stroke="#B4D000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+    <h1 class="lf-h">Bienvenido<br><em>de vuelta.</em></h1>
+    <p class="lf-sub">Ingres&aacute; con tu cuenta para acceder al Programa de Embajadores.</p>
+
+    <form id="loginForm">
+      <div class="f-group">
+        <label class="f-label">Email</label>
+        <input class="f-input" type="email" id="emailInput" placeholder="tu@email.com" required autocomplete="email">
+      </div>
+      <div class="f-group">
+        <label class="f-label">Contrase&ntilde;a</label>
+        <input class="f-input" type="password" id="passInput" placeholder="Tu contrase&ntilde;a" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="f-btn" id="loginBtn">
+        <div class="spinner"></div>
+        <span class="btn-text">Ingresar</span>
+      </button>
+      <div class="f-err" id="loginErr">Email o contrase&ntilde;a incorrectos. Intent&aacute; nuevamente.</div>
+    </form>
+
+    <div class="f-divider">o ingres&aacute; sin contrase&ntilde;a</div>
+
+    <div id="magicWrap">
+      <button class="f-magic" id="magicBtn" type="button">
+        Recibir link de acceso por email
+      </button>
+    </div>
+    <div class="magic-sent-box" id="magicSent">
+      <p>Revis&aacute; tu bandeja. Te enviamos un <strong>link de acceso</strong> que expira en 60 minutos.</p>
+    </div>
+
+    <p class="lf-foot">
+      &iquest;No ten&eacute;s acceso todav&iacute;a?<br>
+      Contact&aacute; a <a href="mailto:embajadores@gruporandazzo.com.ar">embajadores@gruporandazzo.com.ar</a>
+    </p>
+  </div>
+</div>
+
+<script>
+/* Redirigir si ya hay sesion activa */
+;(async () => {
+  await _sbReady;
+  const { data: { session } } = await _sb.auth.getSession();
+  if (session) window.location.replace('index.html');
+})();
+
+/* Login con email y contraseña */
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginErr');
+  const email = document.getElementById('emailInput').value.trim();
+  const pass  = document.getElementById('passInput').value;
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+  err.classList.remove('show');
+
+  await _sbReady;
+  const { error } = await _sb.auth.signInWithPassword({ email, password: pass });
+
+  if (error) {
+    err.classList.add('show');
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  } else {
+    window.location.replace('index.html');
+  }
+});
+
+/* Magic Link */
+document.getElementById('magicBtn').addEventListener('click', async () => {
+  const email = document.getElementById('emailInput').value.trim();
+  if (!email) {
+    document.getElementById('emailInput').focus();
+    document.getElementById('emailInput').style.borderColor = 'rgba(245,158,11,.5)';
+    setTimeout(() => { document.getElementById('emailInput').style.borderColor = ''; }, 2000);
+    return;
+  }
+
+  const btn = document.getElementById('magicBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  await _sbReady;
+  const { error } = await _sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.origin + '/index.html' }
+  });
+
+  if (!error) {
+    document.getElementById('magicWrap').style.display = 'none';
+    document.getElementById('magicSent').style.display = 'block';
+  } else {
+    btn.disabled = false;
+    btn.textContent = 'Recibir link de acceso por email';
+  }
+});
+</script>
+</body>
+</html>
