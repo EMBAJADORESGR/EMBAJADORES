@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Embajadores — Grupo Randazzo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════
+   TOKENS
+══════════════════════════════════════ */
+:root{
+  --ink:     #080907;
+  --ink-2:   #0D0F0A;
+  --lime:    #B4D000;
+  --lime-dim:#7A8D00;
+  --white:   #F8FAF0;
+  --muted:   rgba(248,250,240,.4);
+  --border:  rgba(248,250,240,.07);
+  --surface: rgba(248,250,240,.04);
+  --ff-h:    'Space Grotesk', sans-serif;
+  --ff-b:    'Inter', sans-serif;
+}
+
+/* ══════════════════════════════════════
+   RESET
+══════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;font-size:16px;}
+body{
+  font-family:var(--ff-b);
+  background:var(--ink);
+  color:var(--white);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none;}
+img{display:block;max-width:100%;}
+@media(prefers-reduced-motion:reduce){
+  *,::before,::after{animation-duration:.01ms!important;transition-duration:.01ms!important;}
+}
+
+/* ══════════════════════════════════════
+   LOADER
+══════════════════════════════════════ */
+#loader{
+  position:fixed;inset:0;
+  background:var(--ink);
+  z-index:9999;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:24px;
+  perspective:800px;
+}
+.loader-word{
+  display:flex;
+  gap:0.04em;
+  overflow:hidden;
+}
+.loader-char{
+  font-family:var(--ff-h);
+  font-size:clamp(52px,9vw,120px);
+  font-weight:700;
+  letter-spacing:-0.02em;
+  color:var(--white);
+  opacity:0;
+  transform:translateY(-80px) rotateX(-90deg);
+  filter:blur(6px);
+  display:inline-block;
+  transform-origin:50% 0%;
+  animation:charIn .55s cubic-bezier(.22,1,.36,1) forwards;
+}
+.loader-char.lime{color:var(--lime);}
+@keyframes charIn{
+  to{opacity:1;transform:translateY(0) rotateX(0deg);filter:blur(0);}
+}
+.loader-brand{
+  font-family:var(--ff-h);
+  font-size:12px;
+  font-weight:500;
+  letter-spacing:.25em;
+  color:var(--muted);
+  opacity:0;
+  animation:fadeUp .4s ease forwards;
+}
+.loader-line{
+  width:48px;height:2px;
+  background:var(--lime);
+  transform:scaleX(0);
+  transform-origin:left;
+  animation:lineIn .6s cubic-bezier(.22,1,.36,1) forwards;
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+@keyframes lineIn{
+  to{transform:scaleX(1);}
+}
+#loader.hide{
+  animation:loaderOut .7s cubic-bezier(.76,0,.24,1) forwards;
+}
+@keyframes loaderOut{
+  0%{clip-path:inset(0 0 0 0);}
+  100%{clip-path:inset(0 0 100% 0);}
+}
+
+/* ══════════════════════════════════════
+   NAV
+══════════════════════════════════════ */
+#main{opacity:0;transition:opacity .5s ease .2s;}
+#main.visible{opacity:1;}
+nav{
+  position:fixed;top:0;left:0;right:0;
+  height:60px;z-index:100;
+  padding:0 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  background:rgba(8,9,7,.85);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+}
+.nav-logo{display:flex;align-items:center;gap:10px;}
+.nav-logo svg{width:28px;height:28px;}
+.nav-logo-name{
+  font-family:var(--ff-h);
+  font-size:14px;font-weight:600;
+  letter-spacing:.04em;
+  color:var(--white);
+}
+.nav-links{
+  display:flex;gap:32px;
+  font-size:13px;color:var(--muted);
+}
+.nav-links a{transition:color .2s;}
+.nav-links a:hover{color:var(--white);}
+.nav-cta{
+  font-family:var(--ff-h);
+  font-size:13px;font-weight:600;
+  background:var(--lime);color:var(--ink);
+  padding:9px 20px;border-radius:4px;
+  transition:opacity .2s;letter-spacing:.01em;
+}
+.nav-cta:hover{opacity:.85;}
+
+/* ══════════════════════════════════════
+   HERO
+══════════════════════════════════════ */
+.hero{
+  min-height:100svh;
+  padding:120px 40px 80px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:40px;
+  align-items:center;
+  position:relative;
+  overflow:hidden;
+}
+.hero::before{
+  content:'';
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 55% 55% at -5% 50%, rgba(180,208,0,.08) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 110% 20%, rgba(180,208,0,.04) 0%, transparent 60%);
+  pointer-events:none;
+}
+.hero-grid-line{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size:80px 80px;
+  mask-image:radial-gradient(ellipse 70% 70% at 10% 50%, black 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-left{
+  display:flex;flex-direction:column;gap:28px;
+  position:relative;z-index:1;
+}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:500;letter-spacing:.08em;
+  color:var(--lime);
+  border:1px solid rgba(180,208,0,.25);
+  background:rgba(180,208,0,.06);
+  padding:6px 14px;border-radius:2px;
+  width:fit-content;
+}
+.hero-tag::before{
+  content:'';width:6px;height:6px;
+  border-radius:50%;background:var(--lime);
+  animation:pulse 2s ease infinite;
+}
+@keyframes pulse{
+  0%,100%{opacity:1;}50%{opacity:.3;}
+}
+.hero-h1{
+  font-family:var(--ff-h);
+  font-size:clamp(40px,5.5vw,72px);
+  font-weight:700;
+  line-height:1.05;
+  letter-spacing:-.03em;
+  color:var(--white);
+}
+.hero-h1 .lime{color:var(--lime);}
+.hero-sub{
+  font-size:16px;line-height:1.65;
+  color:var(--muted);
+  max-width:44ch;
+}
+.hero-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.btn-lime{
+  font-family:var(--ff-h);
+  font-size:14px;font-weight:600;letter-spacing:.01em;
+  background:var(--lime);color:var(--ink);
+  padding:13px 28px;border-radius:4px;
+  transition:opacity .2s;
+}
+.btn-lime:hover{opacity:.85;}
+.btn-ghost{
+  font-size:14px;font-weight:400;
+  color:var(--muted);
+  display:flex;align-items:center;gap:6px;
+  padding:13px 0;
+  transition:color .2s;
+}
+.btn-ghost:hover{color:var(--white);}
+.btn-ghost svg{transition:transform .2s;}
+.btn-ghost:hover svg{transform:translateX(3px);}
+.hero-right{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;align-items:flex-end;gap:16px;
+}
+.hero-stat{
+  text-align:right;
+}
+.hero-stat-value{
+  font-family:var(--ff-h);
+  font-size:clamp(60px,7vw,100px);
+  font-weight:700;
+  line-height:1;
+  letter-spacing:-.04em;
+  color:var(--white);
+}
+.hero-stat-label{
+  font-size:14px;color:var(--muted);
+  margin-top:6px;
+  line-height:1.4;
+}
+.hero-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:20px 24px;
+  width:100%;max-width:320px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.hero-card-row{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:13px;
+}
+.hero-card-label{color:var(--muted);}
+.hero-card-val{
+  font-family:var(--ff-h);
+  font-weight:600;font-size:14px;
+}
+.hero-card-val.green{color:#4ADE80;}
+.hero-card-val.lime{color:var(--lime);}
+.hero-card-divider{height:1px;background:var(--border);}
+.hero-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(74,222,128,.08);
+  border:1px solid rgba(74,222,128,.2);
+  border-radius:20px;padding:5px 12px;
+  font-size:11px;color:#4ADE80;font-weight:500;
+}
+
+/* ══════════════════════════════════════
+   TICKER
+══════════════════════════════════════ */
+.ticker{
+  overflow:hidden;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  background:rgba(180,208,0,.03);
+  padding:14px 0;
+  position:relative;
+}
+.ticker-track{
+  display:flex;gap:0;
+  animation:tickerMove 22s linear infinite;
+  width:max-content;
+}
+.ticker-item{
+  font-family:var(--ff-h);
+  font-size:13px;font-weight:500;
+  color:var(--muted);
+  letter-spacing:.04em;
+  padding:0 32px;
+  white-space:nowrap;
+}
+.ticker-item .sep{color:var(--lime);margin:0 8px;}
+@keyframes tickerMove{
+  from{transform:translateX(0);}
+  to{transform:translateX(-50%);}
+}
+
+/* ══════════════════════════════════════
+   SECTION SHARED
+══════════════════════════════════════ */
+.s{padding:96px 40px;}
+.s-inner{max-width:1140px;margin:0 auto;}
+.s-label{
+  font-size:12px;font-weight:500;
+  color:var(--lime);letter-spacing:.1em;
+  margin-bottom:16px;display:block;
+}
+.s-h2{
+  font-family:var(--ff-h);
+  font-size:clamp(28px,3.5vw,48px);
+  font-weight:700;letter-spacing:-.025em;
+  line-height:1.1;color:var(--white);
+  margin-bottom:16px;
+}
+.s-sub{
+  font-size:16px;color:var(--muted);
+  line-height:1.65;max-width:52ch;
+  margin-bottom:56px;
+}
+
+/* ══════════════════════════════════════
+   BIG NUMBER
+══════════════════════════════════════ */
+.big-num-section{
+  padding:72px 40px;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  overflow:hidden;
+  background:var(--ink-2);
+}
+.big-num{
+  font-family:var(--ff-h);
+  font-size:clamp(80px,16vw,220px);
+  font-weight:700;
+  letter-spacing:-.04em;
+  line-height:.9;
+  color:var(--lime);
+  white-space:nowrap;
+  user-select:none;
+}
+.big-num-label{
+  font-size:16px;color:var(--muted);
+  margin-top:24px;
+  max-width:480px;
+  line-height:1.6;
+}
+.big-num-note{
+  font-size:13px;color:var(--lime-dim);
+  margin-top:8px;
+}
+
+/* ══════════════════════════════════════
+   STEPS
+══════════════════════════════════════ */
+.steps-header{
+  display:grid;grid-template-columns:280px 1fr;
+  gap:40px;align-items:end;margin-bottom:56px;
+}
+.steps-track{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  position:relative;
+}
+.steps-track::before{
+  content:'';
+  position:absolute;
+  top:20px;left:0;right:0;
+  height:1px;background:var(--border);
+}
+.step-item{padding:0 0 0 0;padding-top:48px;position:relative;}
+.step-num{
+  position:absolute;top:0;left:0;
+  width:40px;height:40px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--ff-h);font-size:14px;font-weight:600;
+  color:var(--muted);
+  transition:border-color .3s,color .3s;
+  z-index:1;
+}
+.step-item.active .step-num{
+  border-color:var(--lime);
+  color:var(--lime);
+  background:rgba(180,208,0,.08);
+}
+.step-icon{font-size:24px;margin-bottom:14px;}
+.step-title{
+  font-family:var(--ff-h);
+  font-size:16px;font-weight:600;
+  margin-bottom:8px;color:var(--white);
+}
+.step-desc{font-size:13px;color:var(--muted);line-height:1.6;max-width:22ch;}
+
+/* ══════════════════════════════════════
+   ESTADOS
+══════════════════════════════════════ */
+.estados-layout{
+  display:grid;grid-template-columns:1fr 360px;
+  gap:64px;align-items:start;
+}
+.estados-list{display:flex;flex-direction:column;gap:1px;}
+.estado-item{
+  display:grid;grid-template-columns:130px 1fr;
+  gap:24px;align-items:start;
+  padding:20px 0;
+  border-bottom:1px solid var(--border);
+  transition:background .2s;
+}
+.estado-item:last-child{border-bottom:none;}
+.estado-tag{
+  display:inline-flex;
+  padding:5px 12px;border-radius:3px;
+  font-family:var(--ff-h);
+  font-size:10px;font-weight:700;letter-spacing:.06em;
+  white-space:nowrap;
+  width:fit-content;
+}
+.estado-text{font-size:14px;color:var(--muted);line-height:1.55;}
+.et-referido   {background:rgba(148,163,184,.12);color:#94A3B8;}
+.et-asignado   {background:rgba(14,165,233,.12); color:#38BDF8;}
+.et-presupuesto{background:rgba(245,158,11,.12); color:#FCD34D;}
+.et-finalizado {background:rgba(100,116,139,.12);color:#94A3B8;}
+.et-preventa   {background:rgba(34,197,94,.12);  color:#4ADE80;}
+.et-suscripcion{background:rgba(139,92,246,.12); color:#C4B5FD;}
+.et-entregado  {background:rgba(180,208,0,.15);  color:var(--lime);border:1px solid rgba(180,208,0,.3);}
+
+.estados-sidebar-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:28px;
+  position:sticky;top:80px;
+}
+.sidebar-card-title{
+  font-family:var(--ff-h);
+  font-size:13px;font-weight:600;
+  color:var(--white);
+  margin-bottom:24px;
+  padding-bottom:16px;
+  border-bottom:1px solid var(--border);
+}
+.rm{display:flex;flex-direction:column;}
+.rm-row{display:flex;gap:14px;padding:10px 0;}
+.rm-col{display:flex;flex-direction:column;align-items:center;width:12px;flex-shrink:0;}
+.rm-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.rm-seg{width:1px;flex:1;background:var(--border);margin:4px 0;}
+.rm-info{}
+.rm-state{font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:2px;}
+.rm-desc{font-size:11px;color:var(--muted);line-height:1.4;}
+.rm-pago{
+  margin-top:20px;padding-top:16px;
+  border-top:1px solid var(--border);
+  display:flex;gap:10px;align-items:flex-start;
+}
+.rm-pago-icon{
+  width:28px;height:28px;border-radius:4px;
+  background:rgba(180,208,0,.1);
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;
+}
+.rm-pago-text{font-size:12px;color:var(--muted);line-height:1.5;}
+.rm-pago-text strong{color:var(--lime);}
+
+/* ══════════════════════════════════════
+   FAQ
+══════════════════════════════════════ */
+.faq-layout{
+  display:grid;grid-template-columns:240px 1fr;
+  gap:64px;align-items:start;
+}
+.faq-sidebar{
+  position:sticky;top:80px;
+}
+.faq-sidebar-title{
+  font-family:var(--ff-h);
+  font-size:11px;font-weight:600;
+  letter-spacing:.08em;
+  color:var(--muted);
+  margin-bottom:16px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+.faq-sidebar-links{display:flex;flex-direction:column;gap:2px;}
+.faq-sidebar-link{
+  font-size:13px;color:var(--muted);
+  padding:8px 12px;border-radius:4px;
+  transition:background .15s,color .15s;
+  border-left:2px solid transparent;
+}
+.faq-sidebar-link:hover{
+  background:var(--surface);
+  color:var(--white);
+  border-left-color:var(--lime);
+}
+.faq-groups{display:flex;flex-direction:column;gap:48px;}
+.faq-group-title{
+  font-family:var(--ff-h);
+  font-size:13px;font-weight:600;
+  color:var(--lime);
+  letter-spacing:.06em;
+  margin-bottom:16px;
+  padding-bottom:12px;
+  border-bottom:1px solid rgba(180,208,0,.2);
+}
+.faq-item{border-bottom:1px solid var(--border);}
+.faq-btn{
+  width:100%;text-align:left;
+  background:none;border:none;cursor:pointer;
+  padding:20px 0;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:16px;
+}
+.faq-btn-text{
+  font-family:var(--ff-h);
+  font-size:15px;font-weight:500;
+  color:var(--white);
+  line-height:1.4;
+}
+.faq-icon{
+  width:22px;height:22px;flex-shrink:0;
+  border-radius:50%;
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .3s,border-color .3s;
+}
+.faq-icon svg{width:10px;height:10px;stroke:var(--muted);transition:stroke .2s;}
+.faq-btn[aria-expanded="true"] .faq-icon{
+  transform:rotate(45deg);
+  border-color:var(--lime);
+}
+.faq-btn[aria-expanded="true"] .faq-icon svg{stroke:var(--lime);}
+.faq-body{
+  max-height:0;overflow:hidden;
+  transition:max-height .35s cubic-bezier(.4,0,.2,1);
+}
+.faq-body-inner{
+  padding:0 0 20px;
+  font-size:14px;color:var(--muted);
+  line-height:1.75;
+}
+.faq-body-inner p{margin-bottom:10px;}
+.faq-body-inner p:last-child{margin-bottom:0;}
+.faq-body-inner strong{color:var(--white);}
+.faq-note{
+  display:flex;gap:10px;
+  background:rgba(245,158,11,.07);
+  border:1px solid rgba(245,158,11,.2);
+  border-radius:4px;
+  padding:12px 14px;
+  margin-top:12px;
+  font-size:13px;color:#FCD34D;
+  line-height:1.5;
+}
+.faq-note .icon{flex-shrink:0;}
+.faq-table{
+  width:100%;border-collapse:collapse;
+  margin-top:12px;font-size:13px;
+}
+.faq-table th{
+  padding:9px 12px;text-align:left;
+  font-weight:600;color:var(--white);
+  border-bottom:1px solid var(--border);
+  font-family:var(--ff-h);font-size:12px;
+}
+.faq-table td{
+  padding:9px 12px;color:var(--muted);
+  border-bottom:1px solid var(--border);
+}
+.faq-table tr:last-child td{border-bottom:none;}
+
+/* ══════════════════════════════════════
+   BENEFITS STRIP
+══════════════════════════════════════ */
+.benefits-strip{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1px;
+  background:var(--border);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+.benefit-cell{
+  background:var(--ink);
+  padding:36px 32px;
+  transition:background .25s;
+}
+.benefit-cell:hover{background:var(--ink-2);}
+.benefit-icon{font-size:28px;margin-bottom:16px;}
+.benefit-title{
+  font-family:var(--ff-h);
+  font-size:17px;font-weight:600;
+  margin-bottom:8px;color:var(--white);
+}
+.benefit-text{font-size:13px;color:var(--muted);line-height:1.65;}
+
+/* ══════════════════════════════════════
+   PAGO SECTION
+══════════════════════════════════════ */
+.pago-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;margin-top:16px;
+}
+.pago-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:24px;
+  display:flex;flex-direction:column;gap:12px;
+}
+.pago-type{
+  font-family:var(--ff-h);
+  font-size:11px;font-weight:700;
+  letter-spacing:.06em;
+  color:var(--lime);
+  background:rgba(180,208,0,.08);
+  border-radius:2px;
+  padding:4px 10px;
+  width:fit-content;
+}
+.pago-card h4{
+  font-family:var(--ff-h);
+  font-size:16px;font-weight:600;
+  color:var(--white);
+}
+.pago-row{
+  display:flex;justify-content:space-between;align-items:baseline;
+  font-size:13px;
+}
+.pago-row-label{color:var(--muted);}
+.pago-row-val{font-weight:500;color:var(--white);}
+.pago-divider{height:1px;background:var(--border);}
+
+/* ══════════════════════════════════════
+   CTA FINAL
+══════════════════════════════════════ */
+.cta-final{
+  padding:96px 40px;
+  background:var(--lime);
+  text-align:center;
+}
+.cta-final-h{
+  font-family:var(--ff-h);
+  font-size:clamp(36px,5vw,64px);
+  font-weight:700;
+  letter-spacing:-.03em;
+  color:var(--ink);
+  margin-bottom:16px;
+}
+.cta-final-sub{
+  font-size:17px;color:rgba(8,9,7,.6);
+  margin-bottom:36px;max-width:44ch;margin-left:auto;margin-right:auto;
+}
+.btn-dark{
+  display:inline-block;
+  font-family:var(--ff-h);
+  font-size:15px;font-weight:700;
+  background:var(--ink);color:var(--lime);
+  padding:15px 36px;border-radius:4px;
+  letter-spacing:.01em;
+  transition:opacity .2s;
+}
+.btn-dark:hover{opacity:.85;}
+.cta-contact{
+  margin-top:36px;
+  font-size:13px;color:rgba(8,9,7,.5);
+}
+.cta-contact a{
+  color:rgba(8,9,7,.7);
+  border-bottom:1px solid rgba(8,9,7,.25);
+  transition:color .2s;
+}
+.cta-contact a:hover{color:var(--ink);}
+
+/* ══════════════════════════════════════
+   FOOTER
+══════════════════════════════════════ */
+footer{
+  padding:48px 40px;
+  border-top:1px solid var(--border);
+}
+.footer-inner{
+  max-width:1140px;margin:0 auto;
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:40px;
+  padding-bottom:40px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:28px;
+}
+.footer-col-title{
+  font-family:var(--ff-h);
+  font-size:12px;font-weight:600;
+  letter-spacing:.06em;
+  color:var(--white);
+  margin-bottom:16px;
+}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.footer-links a{font-size:13px;color:var(--muted);transition:color .2s;}
+.footer-links a:hover{color:var(--white);}
+.footer-bottom{
+  max-width:1140px;margin:0 auto;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;color:var(--muted);
+}
+.footer-logo{display:flex;align-items:center;gap:8px;}
+.footer-logo svg{width:22px;height:22px;}
+.footer-logo-name{
+  font-family:var(--ff-h);
+  font-size:13px;font-weight:600;color:var(--white);
+}
+
+/* ══════════════════════════════════════
+   SCROLL REVEAL
+══════════════════════════════════════ */
+.reveal{
+  opacity:0;
+  transform:translateY(28px);
+  transition:opacity .6s ease,transform .6s ease;
+}
+.reveal.in{opacity:1;transform:none;}
+.reveal-delay-1{transition-delay:.1s;}
+.reveal-delay-2{transition-delay:.2s;}
+.reveal-delay-3{transition-delay:.3s;}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media(max-width:960px){
+  .hero{grid-template-columns:1fr;padding-top:100px;}
+  .hero-right{align-items:flex-start;}
+  .hero-stat-value{font-size:clamp(48px,10vw,80px);}
+  .steps-header{grid-template-columns:1fr;}
+  .steps-track{grid-template-columns:1fr 1fr;gap:32px 16px;}
+  .steps-track::before{display:none;}
+  .step-item{padding-top:56px;}
+  .estados-layout,.faq-layout{grid-template-columns:1fr;}
+  .estados-sidebar-card,.faq-sidebar{position:static;}
+  .pago-grid,.benefits-strip,footer .footer-inner{grid-template-columns:1fr;}
+  .benefits-strip{gap:0;}
+  .benefit-cell{border-bottom:1px solid var(--border);}
+  nav{padding:0 20px;}
+  .nav-links{display:none;}
+  .s{padding:64px 20px;}
+  .hero{padding:100px 20px 64px;}
+  .big-num-section,.cta-final,footer{padding-left:20px;padding-right:20px;}
+  .ticker{display:none;}
+}
+@media(max-width:600px){
+  .steps-track{grid-template-columns:1fr;}
+  .footer-inner{grid-template-columns:1fr;}
+  .big-num{font-size:clamp(56px,18vw,100px);}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════
+     LOADER
+══════════════════════════ -->
+<div id="loader" aria-hidden="true">
+  <div class="loader-word" id="loaderWord"></div>
+  <div class="loader-brand" id="loaderBrand" style="animation-delay:1.4s">GRUPO RANDAZZO</div>
+  <div class="loader-line" id="loaderLine" style="animation-delay:1.6s"></div>
+</div>
+
+<!-- ══════════════════════════
+     MAIN
+══════════════════════════ -->
+<div id="main">
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="28" height="28" rx="4" fill="rgba(180,208,0,0.12)"/>
+      <path d="M6 8h11l-9 12h12" stroke="#B4D000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="nav-logo-name">Grupo Randazzo</span>
+  </a>
+  <div class="nav-links">
+    <a href="#como-funciona">Cómo funciona</a>
+    <a href="#estados">Estados</a>
+    <a href="#faq">Preguntas frecuentes</a>
+  </div>
+  <a href="#registrarme" class="nav-cta">Ser Embajador</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid-line"></div>
+
+  <div class="hero-left">
+    <div class="hero-tag">Programa de Embajadores · 2026</div>
+    <h1 class="hero-h1">Referí.<br>Ganá.<br><span class="lime">Repetí.</span></h1>
+    <p class="hero-sub">Recomendá a alguien que quiera un auto del Grupo Randazzo. Cuando lo compra, te pagamos $500.000. Sin límite de referencias.</p>
+    <div class="hero-actions">
+      <a href="#registrarme" class="btn-lime">Quiero registrarme</a>
+      <a href="#como-funciona" class="btn-ghost">
+        Ver cómo funciona
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="hero-stat">
+      <div class="hero-stat-value">$500K</div>
+      <div class="hero-stat-label">brutos por cada referido<br>que compra un vehículo</div>
+    </div>
+    <div class="hero-card">
+      <div class="hero-card-row">
+        <span class="hero-card-label">Embajadores activos</span>
+        <span class="hero-card-val lime">280</span>
+      </div>
+      <div class="hero-card-divider"></div>
+      <div class="hero-card-row">
+        <span class="hero-card-label">Ventas generadas</span>
+        <span class="hero-card-val green">29 ✓</span>
+      </div>
+      <div class="hero-card-divider"></div>
+      <div class="hero-card-row">
+        <span class="hero-card-label">Operaciones disponibles</span>
+        <span class="hero-card-val" style="color:var(--white)">0KM · Usados · Plan</span>
+      </div>
+      <div style="margin-top:4px">
+        <span class="hero-pill">
+          <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#4ADE80"/></svg>
+          Programa vigente
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <div class="ticker-item">REFERÍ <span class="sep">·</span> GANÁ $500.000<span class="sep">·</span>GRUPO RANDAZZO<span class="sep">·</span>0KM<span class="sep">·</span>USADOS<span class="sep">·</span>PLAN DE AHORRO<span class="sep">·</span>SIN LÍMITE DE REFERENCIAS<span class="sep">·</span>7 DÍAS HÁBILES<span class="sep">·</span></div>
+    <div class="ticker-item">REFERÍ <span class="sep">·</span> GANÁ $500.000<span class="sep">·</span>GRUPO RANDAZZO<span class="sep">·</span>0KM<span class="sep">·</span>USADOS<span class="sep">·</span>PLAN DE AHORRO<span class="sep">·</span>SIN LÍMITE DE REFERENCIAS<span class="sep">·</span>7 DÍAS HÁBILES<span class="sep">·</span></div>
+    <div class="ticker-item">REFERÍ <span class="sep">·</span> GANÁ $500.000<span class="sep">·</span>GRUPO RANDAZZO<span class="sep">·</span>0KM<span class="sep">·</span>USADOS<span class="sep">·</span>PLAN DE AHORRO<span class="sep">·</span>SIN LÍMITE DE REFERENCIAS<span class="sep">·</span>7 DÍAS HÁBILES<span class="sep">·</span></div>
+  </div>
+</div>
+
+<!-- BIG NUMBER -->
+<section class="big-num-section">
+  <div style="max-width:1140px;margin:0 auto">
+    <div class="big-num reveal">$500.000</div>
+    <p class="big-num-label reveal reveal-delay-1">Por cada persona que referís y compra un vehículo en Grupo Randazzo. Sin límite: cuantos más referidos, más cobrás.</p>
+    <p class="big-num-note reveal reveal-delay-2">Monto bruto. El neto varía según condición fiscal del Embajador.</p>
+  </div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section class="s" id="como-funciona">
+  <div class="s-inner">
+    <div class="steps-header">
+      <div>
+        <span class="s-label">Proceso</span>
+        <h2 class="s-h2">Cuatro pasos,<br>un cobro.</h2>
+      </div>
+      <p style="font-size:15px;color:var(--muted);line-height:1.65;max-width:44ch;align-self:end">Desde que te registrás hasta que recibís el pago, todo es transparente y rastreable.</p>
+    </div>
+    <div class="steps-track">
+      <div class="step-item active reveal">
+        <div class="step-num">1</div>
+        <div class="step-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B4D000" stroke-width="1.6" stroke-linecap="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M6 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-1"/><path d="M9 12h6M9 16h4"/></svg></div>
+        <div class="step-title">Registrate</div>
+        <div class="step-desc">Completá el formulario. En hasta 3 horas hábiles recibís tu link único personal.</div>
+      </div>
+      <div class="step-item reveal reveal-delay-1">
+        <div class="step-num">2</div>
+        <div class="step-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B4D000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>
+        <div class="step-title">Compartí tu link</div>
+        <div class="step-desc">Envialo por WhatsApp o mail a quien quiera comprar un auto.</div>
+      </div>
+      <div class="step-item reveal reveal-delay-2">
+        <div class="step-num">3</div>
+        <div class="step-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B4D000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3v-5l2.5-5h11l2.5 5v5h-2"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/><path d="M5 12h14"/></svg></div>
+        <div class="step-title">Tu referido compra</div>
+        <div class="step-desc">Nuestro equipo lo acompaña hasta la entrega. Vos seguís el estado online.</div>
+      </div>
+      <div class="step-item reveal reveal-delay-3">
+        <div class="step-num">4</div>
+        <div class="step-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B4D000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12a2 2 0 100-4 2 2 0 000 4z"/><path d="M6 12h.01M18 12h.01"/></svg></div>
+        <div class="step-title">Cobrás</div>
+        <div class="step-desc">7 días hábiles desde la entrega, el pago llega a tu cuenta.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BENEFITS STRIP -->
+<div class="benefits-strip">
+  <div class="benefit-cell reveal">
+    <div class="benefit-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B4D000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
+    <div class="benefit-title">Seguimiento en tiempo real</div>
+    <div class="benefit-text">Cada referido tiene un estado visible en tu panel. Sabés exactamente en qué etapa está en todo momento.</div>
+  </div>
+  <div class="benefit-cell reveal reveal-delay-1">
+    <div class="benefit-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B4D000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg></div>
+    <div class="benefit-title">Notificaciones automáticas</div>
+    <div class="benefit-text">Recibís un mail cada vez que tu referido avanza de estado, desde que se asigna hasta que se entrega el auto.</div>
+  </div>
+  <div class="benefit-cell reveal reveal-delay-2">
+    <div class="benefit-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B4D000" stroke-width="1.5" stroke-linecap="round"><path d="M12 12c-2-2.5-4-4-6-4a4 4 0 000 8c2 0 4-1.5 6-4zm0 0c2 2.5 4 4 6 4a4 4 0 000-8c-2 0-4 1.5-6 4z"/></svg></div>
+    <div class="benefit-title">Sin límite de referencias</div>
+    <div class="benefit-text">Cada referido que compra genera un beneficio. No hay tope: cuantos más referidos exitosos, más cobrás.</div>
+  </div>
+</div>
+
+<!-- ESTADOS -->
+<section class="s" id="estados" style="background:var(--ink-2)">
+  <div class="s-inner">
+    <span class="s-label">Trazabilidad</span>
+    <h2 class="s-h2 reveal">¿En qué estado está<br>tu referido?</h2>
+    <p class="s-sub reveal">Cada referido avanza por etapas. El estado <strong style="color:var(--lime)">Entregado</strong> es el que activa tu pago.</p>
+
+    <div class="estados-layout">
+      <div class="estados-list">
+        <div class="estado-item reveal">
+          <span class="estado-tag et-referido">REFERIDO</span>
+          <span class="estado-text">El referido se cargó con éxito. El equipo comercial tomará contacto próximamente.</span>
+        </div>
+        <div class="estado-item reveal">
+          <span class="estado-tag et-asignado">ASIGNADO</span>
+          <span class="estado-text">Ya está siendo atendido por un asesor comercial de Grupo Randazzo.</span>
+        </div>
+        <div class="estado-item reveal">
+          <span class="estado-tag et-presupuesto">PRESUPUESTO</span>
+          <span class="estado-text">Recibió un presupuesto por el vehículo de interés. La negociación está activa.</span>
+        </div>
+        <div class="estado-item reveal">
+          <span class="estado-tag et-finalizado">FINALIZADO</span>
+          <span class="estado-text">El referido no realizó una operación. Este estado no genera beneficio.</span>
+        </div>
+        <div class="estado-item reveal">
+          <span class="estado-tag et-preventa">PREVENTA</span>
+          <span class="estado-text">Se generó una preventa. La operación está confirmada. ¡Muy cerca del cobro!</span>
+        </div>
+        <div class="estado-item reveal">
+          <span class="estado-tag et-suscripcion">SUSCRIPCION</span>
+          <span class="estado-text">El referido realizó una suscripción al Plan de Ahorro. También genera el beneficio.</span>
+        </div>
+        <div class="estado-item reveal">
+          <span class="estado-tag et-entregado">ENTREGADO</span>
+          <span class="estado-text" style="color:var(--white)"><strong>El vehículo fue entregado.</strong> La operación está en condiciones de generar el pago de tu beneficio.</span>
+        </div>
+      </div>
+
+      <div class="estados-sidebar-card reveal">
+        <div class="sidebar-card-title">Camino al cobro</div>
+        <div class="rm">
+          <div class="rm-row">
+            <div class="rm-col"><div class="rm-dot" style="background:#94A3B8"></div><div class="rm-seg"></div></div>
+            <div class="rm-info"><div class="rm-state" style="color:#94A3B8">REFERIDO</div><div class="rm-desc">Ingresado al sistema</div></div>
+          </div>
+          <div class="rm-row">
+            <div class="rm-col"><div class="rm-dot" style="background:#38BDF8"></div><div class="rm-seg"></div></div>
+            <div class="rm-info"><div class="rm-state" style="color:#38BDF8">ASIGNADO</div><div class="rm-desc">Con asesor comercial</div></div>
+          </div>
+          <div class="rm-row">
+            <div class="rm-col"><div class="rm-dot" style="background:#FCD34D"></div><div class="rm-seg"></div></div>
+            <div class="rm-info"><div class="rm-state" style="color:#FCD34D">PRESUPUESTO</div><div class="rm-desc">Oferta enviada</div></div>
+          </div>
+          <div class="rm-row">
+            <div class="rm-col"><div class="rm-dot" style="background:#4ADE80"></div><div class="rm-seg"></div></div>
+            <div class="rm-info"><div class="rm-state" style="color:#4ADE80">PREVENTA / SUSCRIPCIÓN</div><div class="rm-desc">Operación confirmada</div></div>
+          </div>
+          <div class="rm-row">
+            <div class="rm-col"><div class="rm-dot" style="background:var(--lime);box-shadow:0 0 0 4px rgba(180,208,0,.15)"></div></div>
+            <div class="rm-info"><div class="rm-state" style="color:var(--lime)">ENTREGADO ✓</div><div class="rm-desc" style="color:var(--lime);opacity:.7">Tu beneficio se activa</div></div>
+          </div>
+        </div>
+        <div class="rm-pago">
+          <div class="rm-pago-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4D000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12a2 2 0 100-4 2 2 0 000 4z"/></svg></div>
+          <div class="rm-pago-text">Desde <strong>ENTREGADO</strong>, Finanzas procesa tu pago en <strong>7 días hábiles</strong>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PAGOS -->
+<section class="s" id="pagos">
+  <div class="s-inner">
+    <span class="s-label reveal">Modalidad de pago</span>
+    <h2 class="s-h2 reveal">¿Cómo y cuándo cobrás?</h2>
+    <p class="s-sub reveal">El mecanismo de pago depende de tu condición como Embajador.</p>
+    <div class="pago-grid">
+      <div class="pago-card reveal">
+        <span class="pago-type">Consumidor final</span>
+        <h4>Transferencia bancaria</h4>
+        <div class="pago-divider"></div>
+        <div class="pago-row"><span class="pago-row-label">Cuenta</span><span class="pago-row-val">CBU del formulario</span></div>
+        <div class="pago-row"><span class="pago-row-label">Plazo</span><span class="pago-row-val">7 días hábiles</span></div>
+        <div class="pago-row"><span class="pago-row-label">Doc. requerida</span><span class="pago-row-val">Solo CBU</span></div>
+        <div style="font-size:11px;color:#FCD34D;margin-top:4px">No se aceptan CVU</div>
+      </div>
+      <div class="pago-card reveal reveal-delay-1">
+        <span class="pago-type">Mono / Resp. Inscripto</span>
+        <h4>Transferencia con factura</h4>
+        <div class="pago-divider"></div>
+        <div class="pago-row"><span class="pago-row-label">Cuenta</span><span class="pago-row-val">CBU del Embajador</span></div>
+        <div class="pago-row"><span class="pago-row-label">Plazo</span><span class="pago-row-val">7 días hábiles*</span></div>
+        <div class="pago-row"><span class="pago-row-label">Doc. requerida</span><span class="pago-row-val">Factura B o C</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">*Desde entrega o recepción de factura, lo último</div>
+      </div>
+      <div class="pago-card reveal reveal-delay-2">
+        <span class="pago-type">Empleado del Grupo</span>
+        <h4>Con el próximo sueldo</h4>
+        <div class="pago-divider"></div>
+        <div class="pago-row"><span class="pago-row-label">Modalidad</span><span class="pago-row-val">Efectivo</span></div>
+        <div class="pago-row"><span class="pago-row-label">Gestión</span><span class="pago-row-val">RRHH</span></div>
+        <div class="pago-row"><span class="pago-row-label">Doc. requerida</span><span class="pago-row-val">Recibo de conformidad</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="s" id="faq" style="background:var(--ink-2)">
+  <div class="s-inner">
+    <span class="s-label">Preguntas frecuentes</span>
+    <h2 class="s-h2 reveal">Todo lo que necesitás saber.</h2>
+    <p class="s-sub reveal">Bases y condiciones del Programa de Embajadores del Grupo Randazzo.</p>
+
+    <div class="faq-layout">
+      <nav class="faq-sidebar">
+        <div class="faq-sidebar-title">Secciones</div>
+        <div class="faq-sidebar-links">
+          <a href="#fq-programa" class="faq-sidebar-link">El Programa</a>
+          <a href="#fq-participar" class="faq-sidebar-link">Quiénes participan</a>
+          <a href="#fq-validez" class="faq-sidebar-link">Validez de referencias</a>
+          <a href="#fq-pago" class="faq-sidebar-link">Cuándo y cómo cobro</a>
+          <a href="#fq-casos" class="faq-sidebar-link">Casos especiales</a>
+          <a href="#fq-exclusion" class="faq-sidebar-link">Exclusiones</a>
+        </div>
+      </nav>
+
+      <div class="faq-groups">
+
+        <div id="fq-programa">
+          <div class="faq-group-title">El Programa</div>
+          <div class="faq-item">
+            <button class="faq-btn" aria-expanded="false">
+              <span class="faq-btn-text">¿Qué es el Programa de Embajadores?</span>
+              <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            </button>
+            <div class="faq-body"><div class="faq-body-inner"><p>Es un programa organizado por las empresas del Grupo Randazzo (KIARA AUTOMOTORA S.A., PEARA S.A., AUTOS CIARA S.A. y MOVILIS RENT A CAR) mediante el cual quienes se registren como Embajadores pueden recomendar a terceros la compra de vehículos y, cuando esa recomendación deriva en una venta efectiva, reciben un beneficio económico de <strong>$500.000 brutos</strong>.</p></div></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-btn" aria-expanded="false">
+              <span class="faq-btn-text">¿Cuál es la vigencia del Programa?</span>
+              <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            </button>
+            <div class="faq-body"><div class="faq-body-inner"><p>El Programa tiene una vigencia inicial de tres (3) meses desde su publicación. El Grupo podrá extenderlo, suspenderlo o finalizarlo anticipadamente con comunicación previa. La finalización no afecta los beneficios ya devengados.</p></div></div>
+          </div>
+        </div>
+
+        <div id="fq-participar">
+          <div class="faq-group-title">Quiénes pueden participar</div>
+          <div class="faq-item">
+            <button class="faq-btn" aria-expanded="false">
+              <span class="faq-btn-text">¿Quiénes pueden ser Embajadores?</span>
+              <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            </button>
+            <div class="faq-body"><div class="faq-body-inner"><p>Puede participar cualquier persona física mayor de 18 años con capacidad para contratar, incluyendo personas externas al Grupo y empleados del Grupo que no se desempeñen en el área comercial de ventas.</p><p>Los externos se registran por el formulario web. Los empleados, por un canal interno gestionado por Recursos Humanos.</p></div></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-btn" aria-expanded="false">
+              <span class="faq-btn-text">¿Quiénes NO pueden participar?</span>
+              <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            </button>
+            <div class="faq-body"><div class="faq-body-inner"><p>No pueden participar como Embajadores: el personal del área comercial de ventas del Grupo, quienes hayan proporcionado datos falsos, ni quienes hayan sido excluidos por incumplimiento previo.</p><p>No puede ser Referido: el propio Embajador (auto-referencias inválidas), ni quien sea cliente activo del Grupo con negociación vigente al momento de la referencia, salvo que hayan transcurrido más de 12 meses desde el último contacto.</p></div></div>
+          </div>
+        </div>
+
+        <div id="fq-validez">
+          <div class="faq-group-title">Validez de las referencias</div>
+          <div class="faq-item">
+            <button class="faq-btn" aria-expanded="false">
+              <span class="faq-btn-text">¿Cuándo se considera válida una referencia?</span>
+              <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            </button>
+            <div class="faq-body"><div class="faq-body-inner"><p>Una referencia es válida cuando fue registrada <strong>antes</strong> del primer contacto comercial del Referido con el Grupo, y el enlace del Embajador fue utilizado en ese primer ingreso.</p><p>Respecto a contactos previos:<br>— Menos de 90 días: no válida.<br>— Entre 90 días y 12 meses: revisión manual.<br>— Más de 12 meses: puede considerarse válida.</p></div></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-btn" aria-expanded="false">
+              <span class="faq-btn-text">¿Qué operaciones generan el beneficio?</span>
+              <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            </button>
+            <div class="faq-body"><div class="faq-body-inner"><p>Generan el beneficio las compras de vehículos 0KM, usados o suscripciones a Planes de Ahorro, siempre que se haya producido la entrega efectiva del vehículo o la suscripción al plan.</p><p>No generan beneficio: consultas, presupuestos, test drives, reservas, señas, solicitudes de crédito ni operaciones que no se perfeccionen.</p></div></div>
+          </div>
+        </div>
+
+        <div id="fq-pago">
+          <div class="faq-group-title">Cuándo y cómo cobro</div>
+          <div class="faq-item">
+            <button class="faq-btn" aria-expanded="false">
+              <span class="faq-btn-text">Si soy externo — consumidor final, ¿cómo cobro?</span>
+              <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            </button>
+            <div class="faq-body"><div class="faq-body-inner"><p>El pago se realiza mediante <strong>transferencia bancaria al CBU</strong> que registraste en el formulario de inscripción, dentro de los <strong>7 días hábiles</strong> desde la entrega del vehículo.</p><div class="faq-note"><span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span>No se aceptan billeteras virtuales (CVU). El beneficio se acredita únicamente en cuenta bancaria (CBU).</span></div></div></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-btn" aria-expanded="false">
+              <span class="faq-btn-text">Si soy Monotributista o Responsable Inscripto, ¿cómo cobro?</span>
+              <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            </button>
+            <div class="faq-body"><div class="faq-body-inner"><p>Debés emitir la factura correspondiente a nombre de la Empresa Participante: <strong>Factura C</strong> si sos Monotributista, <strong>Factura B</strong> con IVA discriminado si sos Responsable Inscripto.</p><p>El pago se realiza dentro de los <strong>7 días hábiles</strong> desde la entrega del vehículo o desde la recepción de la factura válida, lo que ocurra último. El Grupo practica las retenciones impositivas que correspondan e informa el neto antes de procesar el pago.</p></div></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-btn" aria-expanded="false">
+              <span class="faq-btn-text">Si soy empleado del Grupo, ¿cómo cobro?</span>
+              <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            </button>
+            <div class="faq-body"><div class="faq-body-inner"><p>El beneficio es gestionado por el área de Recursos Humanos. Una vez producida la entrega del vehículo o la suscripción al Plan de Ahorro, el pago se realiza <strong>con el próximo sueldo correspondiente</strong>, en efectivo. El empleado firma un recibo de conformidad interno como respaldo.</p></div></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-btn" aria-expanded="false">
+              <span class="faq-btn-text">¿Qué documentación necesito tener lista?</span>
+              <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            </button>
+            <div class="faq-body"><div class="faq-body-inner">
+              <table class="faq-table">
+                <tr><th>Tipo</th><th>Documentación</th></tr>
+                <tr><td>Consumidor final</td><td>CBU registrado en el formulario</td></tr>
+                <tr><td>Monotributista</td><td>Factura C + CBU</td></tr>
+                <tr><td>Resp. Inscripto</td><td>Factura B con IVA + CBU</td></tr>
+                <tr><td>Empleado</td><td>Ninguna — gestiona RRHH</td></tr>
+              </table>
+            </div></div>
+          </div>
+        </div>
+
+        <div id="fq-casos">
+          <div class="faq-group-title">Casos especiales</div>
+          <div class="faq-item">
+            <button class="faq-btn" aria-expanded="false">
+              <span class="faq-btn-text">¿Qué pasa si el auto queda a nombre del cónyuge?</span>
+              <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            </button>
+            <div class="faq-body"><div class="faq-body-inner"><p>Cuando el crédito queda a nombre de una persona distinta al Referido, el vendedor debe vincular manualmente el código del Embajador a la preventa antes del cierre. Sin esa vinculación, el beneficio no puede procesarse.</p><div class="faq-note"><span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span>Si sabés que la operación puede quedar a nombre de un familiar o cónyuge, avisá al área comercial o a Finanzas en el momento de la operación.</span></div></div></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-btn" aria-expanded="false">
+              <span class="faq-btn-text">¿El Plan de Ahorro también genera beneficio?</span>
+              <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            </button>
+            <div class="faq-body"><div class="faq-body-inner"><p>Sí. Cuando el Referido suscribe un Plan de Ahorro, el beneficio se considera devengado una vez que la suscripción fue perfeccionada. El estado en el sistema aparece como <strong>SUSCRIPCION</strong>.</p></div></div>
+          </div>
+        </div>
+
+        <div id="fq-exclusion">
+          <div class="faq-group-title">Exclusiones</div>
+          <div class="faq-item">
+            <button class="faq-btn" aria-expanded="false">
+              <span class="faq-btn-text">¿Qué prácticas están prohibidas?</span>
+              <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            </button>
+            <div class="faq-body"><div class="faq-body-inner"><p>Auto-referencias · Datos falsos · Referencias posteriores al primer contacto · Manipulación del sistema · Cobrar dinero a los Referidos en nombre del Grupo · Usar marcas del Grupo sin autorización · Cualquier conducta fraudulenta.</p></div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-final" id="registrarme">
+  <h2 class="cta-final-h">Empezá hoy.<br>Tu primer referido espera.</h2>
+  <p class="cta-final-sub">Registrate en minutos y empezá a ganar $500.000 por cada amigo que compre un auto.</p>
+  <a href="#" class="btn-dark">Registrarme como Embajador</a>
+  <div class="cta-contact">
+    ¿Preguntas? Escribinos a <a href="mailto:embajadores@gruporandazzo.com.ar">embajadores@gruporandazzo.com.ar</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-col-title">Empresas participantes</div>
+      <ul class="footer-links">
+        <li><a href="#">Kiara Automotora S.A.</a></li>
+        <li><a href="#">Peara S.A.</a></li>
+        <li><a href="#">Autos Ciara S.A.</a></li>
+        <li><a href="#">Movilis Rent a Car</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Programa</div>
+      <ul class="footer-links">
+        <li><a href="#como-funciona">Cómo funciona</a></li>
+        <li><a href="#estados">Estados del referido</a></li>
+        <li><a href="#pagos">Modalidad de pago</a></li>
+        <li><a href="#faq">Preguntas frecuentes</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Contacto y legales</div>
+      <ul class="footer-links">
+        <li><a href="mailto:embajadores@gruporandazzo.com.ar">embajadores@gruporandazzo.com.ar</a></li>
+        <li><a href="mailto:legales@gruporandazzo.com.ar">Datos personales (Ley 25.326)</a></li>
+        <li><a href="#">Términos y condiciones</a></li>
+        <li><a href="#">Política de privacidad</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom" style="max-width:1140px;margin:0 auto">
+    <div class="footer-logo">
+      <svg width="22" height="22" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="4" fill="rgba(180,208,0,0.12)"/><path d="M6 8h11l-9 12h12" stroke="#B4D000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="footer-logo-name">Grupo Randazzo</span>
+    </div>
+    <div style="font-size:12px;color:var(--muted)">
+      Av. 44 N°1463, La Plata · © 2026 Grupo Randazzo · Vigente hasta el 14/11/2026
+    </div>
+  </div>
+</footer>
+
+</div><!-- /#main -->
+
+<script>
+/* ══════════════════════════
+   LOADER
+══════════════════════════ */
+const word = 'EMBAJADORES';
+const loaderWord = document.getElementById('loaderWord');
+
+word.split('').forEach((ch, i) => {
+  const span = document.createElement('span');
+  span.className = 'loader-char' + (i === 0 ? ' lime' : '');
+  span.textContent = ch;
+  span.style.animationDelay = (i * 0.07 + 0.1) + 's';
+  loaderWord.appendChild(span);
+});
+
+const totalDelay = (word.length * 70 + 100) + 900;
+setTimeout(() => {
+  document.getElementById('loader').classList.add('hide');
+  const main = document.getElementById('main');
+  main.classList.add('visible');
+  setTimeout(() => {
+    document.getElementById('loader').style.display = 'none';
+    initScrollReveal();
+  }, 700);
+}, totalDelay);
+
+/* ══════════════════════════
+   SCROLL REVEAL
+══════════════════════════ */
+function initScrollReveal() {
+  const els = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  els.forEach(el => obs.observe(el));
+}
+
+/* ══════════════════════════
+   FAQ ACCORDION
+══════════════════════════ */
+document.querySelectorAll('.faq-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    // close all
+    document.querySelectorAll('.faq-btn').forEach(b => {
+      b.setAttribute('aria-expanded', 'false');
+      b.nextElementSibling.style.maxHeight = null;
+    });
+    // open clicked
+    if (!expanded) {
+      btn.setAttribute('aria-expanded', 'true');
+      const body = btn.nextElementSibling;
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  });
+});
+
+/* ══════════════════════════
+   SMOOTH SCROLL
+══════════════════════════ */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+</script>
+
+</body>
+</html>
