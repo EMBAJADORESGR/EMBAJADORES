@@ -282,6 +282,37 @@ header{
 .bm-emp{background:rgba(96,165,250,.1);color:#60A5FA;}
 .bm-cli{background:var(--l10);color:var(--lime);}
 
+.pol-pending{
+  margin-top:12px;
+  padding:16px 18px;
+  background:rgba(245,158,11,.05);
+  border:1px solid rgba(245,158,11,.2);
+  border-left:3px solid var(--amber);
+  border-radius:0 4px 4px 0;
+  opacity:.7;
+  transform:scale(.99);
+  transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .4s ease,box-shadow .4s ease,background .3s;
+  cursor:default;
+}
+.pol-pending.in-view{
+  opacity:1;
+  transform:scale(1.015);
+  background:rgba(245,158,11,.09);
+  border-color:rgba(245,158,11,.4);
+  box-shadow:0 6px 32px rgba(0,0,0,.35),0 0 0 1px rgba(245,158,11,.12);
+}
+.pol-pending:hover{
+  transform:scale(1.02);
+  background:rgba(245,158,11,.11);
+  box-shadow:0 8px 40px rgba(0,0,0,.4),0 0 0 1px rgba(245,158,11,.18);
+}
+.pol-pending-label{
+  font-size:9px;font-weight:700;letter-spacing:.14em;
+  color:var(--amber);margin-bottom:7px;
+}
+.pol-pending-text{font-size:13px;color:rgba(252,211,77,.8);line-height:1.6;}
+.pol-pending-text strong{color:#FCD34D;}
+
 /* RESPONSIVE */
 @media(max-width:900px){
   header{padding:0 20px;}
@@ -312,18 +343,7 @@ header{
 <!-- LOADER -->
 <div id="loader">
   <div class="ld-logo">
-    <!-- LOGO MARK SVG -->
-    <div class="gr-mark">
-      <svg width="52" height="46" viewBox="0 0 52 46" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2 4L22 4L8 20L26 20" stroke="#B4D000" stroke-width="4" stroke-linecap="square" stroke-linejoin="miter"/>
-        <path d="M26 26L46 26L32 42L50 42" stroke="#B4D000" stroke-width="4" stroke-linecap="square" stroke-linejoin="miter"/>
-        <path d="M22 4L46 26" stroke="#B4D000" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
-      </svg>
-    </div>
-    <div class="ld-logo-name">
-      <div class="ld-brand">GRUPO RANDAZZO</div>
-      <div class="ld-tagline">VIV&Iacute; LA EXPERIENCIA</div>
-    </div>
+    <img src="/logo.png" alt="Grupo Randazzo" style="height:52px;width:auto;object-fit:contain;">
   </div>
   <div>
     <div class="ld-word" id="lWord"></div>
@@ -336,17 +356,7 @@ header{
 <!-- HEADER -->
 <header>
   <a href="#" class="h-logo">
-    <div class="gr-mark">
-      <svg width="32" height="28" viewBox="0 0 52 46" fill="none">
-        <path d="M2 4L22 4L8 20L26 20" stroke="#B4D000" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="miter"/>
-        <path d="M26 26L46 26L32 42L50 42" stroke="#B4D000" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="miter"/>
-        <path d="M22 4L46 26" stroke="#B4D000" stroke-width="1.8" stroke-linecap="round" opacity="0.25"/>
-      </svg>
-    </div>
-    <div class="h-logo-name">
-      <div class="h-brand">GRUPO RANDAZZO</div>
-      <div class="h-tagline">VIV&Iacute; LA EXPERIENCIA</div>
-    </div>
+    <img src="/logo.png" alt="Grupo Randazzo" style="height:34px;width:auto;object-fit:contain;">
   </a>
   <div class="h-tabs">
     <button class="h-tab active" onclick="showTab('programa')">PROGRAMA</button>
@@ -473,41 +483,6 @@ header{
     <div class="overlay-header"><span class="overlay-title">POL&Iacute;TICAS INTERNAS &mdash; BORRADOR PARA REVISI&Oacute;N GERENCIAL</span><button class="overlay-close" onclick="closeOverlay('pol')"><svg viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="overlay-body">
 
-      <!-- INTRO -->
-      <p class="decisions-intro">Pol&iacute;tica integrada Finanzas + Recursos Humanos. <strong>Los dos puntos a continuaci&oacute;n requieren decisi&oacute;n de Gerencia</strong> antes de publicar la versi&oacute;n definitiva. Pas&aacute; el cursor sobre cada uno.</p>
-
-      <!-- DECISIONS — ZOOM ON HOVER -->
-      <div class="dec-list" id="decList">
-        <div class="dec-item" data-dec="1">
-          <div class="dec-header">
-            <div class="dec-number">01</div>
-            <div class="dec-meta">
-              <div class="dec-label">DECISI&Oacute;N PENDIENTE</div>
-              <div class="dec-q">&iquest;C&oacute;mo identificar al &aacute;rea comercial exclu&iacute;da del Programa?</div>
-              <div class="dec-ctx">RRHH nombr&oacute; los roles Setter, Closer y Fisher. &iquest;Los listamos expl&iacute;citamente o usamos una redacci&oacute;n general que cubra cambios futuros de nomenclatura?</div>
-            </div>
-          </div>
-          <div class="dec-opts">
-            <label class="d-opt"><input type="radio" name="p1" value="a"><div class="d-opt-body"><div class="d-opt-title">Roles espec&iacute;ficos</div><div class="d-opt-desc">"Quedan exclu&iacute;dos los empleados en los roles de Setter, Closer y Fisher."</div></div></label>
-            <label class="d-opt"><input type="radio" name="p1" value="b"><div class="d-opt-body"><div class="d-opt-title">Redacci&oacute;n general con roles de referencia</div><div class="d-opt-desc">"...&aacute;rea comercial de ventas (Setter, Closer, Fisher y cualquier otro de captaci&oacute;n/cierre)."</div><span class="d-opt-rec">Recomendado &mdash; cubre cambios futuros</span></div></label>
-          </div>
-        </div>
-        <div class="dec-item" data-dec="2">
-          <div class="dec-header">
-            <div class="dec-number">02</div>
-            <div class="dec-meta">
-              <div class="dec-label">DECISI&Oacute;N PENDIENTE</div>
-              <div class="dec-q">&iquest;Qu&eacute; aplica para referidos con contacto entre 90 d&iacute;as y 12 meses?</div>
-              <div class="dec-ctx">RRHH define el corte en 90 d&iacute;as. Los T&C originales prev&eacute;n un rango intermedio con revisi&oacute;n manual. Definir si usamos una regla binaria simple o una zona gris operativa.</div>
-            </div>
-          </div>
-          <div class="dec-opts">
-            <label class="d-opt"><input type="radio" name="p2" value="a"><div class="d-opt-body"><div class="d-opt-title">Regla binaria</div><div class="d-opt-desc">Menos de 90 d&iacute;as: inv&aacute;lido. M&aacute;s de 90 d&iacute;as: v&aacute;lido. Sin zona gris, f&aacute;cil de operar.</div><span class="d-opt-rec">Recomendado</span></div></label>
-            <label class="d-opt"><input type="radio" name="p2" value="b"><div class="d-opt-body"><div class="d-opt-title">Zona intermedia con revisi&oacute;n manual</div><div class="d-opt-desc">90d &mdash; 12m: revisi&oacute;n Finanzas. M&aacute;s de 12m: v&aacute;lido autom&aacute;tico.</div></div></label>
-          </div>
-        </div>
-      </div>
-
       <!-- POLÍTICA COMPLETA -->
       <div class="pol-section-h">EL PROGRAMA</div>
       <div class="pol-qa-list">
@@ -516,14 +491,32 @@ header{
       </div>
       <div class="pol-section-h">ALCANCE</div>
       <div class="pol-qa-list">
-        <div class="pol-qa"><div class="pol-q">&iquest;Qui&eacute;nes participan?</div><div class="pol-a"><p><strong>Externos:</strong> &ge;18 a&ntilde;os. Alta por formulario web; validaci&oacute;n Contable en hasta 3 horas h&aacute;biles.<br><strong>Empleados:</strong> todos excepto &aacute;rea comercial de ventas <em>[Decisi&oacute;n 1 pendiente]</em>. Link en correo corporativo.</p></div></div>
+        <div class="pol-qa">
+          <div class="pol-q">&iquest;Qui&eacute;nes pueden participar como Embajadores?</div>
+          <div class="pol-a">
+            <p><strong>Personas externas al Grupo:</strong> cualquier persona f&iacute;sica mayor de 18 a&ntilde;os. Se registran en el formulario habilitado en el sitio oficial. Al completar el formulario reciben su link &uacute;nico de forma inmediata. El &aacute;rea Contable verifica los datos bancarios de manera asincr&oacute;nica.</p>
+            <p><strong>Empleados del Grupo:</strong> todos los empleados pueden participar, con excepci&oacute;n del &aacute;rea comercial de ventas. Reciben su link personalizado en su correo corporativo.</p>
+            <div class="pol-pending" data-pending="1">
+              <div class="pol-pending-label">PENDIENTE DE DEFINICI&Oacute;N</div>
+              <div class="pol-pending-text"><strong>Exclusi&oacute;n de roles comerciales:</strong> definir si nombrar expl&iacute;citamente los roles Setter, Closer y Fisher, o usar una redacci&oacute;n general como &ldquo;personal cuya funci&oacute;n principal sea la captaci&oacute;n o cierre de ventas de veh&iacute;culos&rdquo;.</div>
+            </div>
+          </div>
+        </div>
         <div class="pol-qa"><div class="pol-q">&iquest;Qui&eacute;nes quedan exclu&iacute;dos?</div><div class="pol-a"><p>&Aacute;rea comercial de ventas &middot; Datos falsos &middot; Exclu&iacute;dos previamente &middot; Auto-referencias inv&aacute;lidas.</p></div></div>
       </div>
       <div class="pol-section-h">REGLA DE 90 D&Iacute;AS</div>
       <div class="pol-qa-list">
         <div class="pol-qa"><div class="pol-q">Ventana previa</div><div class="pol-a"><p>Contacto en los 90 d&iacute;as anteriores a la carga &rarr; referencia inv&aacute;lida. Regla anti-bypass: si el referido ya est&aacute; en gesti&oacute;n activa al momento de la carga, tampoco es v&aacute;lida.</p></div></div>
         <div class="pol-qa"><div class="pol-q">Ventana activa</div><div class="pol-a"><p>Una vez cargado, la operaci&oacute;n tiene <strong>90 d&iacute;as</strong> para concretarse. Durante ese per&iacute;odo no puede ser cargado por otro Embajador.</p></div></div>
-        <div class="pol-qa"><div class="pol-q">Rango 90d &mdash; 12m</div><div class="pol-a"><div class="pol-note amber">[Decisi&oacute;n 2 pendiente] Definir regla binaria o zona intermedia con revisi&oacute;n manual.</div></div></div>
+        <div class="pol-qa">
+          <div class="pol-q">Rango 90 d&iacute;as &mdash; 12 meses</div>
+          <div class="pol-a">
+            <div class="pol-pending" data-pending="2">
+              <div class="pol-pending-label">PENDIENTE DE DEFINICI&Oacute;N</div>
+              <div class="pol-pending-text"><strong>Rango 90 d&iacute;as a 12 meses:</strong> definir si aplica regla binaria (v&aacute;lido / inv&aacute;lido en base al corte de 90 d&iacute;as) o revisi&oacute;n manual por parte de Finanzas para contactos con antecedente entre 90 d&iacute;as y 12 meses previos a la carga.</div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="pol-section-h">BENEFICIO Y DEVENGAMIENTO</div>
       <div class="pol-qa-list">
@@ -540,9 +533,13 @@ header{
       <div class="pol-qa-list">
         <div class="pol-qa"><div class="pol-q">Venta a nombre del c&oacute;nyuge</div><div class="pol-a"><p>El vendedor debe vincular manualmente el c&oacute;digo del Embajador a la preventa antes del cierre. Sin esa vinculaci&oacute;n, el beneficio no puede procesarse.</p></div></div>
         <div class="pol-qa"><div class="pol-q">Plan de Ahorro</div><div class="pol-a"><p>Genera el beneficio al perfeccionarse la suscripci&oacute;n (estado SUSCRIPCION). Mismos plazos de pago que compra directa.</p></div></div>
-        <div class="pol-qa"><div class="pol-q">Alta: link inmediato</div><div class="pol-a"><p>Al completar el formulario, el Embajador recibe su link de forma <strong>inmediata</strong> y puede comenzar a referir desde ese momento, incluso en fin de semana. El &aacute;rea Contable verifica los datos bancarios de forma asincr&oacute;nica, sin bloquear la operatoria.</p></div></div>
-        <div class="pol-qa"><div class="pol-q">Correcci&oacute;n de datos bancarios</div><div class="pol-a"><p>Si el CBU declarado no coincide con el titular de la cuenta, Contable env&iacute;a un mensaje al Embajador indicando el motivo y solicit&aacute;ndole que ingrese los datos correctos. Los referidos ya cargados <strong>permanecen v&aacute;lidos</strong>. El pago del beneficio queda en pausa hasta que el CBU sea confirmado.</p></div></div>
-        <div class="pol-qa"><div class="pol-q">Formulario solo para externos</div><div class="pol-a"><p>El formulario de alta es <strong>exclusivamente para personas externas al Grupo</strong>. Los empleados participan a trav&eacute;s del canal interno gestionado por Recursos Humanos.</p></div></div>
+        <div class="pol-qa">
+          <div class="pol-q">Alta y verificaci&oacute;n de datos bancarios</div>
+          <div class="pol-a">
+            <p>Al completar el formulario de inscripci&oacute;n, el Embajador recibe su link &uacute;nico de forma <strong>inmediata</strong> y puede comenzar a referir sin demoras, incluso durante fines de semana o fuera del horario h&aacute;bil. El &aacute;rea Contable realiza la verificaci&oacute;n de los datos bancarios de manera asincr&oacute;nica, sin interrumpir la operatoria del Embajador.</p>
+            <p>En caso de que el CBU declarado no corresponda al titular de la cuenta, Contable notifica al Embajador con el motivo del inconveniente y le solicita que corrija la informaci&oacute;n. Los referidos ya cargados <strong>permanecen v&aacute;lidos en todos los casos</strong>. El pago del beneficio queda en pausa hasta tanto el CBU correcto sea confirmado por el &aacute;rea.</p>
+          </div>
+        </div>
       </div>
       <div class="pol-section-h">EXCLUSIONES</div>
       <div class="pol-qa-list">
@@ -598,7 +595,7 @@ function showTab(id){
 function openOverlay(id){
   document.getElementById('ov-'+id).classList.add('open');
   document.body.style.overflow='hidden';
-  if(id==='pol') initDecisionReveal();
+  if(id==='pol') setTimeout(initPendingReveal, 200);
 }
 function closeOverlay(id){document.getElementById('ov-'+id).classList.remove('open');document.body.style.overflow='';}
 function closeOnBackdrop(e,id){if(e.target===document.getElementById('ov-'+id))closeOverlay(id);}
@@ -613,15 +610,26 @@ function initDecisionReveal(){
   items.forEach((item,i)=>{item.style.transitionDelay=(i*.12)+'s';obs.observe(item);});
 }
 
-/* DECISIONS RADIO VISUAL */
-document.querySelectorAll('.d-opt input').forEach(inp=>{
-  inp.addEventListener('change',()=>{
-    document.querySelectorAll(`.d-opt input[name="${inp.name}"]`).forEach(i=>{i.closest('.d-opt').style.borderColor='';i.closest('.d-opt').style.background='';});
-    inp.closest('.d-opt').style.borderColor='rgba(180,208,0,.5)';inp.closest('.d-opt').style.background='rgba(180,208,0,.06)';
-    const a=document.querySelector('input[name="p1"]:checked'),b=document.querySelector('input[name="p2"]:checked');
-    if(a&&b){document.querySelectorAll('.dec-item').forEach(c=>{c.style.background='rgba(74,222,128,.03)';c.querySelector('.dec-number').style.color='rgba(74,222,128,.3)';c.querySelector('.dec-label').style.color='#4ADE80';});document.querySelector('.decisions-intro strong').style.color='#4ADE80';}
-  });
-});
+/* PENDING ITEMS SCROLL REVEAL */
+function initPendingReveal(){
+  const items=document.querySelectorAll('.pol-pending');
+  if(!items.length) return;
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.classList.add('in-view');
+        // after peak, settle slightly
+        setTimeout(()=>{
+          if(e.target.classList.contains('in-view')){
+            e.target.style.transform='scale(1.008)';
+          }
+        },600);
+        obs.unobserve(e.target);
+      }
+    });
+  },{threshold:.3,rootMargin:'0px 0px -5% 0px'});
+  items.forEach((item,i)=>{item.style.transitionDelay=(i*.08)+'s';obs.observe(item);});
+}
 
 /* FAQ */
 document.querySelectorAll('.faq-q').forEach(btn=>{
