@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gestión Embajadores — Grupo Randazzo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=Barlow+Condensed:wght@600;700&family=Poppins:wght@800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
@@ -42,8 +42,8 @@ a{color:inherit;text-decoration:none;}
 .ld-brand{font-family:var(--ff-brand);font-size:clamp(24px,4vw,40px);font-weight:700;letter-spacing:.02em;color:var(--cream);line-height:1;}
 .ld-tagline{font-size:clamp(9px,1.2vw,11px);letter-spacing:.22em;font-weight:400;color:var(--muted);}
 .ld-word{display:flex;gap:.04em;margin-top:8px;}
-.ld-ch{font-family:var(--ff);font-size:clamp(36px,6vw,72px);font-weight:300;letter-spacing:.1em;color:var(--muted);opacity:0;transform:translateY(-30px);filter:blur(4px);animation:chIn .4s cubic-bezier(.22,1,.36,1) forwards;}
-.ld-ch.hi{color:var(--lime);font-weight:600;}
+.ld-ch{font-family:"Poppins","DM Sans",sans-serif;font-size:clamp(36px,6vw,72px);font-weight:800;letter-spacing:.06em;color:rgba(236,239,224,.55);opacity:0;transform:translateY(-30px);filter:blur(4px);animation:chIn .4s cubic-bezier(.22,1,.36,1) forwards;}
+.ld-ch.hi{color:var(--lime);}
 @keyframes logoIn{to{opacity:1;}}
 @keyframes chIn{to{opacity:1;transform:none;filter:blur(0);}}
 .ld-line{width:56px;height:1px;background:var(--lime);transform:scaleX(0);transform-origin:left;animation:lscale .6s ease forwards;margin-top:4px;}
@@ -343,7 +343,7 @@ header{
 <!-- LOADER -->
 <div id="loader">
   <div class="ld-logo">
-    <img src="/logo.png" alt="Grupo Randazzo" style="height:52px;width:auto;object-fit:contain;">
+    <img src="logo.png" alt="Grupo Randazzo" style="height:52px;width:auto;object-fit:contain;">
   </div>
   <div>
     <div class="ld-word" id="lWord"></div>
@@ -356,7 +356,7 @@ header{
 <!-- HEADER -->
 <header>
   <a href="#" class="h-logo">
-    <img src="/logo.png" alt="Grupo Randazzo" style="height:34px;width:auto;object-fit:contain;">
+    <img src="logo.png" alt="Grupo Randazzo" style="height:34px;width:auto;object-fit:contain;">
   </a>
   <div class="h-tabs">
     <button class="h-tab active" onclick="showTab('programa')">PROGRAMA</button>
