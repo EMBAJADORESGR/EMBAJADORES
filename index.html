@@ -5,107 +5,95 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gestión Embajadores — Grupo Randazzo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
   let _sb;
-  const _sbReady = fetch('/api/config')
-    .then(r => r.json())
-    .then(cfg => { _sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey); })
-    .catch(() => {});
+  const _sbReady = fetch('/api/config').then(r=>r.json()).then(cfg=>{_sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);}).catch(()=>{});
 </script>
 <style>
-:root {
-  --ink:  #060705; --ink1: #0A0C08; --ink2: #0F110C; --ink3: #141610;
-  --lime: #B4D000; --l10: rgba(180,208,0,.10); --l20: rgba(180,208,0,.20); --l30: rgba(180,208,0,.30);
-  --cream:#ECEFE0; --muted:rgba(236,239,224,.42); --faint:rgba(236,239,224,.05); --border:rgba(236,239,224,.08);
-  --amber:#F59E0B; --a-bg:rgba(245,158,11,.08); --a-bd:rgba(245,158,11,.28);
-  --green:#4ADE80; --g-bg:rgba(74,222,128,.07); --g-bd:rgba(74,222,128,.2);
-  --red-bg:rgba(239,68,68,.08); --red-bd:rgba(239,68,68,.2); --red-tx:#FCA5A5;
-  --ff-d:"Cormorant Garamond",serif; --ff-u:"Space Grotesk",sans-serif;
+:root{
+  --ink:#060705;--ink1:#0A0C08;--ink2:#0F110C;
+  --lime:#B4D000;--l10:rgba(180,208,0,.10);--l20:rgba(180,208,0,.20);
+  --cream:#ECEFE0;--muted:rgba(236,239,224,.42);--faint:rgba(236,239,224,.05);--border:rgba(236,239,224,.08);
+  --amber:#F59E0B;--a-bg:rgba(245,158,11,.08);--a-bd:rgba(245,158,11,.28);
+  --green:#4ADE80;--g-bg:rgba(74,222,128,.07);--g-bd:rgba(74,222,128,.2);
+  --ff:"DM Sans",system-ui,sans-serif;
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{font-size:16px;scroll-behavior:smooth;}
-body{font-family:var(--ff-u);background:var(--ink);color:var(--cream);-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh;}
+body{font-family:var(--ff);background:var(--ink);color:var(--cream);-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh;}
 a{color:inherit;text-decoration:none;}
 
-/* ══ AUTH OVERLAY ══ */
+/* AUTH */
 #auth-check{position:fixed;inset:0;background:var(--ink);z-index:10000;display:flex;align-items:center;justify-content:center;}
 #auth-check.off{display:none;}
 .ac-spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--lime);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
-/* ══ LOADER ══ */
-#loader{position:fixed;inset:0;background:var(--ink);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;perspective:900px;}
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--ink);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;perspective:900px;}
 #loader.on{display:flex;}
-.l-word{display:flex;gap:.02em;}
-.l-ch{font-family:var(--ff-d);font-size:clamp(52px,9vw,100px);font-weight:300;letter-spacing:.04em;color:var(--cream);opacity:0;transform:translateY(-60px) rotateX(-80deg);filter:blur(6px);transform-origin:50% 0;animation:chIn .5s cubic-bezier(.22,1,.36,1) forwards;}
-.l-ch.hi{color:var(--lime);font-style:italic;}
+.l-word{display:flex;gap:.04em;}
+.l-ch{font-family:var(--ff);font-size:clamp(44px,8vw,96px);font-weight:300;letter-spacing:.06em;color:var(--cream);opacity:0;transform:translateY(-60px);filter:blur(6px);animation:chIn .45s cubic-bezier(.22,1,.36,1) forwards;}
+.l-ch.hi{color:var(--lime);font-weight:600;}
 @keyframes chIn{to{opacity:1;transform:none;filter:blur(0);}}
-.l-sub{font-size:11px;letter-spacing:.22em;color:var(--muted);opacity:0;animation:fslide .4s ease forwards;}
-.l-line{width:40px;height:1px;background:var(--lime);transform:scaleX(0);transform-origin:left;animation:lscale .6s ease forwards;}
+.l-sub{font-size:11px;letter-spacing:.2em;font-weight:500;color:var(--muted);opacity:0;animation:fslide .4s ease forwards;}
+.l-line{width:40px;height:2px;background:var(--lime);transform:scaleX(0);transform-origin:left;animation:lscale .6s ease forwards;border-radius:1px;}
 @keyframes fslide{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
 @keyframes lscale{to{transform:scaleX(1);}}
 #loader.out{animation:lout .6s cubic-bezier(.76,0,.24,1) forwards;}
 @keyframes lout{0%{clip-path:inset(0 0 0 0);}100%{clip-path:inset(0 0 100% 0);}}
-#page{opacity:0;transition:opacity .5s ease;}
+#page{opacity:0;transition:opacity .4s ease;}
 #page.vis{opacity:1;}
 
-/* ══ HEADER / NAV ══ */
+/* HEADER */
 header{
   position:sticky;top:0;z-index:200;
-  background:rgba(6,7,5,.92);backdrop-filter:blur(16px);
+  background:rgba(6,7,5,.92);backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 40px;height:58px;
+  padding:0 40px;height:56px;
 }
 .h-logo{display:flex;align-items:center;gap:10px;}
 .h-mark{width:28px;height:28px;background:var(--l10);border:1px solid var(--l20);border-radius:4px;display:flex;align-items:center;justify-content:center;}
 .h-mark svg{width:15px;height:15px;}
-.h-name{font-size:13px;font-weight:600;letter-spacing:.02em;}
+.h-name{font-size:13px;font-weight:600;letter-spacing:.01em;}
 .h-tabs{display:flex;gap:2px;background:var(--faint);border:1px solid var(--border);border-radius:5px;padding:3px;}
-.h-tab{
-  font-size:12px;font-weight:600;letter-spacing:.06em;
-  padding:7px 22px;border-radius:3px;cursor:pointer;
-  color:var(--muted);background:none;border:none;
-  font-family:var(--ff-u);transition:color .2s,background .2s;
-}
+.h-tab{font-size:12px;font-weight:600;letter-spacing:.05em;padding:7px 22px;border-radius:3px;cursor:pointer;color:var(--muted);background:none;border:none;font-family:var(--ff);transition:color .2s,background .2s;}
 .h-tab:hover{color:var(--cream);}
 .h-tab.active{background:var(--lime);color:var(--ink);}
 .h-right{display:flex;align-items:center;gap:10px;}
 .h-user{font-size:11px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.btn-so{font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);padding:6px 14px;border-radius:3px;cursor:pointer;font-family:var(--ff-u);transition:color .2s;}
+.btn-so{font-size:11px;font-weight:500;color:var(--muted);background:none;border:1px solid var(--border);padding:6px 14px;border-radius:3px;cursor:pointer;font-family:var(--ff);transition:color .2s;}
 .btn-so:hover{color:var(--cream);}
 
-/* ══ SECTIONS ══ */
+/* SECTIONS */
 .tab-section{display:none;padding:48px 40px;max-width:1100px;margin:0 auto;}
 .tab-section.active{display:block;}
 
-/* ══ SHARED COMPONENTS ══ */
-.s-kicker{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--lime);margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+/* SHARED */
+.s-kicker{font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--lime);margin-bottom:10px;display:flex;align-items:center;gap:10px;}
 .s-kicker::after{content:'';flex:0 0 20px;height:1px;background:var(--lime);}
-.s-h{font-family:var(--ff-d);font-size:clamp(28px,3vw,44px);font-weight:300;line-height:1.1;margin-bottom:8px;}
-.s-h em{font-style:italic;color:var(--lime);}
+.s-h{font-size:clamp(26px,3vw,42px);font-weight:300;line-height:1.1;margin-bottom:8px;}
+.s-h strong{font-weight:700;}
+.s-h em{font-style:normal;color:var(--lime);font-weight:600;}
 .s-sub{font-size:14px;color:var(--muted);line-height:1.65;max-width:58ch;margin-bottom:40px;}
 .divider{height:1px;background:var(--border);margin:40px 0;}
 
-/* ══ PROGRAMA — STEPS ══ */
+/* STEPS */
 .steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);margin-bottom:40px;}
 .step-c{background:var(--ink1);padding:28px 22px;border-top:2px solid transparent;transition:border-color .2s;}
 .step-c.hi{border-top-color:var(--lime);}
-.step-n{font-size:11px;font-weight:700;color:var(--lime);letter-spacing:.06em;margin-bottom:12px;}
-.step-title{font-family:var(--ff-d);font-size:20px;font-weight:400;margin-bottom:8px;}
+.step-n{font-size:10px;font-weight:700;color:var(--lime);letter-spacing:.08em;margin-bottom:12px;}
+.step-title{font-size:18px;font-weight:600;margin-bottom:8px;}
 .step-desc{font-size:13px;color:var(--muted);line-height:1.6;}
 
-/* ══ PROGRAMA — STATES ══ */
+/* STATES */
 .states-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:40px;}
-.state-row{
-  display:grid;grid-template-columns:130px 1fr;gap:16px;
-  align-items:center;padding:12px 16px;
-  background:var(--faint);border:1px solid var(--border);border-radius:4px;
-}
-.state-row.pago{background:rgba(180,208,0,.05);border-color:var(--l20);}
+.state-row{display:grid;grid-template-columns:130px 1fr;gap:16px;align-items:center;padding:12px 16px;background:var(--faint);border:1px solid var(--border);border-radius:4px;}
+.state-row.pago{background:rgba(180,208,0,.04);border-color:var(--l20);}
 .s-badge{padding:4px 10px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.05em;width:fit-content;}
 .sb-ref{background:rgba(148,163,184,.12);color:#94A3B8;}
 .sb-asi{background:rgba(14,165,233,.12);color:#38BDF8;}
@@ -116,23 +104,27 @@ header{
 .sb-ent{background:rgba(180,208,0,.15);color:var(--lime);border:1px solid var(--l20);}
 .state-desc{font-size:13px;color:var(--muted);line-height:1.4;}
 
-/* ══ PROGRAMA — FAQ (BBVA style) ══ */
-.faq-section-title{
-  font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--lime);
-  padding-bottom:10px;border-bottom:1px solid rgba(180,208,0,.2);
-  margin:32px 0 16px;
+/* POLICY BUTTONS */
+.pol-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:48px;}
+.pol-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 24px;border-radius:4px;
+  font-size:13px;font-weight:600;letter-spacing:.03em;
+  cursor:pointer;font-family:var(--ff);
+  transition:opacity .2s,background .2s;border:none;
 }
+.pol-btn-tyc{background:var(--faint);border:1px solid var(--border);color:var(--cream);}
+.pol-btn-tyc:hover{border-color:rgba(236,239,224,.25);background:rgba(236,239,224,.08);}
+.pol-btn-pol{background:var(--lime);color:var(--ink);}
+.pol-btn-pol:hover{opacity:.85;}
+.pol-btn svg{width:14px;height:14px;flex-shrink:0;}
+
+/* FAQ */
+.faq-section-title{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--lime);padding-bottom:10px;border-bottom:1px solid rgba(180,208,0,.2);margin:32px 0 12px;}
 .faq-item{border-bottom:1px solid var(--border);}
-.faq-q{
-  width:100%;text-align:left;background:none;border:none;cursor:pointer;
-  padding:18px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;
-  font-family:var(--ff-u);
-}
+.faq-q{width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:16px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;font-family:var(--ff);}
 .faq-q-text{font-size:15px;font-weight:500;color:var(--cream);line-height:1.4;}
-.faq-icon{
-  width:22px;height:22px;border-radius:50%;border:1px solid var(--border);flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;transition:transform .3s,border-color .2s;
-}
+.faq-icon{width:22px;height:22px;border-radius:50%;border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .3s,border-color .2s;}
 .faq-icon svg{width:10px;height:10px;stroke:var(--muted);}
 .faq-q[aria-expanded="true"] .faq-icon{transform:rotate(45deg);border-color:var(--lime);}
 .faq-q[aria-expanded="true"] .faq-icon svg{stroke:var(--lime);}
@@ -142,101 +134,124 @@ header{
 .faq-body-inner p:last-child{margin-bottom:0;}
 .faq-body-inner strong{color:var(--cream);}
 .faq-body-inner .lime{color:var(--lime);font-weight:600;}
-.faq-note{
-  display:flex;gap:8px;padding:10px 14px;border-radius:3px;
-  font-size:12px;line-height:1.55;margin-top:10px;
-}
+.faq-note{display:flex;gap:8px;padding:10px 14px;border-radius:3px;font-size:12px;line-height:1.55;margin-top:10px;}
 .faq-note.warn{background:var(--a-bg);border:1px solid var(--a-bd);color:#FCD34D;}
-.faq-note.ok{background:var(--g-bg);border:1px solid var(--g-bd);color:var(--green);}
 .faq-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;}
 .faq-table th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border);}
 .faq-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--muted);}
 .faq-table tr:last-child td{border-bottom:none;}
 .faq-table td strong{color:var(--cream);}
 
-/* ══ POLÍTICAS — decisions ══ */
-.dec-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:40px;}
-.dec-card{border:1px solid var(--a-bd);background:var(--a-bg);border-radius:6px;overflow:hidden;display:grid;grid-template-columns:44px 1fr;}
-.dec-num{background:var(--amber);display:flex;align-items:flex-start;justify-content:center;padding-top:18px;font-size:15px;font-weight:700;color:var(--ink);}
-.dec-body{padding:18px 20px;}
-.dec-q{font-size:15px;font-weight:600;color:var(--cream);margin-bottom:6px;line-height:1.3;}
-.dec-ctx{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
-.opts{display:flex;flex-direction:column;gap:7px;}
-.opt{display:flex;gap:10px;align-items:flex-start;padding:11px 14px;background:rgba(236,239,224,.04);border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:border-color .2s,background .2s;}
+/* ══ OVERLAY / MODAL ══ */
+.overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(6,7,5,.6);backdrop-filter:blur(4px);
+  opacity:0;pointer-events:none;
+  transition:opacity .3s ease;
+  display:flex;align-items:flex-end;
+}
+.overlay.open{opacity:1;pointer-events:all;}
+.overlay-panel{
+  background:var(--ink1);
+  border-top:1px solid var(--border);
+  border-radius:12px 12px 0 0;
+  width:100%;
+  max-height:90vh;
+  overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform .4s cubic-bezier(.32,0,.67,0);
+}
+.overlay.open .overlay-panel{transform:translateY(0);transition:transform .4s cubic-bezier(.33,1,.68,1);}
+.overlay-header{
+  position:sticky;top:0;
+  background:var(--ink1);
+  border-bottom:1px solid var(--border);
+  padding:18px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  z-index:10;
+}
+.overlay-title{font-size:14px;font-weight:700;letter-spacing:.04em;color:var(--cream);}
+.overlay-close{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--faint);border:1px solid var(--border);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .2s;
+}
+.overlay-close:hover{background:rgba(236,239,224,.1);}
+.overlay-close svg{width:12px;height:12px;stroke:var(--muted);}
+.overlay-body{padding:32px 40px 48px;max-width:800px;margin:0 auto;}
+
+/* Overlay content — T&C */
+.tyc-intro{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:32px;max-width:64ch;}
+.tyc-section-title{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--lime);padding-bottom:10px;border-bottom:1px solid rgba(180,208,0,.2);margin:28px 0 12px;}
+
+/* Overlay content — Políticas */
+.dec-grid-ov{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:36px;}
+.dec-card{border:1px solid var(--a-bd);background:var(--a-bg);border-radius:5px;overflow:hidden;display:grid;grid-template-columns:40px 1fr;}
+.dec-num{background:var(--amber);display:flex;align-items:flex-start;justify-content:center;padding-top:16px;font-size:14px;font-weight:700;color:var(--ink);}
+.dec-body{padding:16px 18px;}
+.dec-q{font-size:14px;font-weight:600;color:var(--cream);margin-bottom:5px;line-height:1.3;}
+.dec-ctx{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+.opts{display:flex;flex-direction:column;gap:6px;}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:rgba(236,239,224,.04);border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:border-color .2s,background .2s;}
 .opt:hover{border-color:var(--l20);background:var(--l10);}
 .opt input{accent-color:var(--lime);width:14px;height:14px;margin-top:2px;flex-shrink:0;cursor:pointer;}
 .opt-body{flex:1;}
-.opt-title{font-size:13px;font-weight:600;color:var(--cream);margin-bottom:3px;}
+.opt-title{font-size:12px;font-weight:600;color:var(--cream);margin-bottom:2px;}
 .opt-desc{font-size:11px;color:var(--muted);line-height:1.5;font-style:italic;}
-.opt-rec{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.05em;color:var(--lime);background:var(--l10);padding:2px 6px;border-radius:2px;margin-top:5px;}
-
-/* Políticas Q&A — layout */
+.opt-rec{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.05em;color:var(--lime);background:var(--l10);padding:2px 6px;border-radius:2px;margin-top:4px;}
+.pol-section-h{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--muted);margin:28px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
 .pol-qa-list{display:flex;flex-direction:column;gap:0;}
-.pol-qa{display:grid;grid-template-columns:200px 1fr;gap:28px;padding:22px 0;border-bottom:1px solid var(--border);align-items:start;}
+.pol-qa{display:grid;grid-template-columns:180px 1fr;gap:24px;padding:18px 0;border-bottom:1px solid var(--border);align-items:start;}
 .pol-qa:last-child{border-bottom:none;}
-.pol-q{font-size:13px;font-weight:600;color:var(--lime);line-height:1.4;}
-.pol-a{font-size:14px;color:rgba(236,239,224,.72);line-height:1.75;}
+.pol-q{font-size:12px;font-weight:600;color:var(--lime);line-height:1.4;}
+.pol-a{font-size:13px;color:rgba(236,239,224,.72);line-height:1.75;}
 .pol-a p{margin-bottom:8px;}
 .pol-a p:last-child{margin-bottom:0;}
 .pol-a strong{color:var(--cream);}
-.pol-section-h{
-  font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted);
-  margin:32px 0 12px;padding-bottom:10px;border-bottom:1px solid var(--border);
-}
+.pol-note{display:flex;gap:8px;padding:10px 14px;border-radius:3px;font-size:12px;line-height:1.55;margin-top:8px;}
+.pol-note.amber{background:var(--a-bg);border:1px solid var(--a-bd);color:#FCD34D;}
+.pol-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px;}
+.pol-table th{padding:7px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);}
+.pol-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);}
+.pol-table tr:last-child td{border-bottom:none;}
+.pol-table td strong{color:var(--cream);}
 
-/* ══ MÉTRICAS — upload ══ */
-.upload-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;}
-.upload-card{
-  background:var(--ink1);border:1px dashed var(--border);border-radius:8px;
-  padding:28px 20px;text-align:center;cursor:pointer;
-  transition:border-color .2s,background .2s;position:relative;
-}
-.upload-card:hover{border-color:var(--lime);background:var(--ink2);}
+/* ══ MÉTRICAS ══ */
+.upload-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px;}
+.upload-card{background:var(--ink1);border:1px dashed var(--border);border-radius:8px;padding:28px 20px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;}
+.upload-card:hover{border-color:var(--lime);}
 .upload-card.loaded{border-color:var(--green);border-style:solid;}
 .upload-card.loaded .uc-icon{color:var(--green);}
-.uc-icon{font-size:28px;margin-bottom:12px;color:var(--muted);}
-.uc-icon svg{width:28px;height:28px;stroke:currentColor;fill:none;}
+.uc-icon{margin-bottom:12px;color:var(--muted);}
+.uc-icon svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.5;}
 .uc-title{font-size:13px;font-weight:600;color:var(--cream);margin-bottom:4px;}
 .uc-desc{font-size:11px;color:var(--muted);line-height:1.5;}
 .uc-name{font-size:11px;color:var(--green);margin-top:8px;font-weight:500;}
 .uc-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.btn-process{
-  display:none;width:100%;padding:13px;
-  background:var(--lime);color:var(--ink);
-  font-size:14px;font-weight:700;font-family:var(--ff-u);
-  border:none;border-radius:4px;cursor:pointer;
-  transition:opacity .2s;margin-bottom:32px;
-}
+.btn-process{display:none;width:100%;padding:13px;background:var(--lime);color:var(--ink);font-size:14px;font-weight:700;font-family:var(--ff);border:none;border-radius:4px;cursor:pointer;transition:opacity .2s;margin-bottom:28px;}
 .btn-process.vis{display:block;}
 .btn-process:hover{opacity:.85;}
 #dashboard{display:none;}
 #dashboard.vis{display:block;}
-
-/* KPIs */
-.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
 .kpi-c{background:var(--ink1);border:1px solid var(--border);border-radius:6px;padding:20px;border-top:2px solid transparent;}
 .kpi-c.k-lime{border-top-color:var(--lime);}
 .kpi-c.k-amber{border-top-color:var(--amber);}
 .kpi-c.k-green{border-top-color:var(--green);}
 .kpi-c.k-blue{border-top-color:#60A5FA;}
-.kpi-val{font-family:var(--ff-d);font-size:38px;font-weight:300;line-height:1;color:var(--cream);margin-bottom:4px;}
+.kpi-val{font-size:36px;font-weight:700;line-height:1;margin-bottom:4px;}
 .kpi-val.lime{color:var(--lime);}
 .kpi-val.green{color:var(--green);}
 .kpi-label{font-size:11px;color:var(--muted);}
-
-/* Charts */
-.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
 .chart-card{background:var(--ink1);border:1px solid var(--border);border-radius:6px;padding:20px;}
-.chart-card.full{grid-column:1/-1;}
-.chart-title{font-size:12px;font-weight:600;color:var(--cream);margin-bottom:16px;letter-spacing:.03em;}
-.chart-wrap{position:relative;height:220px;}
-
-/* Rankings table */
+.chart-title{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin-bottom:16px;}
+.chart-wrap{position:relative;height:210px;}
 .rank-table{width:100%;border-collapse:collapse;font-size:12px;}
-.rank-table th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border);}
+.rank-table th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);}
 .rank-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--muted);}
 .rank-table tr:last-child td{border-bottom:none;}
-.rank-table tr:hover td{color:var(--cream);}
 .rank-table td.name{color:var(--cream);font-weight:500;}
 .rank-table td.lime{color:var(--lime);font-weight:600;}
 .rank-table td.green{color:var(--green);font-weight:600;}
@@ -244,43 +259,32 @@ header{
 .bm-emp{background:rgba(96,165,250,.1);color:#60A5FA;}
 .bm-cli{background:var(--l10);color:var(--lime);}
 
-/* Pagos pendientes */
-.pago-badge{display:inline-block;padding:3px 8px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.03em;}
-.pb-pending{background:var(--a-bg);border:1px solid var(--a-bd);color:var(--amber);}
-.pb-paid{background:var(--g-bg);border:1px solid var(--g-bd);color:var(--green);}
-
-/* RESPONSIVE */
 @media(max-width:900px){
   header{padding:0 20px;}
   .tab-section{padding:32px 20px;}
   .steps-grid{grid-template-columns:1fr 1fr;}
   .states-grid{grid-template-columns:1fr;}
-  .dec-grid{grid-template-columns:1fr;}
+  .dec-grid-ov{grid-template-columns:1fr;}
   .kpi-row{grid-template-columns:1fr 1fr;}
   .charts-row{grid-template-columns:1fr;}
   .upload-grid{grid-template-columns:1fr;}
-  .pol-qa{grid-template-columns:1fr;gap:8px;}
+  .pol-qa{grid-template-columns:1fr;gap:6px;}
+  .overlay-header{padding:16px 20px;}
+  .overlay-body{padding:24px 20px 40px;}
   .h-user{display:none;}
-}
-@media(max-width:600px){
-  .h-tab{padding:7px 14px;font-size:11px;}
-  .kpi-row{grid-template-columns:1fr 1fr;}
 }
 </style>
 </head>
 <body>
 
-<!-- AUTH OVERLAY -->
 <div id="auth-check"><div class="ac-spinner"></div></div>
 
-<!-- LOADER -->
 <div id="loader">
   <div class="l-word" id="lWord"></div>
-  <div class="l-sub" style="animation-delay:1.35s">GRUPO RANDAZZO &middot; GESTI&Oacute;N</div>
-  <div class="l-line" style="animation-delay:1.55s"></div>
+  <div class="l-sub" style="animation-delay:1.3s">GRUPO RANDAZZO &middot; GESTI&Oacute;N</div>
+  <div class="l-line" style="animation-delay:1.5s"></div>
 </div>
 
-<!-- PAGE -->
 <div id="page">
 
 <!-- HEADER -->
@@ -291,7 +295,6 @@ header{
   </div>
   <div class="h-tabs">
     <button class="h-tab active" onclick="showTab('programa')">PROGRAMA</button>
-    <button class="h-tab" onclick="showTab('politicas')">POL&Iacute;TICAS</button>
     <button class="h-tab" onclick="showTab('metricas')">M&Eacute;TRICAS</button>
   </div>
   <div class="h-right">
@@ -300,14 +303,25 @@ header{
   </div>
 </header>
 
-<!-- ══════════════════════════════
-     TAB: PROGRAMA
-══════════════════════════════ -->
+<!-- ══ PROGRAMA ══ -->
 <div class="tab-section active" id="tab-programa">
 
   <div class="s-kicker">Programa de Embajadores de Marca</div>
   <h1 class="s-h">Refer&iacute;. Gan&aacute;. <em>$500.000.</em></h1>
   <p class="s-sub">Recomend&aacute; a alguien que quiera un auto en Grupo Randazzo. Cuando se concreta la venta y se entrega el veh&iacute;culo, el beneficio es tuyo.</p>
+
+  <!-- POLICY BUTTONS -->
+  <div class="pol-btns">
+    <button class="pol-btn pol-btn-tyc" onclick="openOverlay('tyc')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      T&eacute;rminos y Condiciones
+    </button>
+    <button class="pol-btn pol-btn-pol" onclick="openOverlay('pol')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Pol&iacute;ticas Internas
+      <span style="background:var(--ink);border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">2 pendientes</span>
+    </button>
+  </div>
 
   <!-- STEPS -->
   <div class="steps-grid">
@@ -339,709 +353,344 @@ header{
   <div class="s-kicker">Estados del referido</div>
   <p style="font-size:14px;color:var(--muted);margin-bottom:20px;">Cada referido avanza por estos estados. El estado <strong style="color:var(--lime)">ENTREGADO</strong> activa el pago del beneficio.</p>
   <div class="states-grid">
-    <div class="state-row">
-      <span class="s-badge sb-ref">REFERIDO</span>
-      <span class="state-desc">El referido se carg&oacute; con &eacute;xito. El equipo comercial toma contacto.</span>
-    </div>
-    <div class="state-row">
-      <span class="s-badge sb-asi">ASIGNADO</span>
-      <span class="state-desc">Est&aacute; siendo atendido por un asesor comercial del Grupo.</span>
-    </div>
-    <div class="state-row">
-      <span class="s-badge sb-pre">PRESUPUESTO</span>
-      <span class="state-desc">Recibi&oacute; un presupuesto por el veh&iacute;culo de inter&eacute;s. Negociaci&oacute;n activa.</span>
-    </div>
-    <div class="state-row">
-      <span class="s-badge sb-fin">FINALIZADO</span>
-      <span class="state-desc">No realiz&oacute; una operaci&oacute;n. No genera beneficio.</span>
-    </div>
-    <div class="state-row pago">
-      <span class="s-badge sb-pv">PREVENTA</span>
-      <span class="state-desc">Operaci&oacute;n confirmada con n&uacute;mero de preventa. &iexcl;Cerca del cobro!</span>
-    </div>
-    <div class="state-row pago">
-      <span class="s-badge sb-sus">SUSCRIPCION</span>
-      <span class="state-desc">Suscripci&oacute;n al Plan de Ahorro perfeccionada. Genera el beneficio.</span>
-    </div>
-    <div class="state-row pago" style="grid-column:1/-1">
-      <span class="s-badge sb-ent">ENTREGADO</span>
-      <span class="state-desc" style="color:var(--cream)"><strong>El veh&iacute;culo fue entregado.</strong> El beneficio queda devengado desde este momento. Inicia el plazo de pago.</span>
-    </div>
+    <div class="state-row"><span class="s-badge sb-ref">REFERIDO</span><span class="state-desc">El referido se carg&oacute; con &eacute;xito. El equipo comercial toma contacto pr&oacute;ximamente.</span></div>
+    <div class="state-row"><span class="s-badge sb-asi">ASIGNADO</span><span class="state-desc">Est&aacute; siendo atendido por un asesor comercial del Grupo.</span></div>
+    <div class="state-row"><span class="s-badge sb-pre">PRESUPUESTO</span><span class="state-desc">Recibi&oacute; un presupuesto por el veh&iacute;culo de inter&eacute;s. Negociaci&oacute;n activa.</span></div>
+    <div class="state-row"><span class="s-badge sb-fin">FINALIZADO</span><span class="state-desc">No realiz&oacute; una operaci&oacute;n. No genera beneficio.</span></div>
+    <div class="state-row pago"><span class="s-badge sb-pv">PREVENTA</span><span class="state-desc">Operaci&oacute;n confirmada con n&uacute;mero de preventa. &iexcl;Cerca del cobro!</span></div>
+    <div class="state-row pago"><span class="s-badge sb-sus">SUSCRIPCION</span><span class="state-desc">Suscripci&oacute;n al Plan de Ahorro perfeccionada. Genera el beneficio.</span></div>
+    <div class="state-row pago" style="grid-column:1/-1"><span class="s-badge sb-ent">ENTREGADO</span><span class="state-desc" style="color:var(--cream)"><strong>El veh&iacute;culo fue entregado.</strong> El beneficio queda devengado. Inicia el plazo de pago.</span></div>
   </div>
 
   <div class="divider"></div>
 
-  <!-- FAQ BBVA STYLE -->
+  <!-- FAQ -->
   <div class="s-kicker">Preguntas frecuentes</div>
-  <h2 class="s-h" style="font-size:clamp(22px,2.5vw,34px);margin-bottom:8px;">Todo lo que necesit&aacute;s saber</h2>
-  <p class="s-sub" style="margin-bottom:0;">Bases y condiciones del Programa de Embajadores de Marca.</p>
-
-  <!-- FAQ: El Programa -->
   <div class="faq-section-title">EL PROGRAMA</div>
   <div class="faq-item">
-    <button class="faq-q" aria-expanded="false">
-      <span class="faq-q-text">&iquest;Qu&eacute; es el Programa de Embajadores de Marca?</span>
-      <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-    </button>
-    <div class="faq-body"><div class="faq-body-inner">
-      <p>Es un programa organizado por las empresas del Grupo Randazzo (KIARA AUTOMOTORA S.A., PEARA S.A., AUTOS CIARA S.A. y MOVILIS RENT A CAR) mediante el cual personas registradas como Embajadores pueden recomendar a terceros la compra de veh&iacute;culos y, cuando esa recomendaci&oacute;n deriva en una venta efectiva con entrega del veh&iacute;culo, reciben un beneficio econ&oacute;mico de <strong class="lime">$500.000 brutos</strong>.</p>
-    </div></div>
+    <button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Qu&eacute; es el Programa de Embajadores de Marca?</span><span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span></button>
+    <div class="faq-body"><div class="faq-body-inner"><p>Es un programa organizado por las empresas del Grupo Randazzo (KIARA AUTOMOTORA S.A., PEARA S.A., AUTOS CIARA S.A. y MOVILIS RENT A CAR) mediante el cual personas registradas como Embajadores pueden recomendar a terceros la compra de veh&iacute;culos y, cuando esa recomendaci&oacute;n deriva en una venta efectiva, reciben un beneficio econ&oacute;mico de <strong class="lime">$500.000 brutos</strong>.</p></div></div>
   </div>
   <div class="faq-item">
-    <button class="faq-q" aria-expanded="false">
-      <span class="faq-q-text">&iquest;Cu&aacute;l es la vigencia del Programa?</span>
-      <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-    </button>
-    <div class="faq-body"><div class="faq-body-inner">
-      <p>El Programa tiene una vigencia inicial de <strong>tres meses</strong> desde su publicaci&oacute;n, con vencimiento previsto al <strong class="lime">14 de noviembre de 2026</strong>. El Grupo podr&aacute; extenderlo, suspenderlo o finalizarlo anticipadamente con comunicaci&oacute;n previa. La finalizaci&oacute;n no afecta beneficios ya devengados.</p>
-    </div></div>
+    <button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Cu&aacute;l es la vigencia del Programa?</span><span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span></button>
+    <div class="faq-body"><div class="faq-body-inner"><p>Vigencia inicial de <strong>tres meses</strong> desde su publicaci&oacute;n, con vencimiento al <strong class="lime">14 de noviembre de 2026</strong>. El Grupo podr&aacute; extenderlo, suspenderlo o finalizarlo con comunicaci&oacute;n previa. La finalizaci&oacute;n no afecta beneficios ya devengados.</p></div></div>
   </div>
-
-  <!-- FAQ: Quiénes participan -->
   <div class="faq-section-title">QUI&Eacute;NES PARTICIPAN</div>
   <div class="faq-item">
-    <button class="faq-q" aria-expanded="false">
-      <span class="faq-q-text">&iquest;Qui&eacute;nes pueden ser Embajadores?</span>
-      <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-    </button>
-    <div class="faq-body"><div class="faq-body-inner">
-      <p>Puede participar cualquier persona f&iacute;sica mayor de 18 a&ntilde;os con capacidad para contratar, incluyendo:</p>
-      <p>— <strong>Personas externas al Grupo:</strong> se registran en el formulario habilitado en el sitio oficial. El &aacute;rea Contable valida la inscripci&oacute;n en hasta 3 horas h&aacute;biles.<br>
-      — <strong>Empleados del Grupo:</strong> todos pueden participar, excepto el &aacute;rea comercial de ventas (Setter, Closer y Fisher). Reciben su link personalizado en su correo corporativo.</p>
-    </div></div>
+    <button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Qui&eacute;nes pueden ser Embajadores?</span><span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span></button>
+    <div class="faq-body"><div class="faq-body-inner"><p>— <strong>Personas externas:</strong> cualquier persona f&iacute;sica mayor de 18 a&ntilde;os. Se registran en el formulario del sitio oficial.<br>— <strong>Empleados del Grupo:</strong> todos excepto el &aacute;rea comercial de ventas (Setter, Closer, Fisher). Reciben su link en su correo corporativo.</p></div></div>
   </div>
   <div class="faq-item">
-    <button class="faq-q" aria-expanded="false">
-      <span class="faq-q-text">&iquest;Qui&eacute;nes NO pueden participar?</span>
-      <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-    </button>
-    <div class="faq-body"><div class="faq-body-inner">
-      <p>— Personal del &aacute;rea comercial de ventas del Grupo (Setter, Closer, Fisher y cualquier otro rol cuya funci&oacute;n principal sea la captaci&oacute;n o cierre de ventas).<br>
-      — Quienes hayan proporcionado datos falsos o hayan sido exclu&iacute;dos por incumplimiento previo.<br>
-      — El propio Embajador no puede referirse a s&iacute; mismo (auto-referencias inv&aacute;lidas).</p>
-    </div></div>
+    <button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Qui&eacute;nes NO pueden participar?</span><span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span></button>
+    <div class="faq-body"><div class="faq-body-inner"><p>Personal del &aacute;rea comercial de ventas &middot; Quienes hayan proporcionado datos falsos &middot; El propio Embajador no puede referirse a s&iacute; mismo (auto-referencias inv&aacute;lidas).</p></div></div>
   </div>
-
-  <!-- FAQ: Validez -->
-  <div class="faq-section-title">VALIDEZ DE REFERENCIAS — REGLA DE 90 D&Iacute;AS</div>
+  <div class="faq-section-title">VALIDEZ — REGLA DE 90 D&Iacute;AS</div>
   <div class="faq-item">
-    <button class="faq-q" aria-expanded="false">
-      <span class="faq-q-text">&iquest;Cu&aacute;ndo se considera v&aacute;lida una referencia?</span>
-      <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-    </button>
-    <div class="faq-body"><div class="faq-body-inner">
-      <p>Una referencia es v&aacute;lida cuando se cumplen <strong>en forma concurrente</strong> estas condiciones:</p>
-      <p><strong>a) Sin contacto previo en los 90 d&iacute;as anteriores.</strong> Si el referido registra cualquier consulta o gesti&oacute;n en el CRM del Grupo dentro de los 90 d&iacute;as anteriores a la fecha de carga, la referencia no es v&aacute;lida. Esto previene que contactos captados por otros canales sean cargados al Programa para acceder al beneficio.</p>
-      <p><strong>b) El contacto no puede cargarse retroactivamente.</strong> Si el referido ya est&aacute; siendo atendido por un asesor al momento de la carga, la referencia no es v&aacute;lida.</p>
-      <p><strong>c) M&aacute;s de 90 d&iacute;as sin contacto previo:</strong> la referencia puede considerarse v&aacute;lida.</p>
-    </div></div>
+    <button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Cu&aacute;ndo es v&aacute;lida una referencia?</span><span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span></button>
+    <div class="faq-body"><div class="faq-body-inner"><p><strong>Ventana previa:</strong> si el referido tuvo contacto con el Grupo en los &uacute;ltimos 90 d&iacute;as, la referencia no es v&aacute;lida.<br><strong>No retroactiva:</strong> si el referido ya est&aacute; en gesti&oacute;n comercial, tampoco es v&aacute;lida.<br><strong>M&aacute;s de 90 d&iacute;as sin contacto:</strong> puede considerarse v&aacute;lida.</p></div></div>
   </div>
   <div class="faq-item">
-    <button class="faq-q" aria-expanded="false">
-      <span class="faq-q-text">&iquest;Cu&aacute;nto tiempo tiene el referido para concretar la compra?</span>
-      <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-    </button>
-    <div class="faq-body"><div class="faq-body-inner">
-      <p>Una vez cargado el referido en el sistema, la operaci&oacute;n tiene <strong class="lime">90 d&iacute;as</strong> para concretarse. Pasado ese plazo sin venta, el contacto puede volver a ser referido por ese mismo Embajador u otro. Durante esos 90 d&iacute;as, el mismo referido no puede ser cargado nuevamente por ning&uacute;n Embajador.</p>
-    </div></div>
+    <button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Cu&aacute;nto tiempo tiene el referido para comprar?</span><span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span></button>
+    <div class="faq-body"><div class="faq-body-inner"><p>Una vez cargado, la operaci&oacute;n tiene <strong class="lime">90 d&iacute;as</strong> para concretarse. Pasado ese plazo sin venta, el contacto puede volver a ser referido por ese mismo Embajador u otro. Durante esos 90 d&iacute;as, el referido no puede ser cargado nuevamente.</p></div></div>
   </div>
-
-  <!-- FAQ: Beneficio -->
   <div class="faq-section-title">BENEFICIO Y PAGO</div>
   <div class="faq-item">
-    <button class="faq-q" aria-expanded="false">
-      <span class="faq-q-text">&iquest;Cu&aacute;nto vale el beneficio?</span>
-      <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-    </button>
-    <div class="faq-body"><div class="faq-body-inner">
-      <p><strong class="lime">$500.000 brutos</strong> por cada Operaci&oacute;n Elegible. El monto neto puede ser inferior si corresponde practicar retenciones impositivas conforme normativa AFIP vigente. El Grupo informa el neto antes de procesar el pago.</p>
-      <p>El beneficio se genera <strong>por Cliente Referido</strong>, no por veh&iacute;culo. Una segunda compra del mismo cliente no genera un segundo pago, salvo comunicaci&oacute;n expresa del Grupo.</p>
-    </div></div>
-  </div>
-  <div class="faq-item">
-    <button class="faq-q" aria-expanded="false">
-      <span class="faq-q-text">&iquest;Cu&aacute;ndo y c&oacute;mo se paga?</span>
-      <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-    </button>
+    <button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Cu&aacute;nto vale el beneficio y cu&aacute;ndo se paga?</span><span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span></button>
     <div class="faq-body"><div class="faq-body-inner">
       <table class="faq-table">
-        <tr><th>Tipo de Embajador</th><th>Modalidad</th><th>Plazo</th><th>Documentaci&oacute;n</th></tr>
-        <tr><td><strong>Externo — Cons. Final</strong></td><td>Transferencia al CBU del formulario</td><td><strong>7 d&iacute;as h&aacute;biles</strong> desde entrega</td><td>Solo CBU. No se aceptan CVU.</td></tr>
-        <tr><td><strong>Externo — Monotributista</strong></td><td>Transferencia al CBU</td><td><strong>7 d&iacute;as h&aacute;biles*</strong></td><td>Factura C + CBU</td></tr>
-        <tr><td><strong>Externo — Resp. Inscripto</strong></td><td>Transferencia al CBU</td><td><strong>7 d&iacute;as h&aacute;biles*</strong></td><td>Factura B con IVA + CBU</td></tr>
-        <tr><td><strong>Empleado del Grupo</strong></td><td>Efectivo con el pr&oacute;ximo sueldo</td><td>Pr&oacute;xima liquidaci&oacute;n</td><td>Recibo de conformidad (RRHH)</td></tr>
+        <tr><th>Tipo</th><th>Modalidad</th><th>Plazo</th><th>Doc. requerida</th></tr>
+        <tr><td><strong>Externo — Cons. Final</strong></td><td>Transferencia al CBU</td><td>7 d&iacute;as h&aacute;biles</td><td>CBU. No se aceptan CVU.</td></tr>
+        <tr><td><strong>Externo — Monotributista</strong></td><td>Transferencia al CBU</td><td>7 d&iacute;as h&aacute;biles*</td><td>Factura C + CBU</td></tr>
+        <tr><td><strong>Externo — Resp. Inscripto</strong></td><td>Transferencia al CBU</td><td>7 d&iacute;as h&aacute;biles*</td><td>Factura B con IVA + CBU</td></tr>
+        <tr><td><strong>Empleado del Grupo</strong></td><td>Efectivo con pr&oacute;ximo sueldo</td><td>Pr&oacute;xima liquidaci&oacute;n</td><td>Recibo conformidad (RRHH)</td></tr>
       </table>
       <div class="faq-note warn">*El plazo corre desde la entrega del veh&iacute;culo o desde la recepci&oacute;n de la factura v&aacute;lida, lo que ocurra &uacute;ltimo.</div>
     </div></div>
   </div>
-
-  <!-- FAQ: Casos especiales -->
   <div class="faq-section-title">CASOS ESPECIALES</div>
   <div class="faq-item">
-    <button class="faq-q" aria-expanded="false">
-      <span class="faq-q-text">&iquest;Qu&eacute; pasa si el auto queda a nombre del c&oacute;nyuge u otra persona?</span>
-      <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-    </button>
-    <div class="faq-body"><div class="faq-body-inner">
-      <p>Cuando el cr&eacute;dito o la titularidad queda a nombre de una persona distinta al referido, el sistema pierde la trazabilidad autom&aacute;ticamente porque los DNI no coinciden. El vendedor debe <strong>vincular manualmente el c&oacute;digo del Embajador a la preventa antes del cierre</strong>.</p>
-      <div class="faq-note warn">Sin esa vinculaci&oacute;n manual, el beneficio no puede procesarse. El Embajador debe avisar al &aacute;rea comercial o a Finanzas en el momento de la operaci&oacute;n.</div>
-    </div></div>
+    <button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Qu&eacute; pasa si el auto queda a nombre del c&oacute;nyuge?</span><span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span></button>
+    <div class="faq-body"><div class="faq-body-inner"><p>El sistema pierde la trazabilidad porque los DNI no coinciden. El vendedor debe <strong>vincular manualmente el c&oacute;digo del Embajador a la preventa antes del cierre</strong>. Sin esa vinculaci&oacute;n, el beneficio no puede procesarse. El Embajador debe avisar a Finanzas en el momento de la operaci&oacute;n.</p></div></div>
   </div>
   <div class="faq-item">
-    <button class="faq-q" aria-expanded="false">
-      <span class="faq-q-text">&iquest;El Plan de Ahorro tambi&eacute;n genera beneficio?</span>
-      <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-    </button>
-    <div class="faq-body"><div class="faq-body-inner">
-      <p>S&iacute;. Cuando el referido suscribe un Plan de Ahorro, el beneficio se devenga al perfeccionarse la suscripci&oacute;n (estado <strong>SUSCRIPCION</strong>). Los plazos de pago son los mismos que para una compra directa.</p>
-    </div></div>
+    <button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;El Plan de Ahorro tambi&eacute;n genera beneficio?</span><span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span></button>
+    <div class="faq-body"><div class="faq-body-inner"><p>S&iacute;. Cuando el referido suscribe un Plan de Ahorro, el beneficio se devenga al perfeccionarse la suscripci&oacute;n (estado <strong>SUSCRIPCION</strong>). Los plazos de pago son los mismos que para una compra directa.</p></div></div>
   </div>
 
-  <!-- FAQ: Exclusiones -->
-  <div class="faq-section-title">EXCLUSIONES Y CONDUCTAS PROHIBIDAS</div>
-  <div class="faq-item">
-    <button class="faq-q" aria-expanded="false">
-      <span class="faq-q-text">&iquest;Qu&eacute; pr&aacute;cticas est&aacute;n prohibidas?</span>
-      <span class="faq-icon"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-    </button>
-    <div class="faq-body"><div class="faq-body-inner">
-      <p>Auto-referencias &middot; Carga retroactiva de referidos en gesti&oacute;n &middot; Datos falsos o sin consentimiento &middot; Manipulaci&oacute;n del sistema &middot; Cobrar dinero a referidos en nombre del Grupo &middot; Uso de marcas del Grupo sin autorizaci&oacute;n &middot; Cualquier conducta fraudulenta.</p>
-      <p>El incumplimiento puede derivar en exclusi&oacute;n del Programa, rechazo del beneficio y las acciones legales que correspondan.</p>
-    </div></div>
-  </div>
+</div><!-- /programa -->
 
-  <!-- CONTACTO -->
-  <div class="faq-section-title">CONTACTO</div>
-  <div style="padding:20px 0;font-size:14px;color:var(--muted);">
-    <p><strong style="color:var(--cream)">Consultas del Programa:</strong> embajadores@gruporandazzo.com.ar</p>
-    <p style="margin-top:6px"><strong style="color:var(--cream)">Datos personales (Ley 25.326):</strong> legales@gruporandazzo.com.ar</p>
-    <p style="margin-top:6px"><strong style="color:var(--cream)">Sitio web:</strong> www.gruporandazzo.com</p>
-  </div>
-
-</div><!-- /tab-programa -->
-
-
-<!-- ══════════════════════════════
-     TAB: POLÍTICAS
-══════════════════════════════ -->
-<div class="tab-section" id="tab-politicas">
-
-  <div class="s-kicker">Para revisi&oacute;n de Gerencia</div>
-  <h1 class="s-h">Bases y Condiciones <em>— Borrador</em></h1>
-  <p class="s-sub">Pol&iacute;tica integrada: Finanzas + Recursos Humanos. Lista para aprobaci&oacute;n con <strong style="color:var(--amber)">2 puntos que requieren decisi&oacute;n</strong> antes de publicar la versi&oacute;n definitiva.</p>
-
-  <!-- DECISIONS -->
-  <div class="dec-grid">
-    <div class="dec-card">
-      <div class="dec-num">1</div>
-      <div class="dec-body">
-        <div class="dec-q">&iquest;C&oacute;mo se identifica al &aacute;rea comercial exclu&iacute;da?</div>
-        <div class="dec-ctx">RRHH nombr&oacute; los roles Setter, Closer y Fisher. &iquest;Nombramos expl&iacute;citamente o usamos una redacci&oacute;n general?</div>
-        <div class="opts">
-          <label class="opt"><input type="radio" name="d1" value="a">
-            <div class="opt-body"><div class="opt-title">Roles espec&iacute;ficos</div><div class="opt-desc">"Quedan exclu&iacute;dos los empleados en los roles de Setter, Closer y Fisher."</div></div>
-          </label>
-          <label class="opt"><input type="radio" name="d1" value="b">
-            <div class="opt-body"><div class="opt-title">Redacci&oacute;n general + roles de referencia</div><div class="opt-desc">"...&aacute;rea comercial de ventas (incluyendo Setter, Closer, Fisher y cualquier otro rol de captaci&oacute;n o cierre de ventas)."</div>
-            <span class="opt-rec">Recomendado &mdash; cubre cambios futuros</span></div>
-          </label>
-        </div>
-      </div>
-    </div>
-    <div class="dec-card">
-      <div class="dec-num">2</div>
-      <div class="dec-body">
-        <div class="dec-q">&iquest;C&oacute;mo tratar referidos con contacto entre 90 d&iacute;as y 12 meses?</div>
-        <div class="dec-ctx">RRHH defini&oacute; el corte en 90 d&iacute;as. Los T&C originales prev&eacute;n un rango intermedio con revisi&oacute;n manual.</div>
-        <div class="opts">
-          <label class="opt"><input type="radio" name="d2" value="a">
-            <div class="opt-body"><div class="opt-title">Regla binaria simple</div><div class="opt-desc">Menos de 90 d&iacute;as: inv&aacute;lido. M&aacute;s de 90 d&iacute;as: v&aacute;lido. Sin zona gris.</div>
-            <span class="opt-rec">Recomendado &mdash; m&aacute;s simple de operar</span></div>
-          </label>
-          <label class="opt"><input type="radio" name="d2" value="b">
-            <div class="opt-body"><div class="opt-title">Zona intermedia con revisi&oacute;n manual</div><div class="opt-desc">90 d&iacute;as &mdash; 12 meses: revisi&oacute;n por Finanzas. M&aacute;s de 12 meses: v&aacute;lido autom&aacute;tico.</div></div>
-          </label>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- POLÍTICA COMPLETA -->
-  <div class="pol-section-h">EL PROGRAMA</div>
-  <div class="pol-qa-list">
-    <div class="pol-qa">
-      <div class="pol-q">&iquest;Qu&eacute; es el Programa?</div>
-      <div class="pol-a"><p>Es un programa organizado por las empresas del Grupo Randazzo (KIARA AUTOMOTORA S.A., PEARA S.A., AUTOS CIARA S.A. y MOVILIS RENT A CAR) mediante el cual personas registradas como Embajadores pueden recomendar a terceros la compra de veh&iacute;culos y, cuando esa recomendaci&oacute;n deriva en una venta efectiva con entrega del veh&iacute;culo, reciben un beneficio econ&oacute;mico de <strong>$500.000 brutos</strong>.</p></div>
-    </div>
-    <div class="pol-qa">
-      <div class="pol-q">&iquest;Cu&aacute;l es la vigencia?</div>
-      <div class="pol-a"><p>Tres (3) meses desde su publicaci&oacute;n, con vencimiento al <strong>14 de noviembre de 2026</strong>. El Grupo podr&aacute; extenderlo, suspenderlo o finalizarlo con comunicaci&oacute;n previa. La finalizaci&oacute;n no afecta los beneficios ya devengados.</p></div>
-    </div>
-  </div>
-
-  <div class="pol-section-h">ALCANCE Y PARTICIPANTES</div>
-  <div class="pol-qa-list">
-    <div class="pol-qa">
-      <div class="pol-q">&iquest;Qui&eacute;nes pueden participar como Embajadores?</div>
-      <div class="pol-a">
-        <p><strong>Personas externas al Grupo:</strong> cualquier persona f&iacute;sica mayor de 18 a&ntilde;os con capacidad para contratar. Se registran a trav&eacute;s del formulario habilitado en el sitio oficial. El &aacute;rea Contable valida la inscripci&oacute;n en hasta 3 horas h&aacute;biles. Una vez aprobados, reciben su link &uacute;nico por email.</p>
-        <p><strong>Empleados del Grupo:</strong> todos los empleados pueden participar, con excepci&oacute;n del &aacute;rea comercial de ventas <em>[ver Decisi&oacute;n 1 pendiente]</em>. Reciben su link personalizado directamente en su correo corporativo.</p>
-      </div>
-    </div>
-    <div class="pol-qa">
-      <div class="pol-q">&iquest;Qui&eacute;nes NO pueden participar?</div>
-      <div class="pol-a">
-        <p>Como Embajadores: personal del &aacute;rea comercial de ventas del Grupo; quienes hayan proporcionado datos falsos o sido exclu&iacute;dos previamente.</p>
-        <p>Como Referidos: el propio Embajador (auto-referencias inv&aacute;lidas); quien tenga contacto comercial activo con el Grupo en los &uacute;ltimos 90 d&iacute;as.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="pol-section-h">VALIDEZ — REGLA DE 90 D&Iacute;AS</div>
-  <div class="pol-qa-list">
-    <div class="pol-qa">
-      <div class="pol-q">Ventana previa: 90 d&iacute;as antes de la carga</div>
-      <div class="pol-a">
-        <p>Si el referido registra cualquier consulta o gesti&oacute;n en el CRM dentro de los <strong>90 d&iacute;as anteriores</strong> a la fecha de carga, la referencia no es v&aacute;lida. Previene que contactos captados por otros canales sean cargados al Programa para acceder al beneficio.</p>
-        <p>Si el referido ya est&aacute; siendo atendido activamente por un asesor al momento de la carga, la referencia no es v&aacute;lida aunque no hayan pasado 90 d&iacute;as (regla anti-bypass).</p>
-      </div>
-    </div>
-    <div class="pol-qa">
-      <div class="pol-q">Ventana activa: 90 d&iacute;as para cerrar la operaci&oacute;n</div>
-      <div class="pol-a">
-        <p>Una vez cargado el referido, la operaci&oacute;n tiene <strong>90 d&iacute;as</strong> para concretarse. Durante ese per&iacute;odo el referido no puede ser cargado nuevamente por ning&uacute;n Embajador. Pasados los 90 d&iacute;as sin venta, puede volver a ser referido.</p>
-      </div>
-    </div>
-    <div class="pol-qa">
-      <div class="pol-q">Rango 90 d&iacute;as &mdash; 12 meses</div>
-      <div class="pol-a"><p><strong style="color:var(--amber)">Decisi&oacute;n 2 pendiente:</strong> definir si aplica regla binaria (v&aacute;lido/inv&aacute;lido en base a 90 d&iacute;as) o zona intermedia con revisi&oacute;n manual para contactos entre 90 d&iacute;as y 12 meses.</p></div>
-    </div>
-  </div>
-
-  <div class="pol-section-h">BENEFICIO Y DEVENGAMIENTO</div>
-  <div class="pol-qa-list">
-    <div class="pol-qa">
-      <div class="pol-q">&iquest;Cu&aacute;nto vale el beneficio?</div>
-      <div class="pol-a">
-        <p><strong>$500.000 brutos</strong> por cada Operaci&oacute;n Elegible. El monto neto puede ser inferior si corresponde practicar retenciones impositivas conforme normativa AFIP. El Grupo informa el neto antes de procesar el pago.</p>
-        <p>El beneficio se genera por Cliente Referido, no por veh&iacute;culo. Una segunda compra del mismo cliente no genera un segundo pago, salvo comunicaci&oacute;n expresa del Grupo.</p>
-      </div>
-    </div>
-    <div class="pol-qa">
-      <div class="pol-q">&iquest;Cu&aacute;ndo se devenga el beneficio?</div>
-      <div class="pol-a">
-        <p>El beneficio queda devengado en el momento de la <strong>entrega efectiva del veh&iacute;culo</strong> al referido, o al perfeccionarse la suscripci&oacute;n al Plan de Ahorro. La entrega es el disparador del derecho al pago; el cobro efectivo ocurre en los plazos que se detallan a continuaci&oacute;n seg&uacute;n el tipo de Embajador.</p>
-        <p>No generan beneficio: consultas, presupuestos, test drives, reservas, se&ntilde;as, solicitudes de cr&eacute;dito ni operaciones que no se perfeccionen.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="pol-section-h">MODALIDADES DE PAGO</div>
-  <div class="pol-qa-list">
-    <div class="pol-qa">
-      <div class="pol-q">Externo — Consumidor Final</div>
-      <div class="pol-a">
-        <p><strong>Modalidad:</strong> Transferencia bancaria al CBU registrado en el formulario de inscripci&oacute;n.<br>
-        <strong>Plazo:</strong> 7 d&iacute;as h&aacute;biles desde la entrega del veh&iacute;culo.<br>
-        <strong>Documentaci&oacute;n:</strong> Solo CBU. No se aceptan billeteras virtuales (CVU).</p>
-      </div>
-    </div>
-    <div class="pol-qa">
-      <div class="pol-q">Externo — Monotributista o Resp. Inscripto</div>
-      <div class="pol-a">
-        <p><strong>Modalidad:</strong> Transferencia bancaria al CBU del Embajador.<br>
-        <strong>Plazo:</strong> 7 d&iacute;as h&aacute;biles desde la entrega del veh&iacute;culo <em>o</em> desde la recepci&oacute;n de la factura v&aacute;lida, lo que ocurra &uacute;ltimo.<br>
-        <strong>Documentaci&oacute;n:</strong> Factura C (Monotributista) o Factura B con IVA discriminado (Resp. Inscripto) a nombre de la Empresa Participante + CBU.<br>
-        <strong>Retenciones:</strong> El Grupo practica las retenciones que correspondan (Ganancias, IVA, IIBB) e informa el neto antes de pagar.</p>
-      </div>
-    </div>
-    <div class="pol-qa">
-      <div class="pol-q">Empleado del Grupo</div>
-      <div class="pol-a">
-        <p><strong>Gesti&oacute;n:</strong> &Aacute;rea de Recursos Humanos.<br>
-        <strong>Modalidad:</strong> Efectivo, liquidado junto con el pr&oacute;ximo sueldo correspondiente al mes en que se produjo la entrega o la suscripci&oacute;n.<br>
-        <strong>Documentaci&oacute;n:</strong> Ninguna adicional. El empleado firma un recibo de conformidad interno como respaldo.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="pol-section-h">CASOS ESPECIALES</div>
-  <div class="pol-qa-list">
-    <div class="pol-qa">
-      <div class="pol-q">Venta a nombre del c&oacute;nyuge</div>
-      <div class="pol-a">
-        <p>Cuando el cr&eacute;dito o la titularidad del veh&iacute;culo queda a nombre de una persona distinta al referido, el sistema pierde la trazabilidad autom&aacute;ticamente porque los DNI no coinciden. El vendedor debe <strong>vincular manualmente el c&oacute;digo del Embajador a la preventa antes del cierre de la operaci&oacute;n</strong>. Sin esa vinculaci&oacute;n, el beneficio no puede procesarse. El Embajador debe avisar al &aacute;rea comercial o a Finanzas en el momento de la operaci&oacute;n.</p>
-      </div>
-    </div>
-    <div class="pol-qa">
-      <div class="pol-q">Plan de Ahorro</div>
-      <div class="pol-a">
-        <p>Las suscripciones a Planes de Ahorro tambi&eacute;n generan el beneficio. El derecho se devenga cuando la suscripci&oacute;n queda perfeccionada (estado <strong>SUSCRIPCION</strong>). Los plazos de pago son los mismos que para una compra directa.</p>
-      </div>
-    </div>
-    <div class="pol-qa">
-      <div class="pol-q">Alta en fin de semana</div>
-      <div class="pol-a">
-        <p>Las inscripciones de Embajadores externos realizadas el viernes despu&eacute;s del horario de atenci&oacute;n, o durante el fin de semana, son validadas por Contable el pr&oacute;ximo d&iacute;a h&aacute;bil. El Embajador no puede comenzar a referir hasta recibir la confirmaci&oacute;n del link.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="pol-section-h">EXCLUSIONES Y CONTROL</div>
-  <div class="pol-qa-list">
-    <div class="pol-qa">
-      <div class="pol-q">Pr&aacute;cticas prohibidas y consecuencias</div>
-      <div class="pol-a">
-        <table class="faq-table">
-          <tr><th>Pr&aacute;ctica prohibida</th><th>Consecuencia</th></tr>
-          <tr><td>Auto-referencia</td><td>Referencia inv&aacute;lida &middot; Posible exclusi&oacute;n</td></tr>
-          <tr><td>Carga retroactiva (referido en gesti&oacute;n)</td><td>Referencia inv&aacute;lida</td></tr>
-          <tr><td>Datos falsos o sin consentimiento del referido</td><td>Exclusi&oacute;n &middot; Acciones legales</td></tr>
-          <tr><td>Cobrar dinero a referidos en nombre del Grupo</td><td>Exclusi&oacute;n &middot; Acciones legales</td></tr>
-          <tr><td>Uso de marcas del Grupo sin autorizaci&oacute;n</td><td>Exclusi&oacute;n</td></tr>
-          <tr><td>Manipulaci&oacute;n del sistema</td><td>Exclusi&oacute;n &middot; Reintegro del beneficio &middot; Acciones legales</td></tr>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div class="pol-section-h">CONTACTO</div>
-  <div class="pol-qa-list">
-    <div class="pol-qa">
-      <div class="pol-q">Canales oficiales</div>
-      <div class="pol-a">
-        <p><strong>Consultas:</strong> embajadores@gruporandazzo.com.ar<br>
-        <strong>Datos personales (Ley 25.326):</strong> legales@gruporandazzo.com.ar<br>
-        <strong>Domicilio legal:</strong> Av. 44 N&ordm;1463, La Plata, Provincia de Buenos Aires.</p>
-      </div>
-    </div>
-  </div>
-
-</div><!-- /tab-politicas -->
-
-
-<!-- ══════════════════════════════
-     TAB: MÉTRICAS
-══════════════════════════════ -->
+<!-- ══ MÉTRICAS ══ -->
 <div class="tab-section" id="tab-metricas">
-
-  <div class="s-kicker">Panel de control</div>
+  <div class="s-kicker">Panel de Control</div>
   <h1 class="s-h"><em>M&eacute;tricas</em> del Programa</h1>
-  <p class="s-sub">Carg&aacute; los tres reportes descargados del CRM para ver el estado actualizado del Programa.</p>
-
-  <!-- UPLOAD CARDS -->
+  <p class="s-sub">Carg&aacute; los tres reportes descargados del CRM para visualizar el estado actualizado del Programa.</p>
   <div class="upload-grid">
     <div class="upload-card" id="uc-emb">
       <input class="uc-input" type="file" accept=".xls,.csv,.txt" onchange="loadFile(this,'emb')">
-      <div class="uc-icon"><svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg></div>
+      <div class="uc-icon"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg></div>
       <div class="uc-title">Registro de Embajadores</div>
-      <div class="uc-desc">Embajadores.xls — lista de todos los embajadores registrados</div>
+      <div class="uc-desc">Embajadores.xls</div>
       <div class="uc-name" id="uc-emb-name"></div>
     </div>
     <div class="upload-card" id="uc-ref">
       <input class="uc-input" type="file" accept=".xls,.csv,.txt" onchange="loadFile(this,'ref')">
-      <div class="uc-icon"><svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg></div>
+      <div class="uc-icon"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg></div>
       <div class="uc-title">Reporte de Referidos</div>
-      <div class="uc-desc">Reporte_Embajadores.xls — todas las referencias del CRM</div>
+      <div class="uc-desc">Reporte_Embajadores.xls</div>
       <div class="uc-name" id="uc-ref-name"></div>
     </div>
     <div class="upload-card" id="uc-pv">
       <input class="uc-input" type="file" accept=".xls,.csv,.txt" onchange="loadFile(this,'pv')">
-      <div class="uc-icon"><svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg></div>
+      <div class="uc-icon"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg></div>
       <div class="uc-title">Reporte de Preventas</div>
-      <div class="uc-desc">Reporte_Embajadores_Preventas.xls — referencias con estado y preventa</div>
+      <div class="uc-desc">Reporte_Embajadores_Preventas.xls</div>
       <div class="uc-name" id="uc-pv-name"></div>
     </div>
   </div>
-
   <button class="btn-process" id="btnProcess" onclick="processData()">Procesar y visualizar datos</button>
-
-  <!-- DASHBOARD -->
   <div id="dashboard">
-
-    <!-- KPIs -->
     <div class="kpi-row" id="kpiRow"></div>
-
-    <!-- Charts row 1 -->
     <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">REFERENCIAS POR ESTADO</div>
-        <div class="chart-wrap"><canvas id="chartEstados"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">MIX POR TIPO DE OPERACI&Oacute;N</div>
-        <div class="chart-wrap"><canvas id="chartOps"></canvas></div>
-      </div>
+      <div class="chart-card"><div class="chart-title">REFERENCIAS POR ESTADO</div><div class="chart-wrap"><canvas id="chartEstados"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">MIX POR TIPO DE OPERACI&Oacute;N</div><div class="chart-wrap"><canvas id="chartOps"></canvas></div></div>
     </div>
-
-    <!-- Charts row 2 -->
     <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">VENTAS CON PREVENTA POR SISTEMA</div>
-        <div class="chart-wrap"><canvas id="chartSistemas"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">EMBAJADORES REGISTRADOS</div>
-        <div class="chart-wrap"><canvas id="chartEmbTipo"></canvas></div>
-      </div>
+      <div class="chart-card"><div class="chart-title">VENTAS POR SISTEMA</div><div class="chart-wrap"><canvas id="chartSistemas"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">EMBAJADORES REGISTRADOS</div><div class="chart-wrap"><canvas id="chartEmbTipo"></canvas></div></div>
     </div>
-
-    <!-- Rankings -->
     <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">TOP EMBAJADORES POR REFERENCIAS</div>
-        <div class="chart-wrap" style="height:auto;overflow-x:auto">
-          <table class="rank-table" id="rankTable"></table>
+      <div class="chart-card"><div class="chart-title">TOP EMBAJADORES</div><div class="chart-wrap" style="height:auto;overflow-x:auto"><table class="rank-table" id="rankTable"></table></div></div>
+      <div class="chart-card"><div class="chart-title">VENTAS CON PREVENTA — PENDIENTES DE PAGO</div><div class="chart-wrap" style="height:auto;overflow-x:auto"><table class="rank-table" id="pvTable"></table></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OVERLAY T&C ══ -->
+<div class="overlay" id="ov-tyc" onclick="closeOnBackdrop(event,'tyc')">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <span class="overlay-title">T&Eacute;RMINOS Y CONDICIONES DEL PROGRAMA</span>
+      <button class="overlay-close" onclick="closeOverlay('tyc')"><svg viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="overlay-body">
+      <p class="tyc-intro">T&eacute;rminos y condiciones del Programa de Embajadores del Grupo Randazzo. Vigentes desde el 14/08/2026.</p>
+      <div class="tyc-section-title">1. INFORMACI&Oacute;N GENERAL</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:16px;">Las empresas participantes KIARA AUTOMOTORA S.A., PEARA S.A., AUTOS CIARA S.A. y MOVILIS RENT A CAR (en conjunto, "Grupo Randazzo") organizan el Programa de Embajadores mediante el cual personas f&iacute;sicas o jur&iacute;dicas registradas como Embajadores podr&aacute;n recomendar a terceros los productos y servicios del Grupo y generar oportunidades comerciales. Cuando una referencia v&aacute;lida derive en una Operaci&oacute;n Elegible, el Embajador podr&aacute; acceder al beneficio econ&oacute;mico previsto.</p>
+      <div class="tyc-section-title">2. DEFINICIONES</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:16px;"><strong style="color:var(--cream)">Embajador:</strong> persona f&iacute;sica mayor de 18 a&ntilde;os que se registra v&aacute;lidamente y obtiene un enlace o c&oacute;digo &uacute;nico.<br><strong style="color:var(--cream)">Referido:</strong> persona cuyos datos son informados por un Embajador para ser contactada con finalidad comercial.<br><strong style="color:var(--cream)">Cliente Referido:</strong> Referido que efectivamente concreta la compra de un veh&iacute;culo.<br><strong style="color:var(--cream)">Referencia V&aacute;lida:</strong> referencia registrada correctamente y que cumple todos los requisitos de estos T&eacute;rminos.<br><strong style="color:var(--cream)">Operaci&oacute;n Elegible:</strong> compraventa de un veh&iacute;culo efectivamente concretada y perfeccionada.<br><strong style="color:var(--cream)">Pago &Uacute;nico:</strong> beneficio econ&oacute;mico de PESOS QUINIENTOS MIL ($500.000) brutos, sujeto a retenciones y condiciones de estos T&eacute;rminos.</p>
+      <div class="tyc-section-title">3. PARTICIPACI&Oacute;N</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:16px;"><strong style="color:var(--cream)">3.1 Requisitos:</strong> Puede participar cualquier persona f&iacute;sica mayor de 18 a&ntilde;os. No pueden participar empleados del &aacute;rea comercial de ventas del Grupo ni quienes el Grupo determine razonablemente como vinculados con conflicto de inter&eacute;s.<br><br><strong style="color:var(--cream)">3.2 Vigencia:</strong> El Programa tiene una vigencia inicial de tres (3) meses desde su publicaci&oacute;n. La finalizaci&oacute;n no afecta derechos al Pago &Uacute;nico ya devengados.<br><br><strong style="color:var(--cream)">3.3 Referidos:</strong> Podr&aacute; ser Referido toda persona que no sea cliente activo del Grupo ni mantenga negociaci&oacute;n comercial activa al momento de la referencia. Si tuvo contacto en los 90 d&iacute;as anteriores: inv&aacute;lida. Entre 90 d&iacute;as y 12 meses: sujeta a revisi&oacute;n. M&aacute;s de 12 meses: puede considerarse v&aacute;lida.<br><br><strong style="color:var(--cream)">3.4 Mec&aacute;nica:</strong> El Embajador recibe un enlace &uacute;nico, personal e intransferible. Puede difundir el Programa por medios l&iacute;citos respetando estos T&eacute;rminos. No puede hacerse pasar por empleado del Grupo, negociar precios, suscribir contratos ni asumir obligaciones en nombre del Grupo.</p>
+      <div class="tyc-section-title">4. BENEFICIO — $500.000 BRUTOS</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:16px;">El beneficio es de PESOS QUINIENTOS MIL ($500.000) brutos por cada Operaci&oacute;n Elegible. El monto efectivamente percibido podr&aacute; ser inferior cuando corresponda practicar retenciones impositivas. El derecho al Pago &Uacute;nico se considera devengado cuando: (i) la referencia fue validada; (ii) el Referido se convierte en Cliente Referido; (iii) se concert&oacute; una Operaci&oacute;n Elegible; y (iv) se produjo la entrega del veh&iacute;culo.</p>
+      <div class="tyc-section-title">5. FORMA Y PLAZO DE PAGO</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:16px;"><strong style="color:var(--cream)">Externos — Consumidor Final:</strong> Transferencia bancaria al CBU registrado en el formulario. No se aceptan CVU. Plazo: 7 d&iacute;as h&aacute;biles desde la entrega.<br><br><strong style="color:var(--cream)">Externos — Monotributista / Resp. Inscripto:</strong> Previo a la transferencia, el Embajador debe emitir la factura correspondiente (Factura C o B seg&uacute;n corresponda). Plazo: 7 d&iacute;as h&aacute;biles desde la entrega o desde la recepci&oacute;n de la factura v&aacute;lida, lo que ocurra &uacute;ltimo.<br><br><strong style="color:var(--cream)">Empleados del Grupo:</strong> Pago gestionado por Recursos Humanos. Se efectiviza con el pr&oacute;ximo sueldo correspondiente al mes en que se produjo la entrega. El empleado firma un recibo de conformidad.</p>
+      <div class="tyc-section-title">6. EXCLUSIONES Y CONDUCTAS PROHIBIDAS</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:16px;">Auto-referencias &middot; Carga retroactiva de referidos en gesti&oacute;n &middot; Datos falsos o sin consentimiento &middot; Manipulaci&oacute;n del sistema &middot; Cobrar dinero a referidos en nombre del Grupo &middot; Uso no autorizado de marcas del Grupo. El incumplimiento puede dar lugar a exclusi&oacute;n, rechazo del beneficio y acciones legales.</p>
+      <div class="tyc-section-title">7. DATOS DE IDENTIFICACI&Oacute;N</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.75;">Empresas Participantes: AUTOS CIARA S.A. &middot; PEARA S.A. &middot; KIARA AUTOMOTORA S.A. &middot; MOVILIS RENT A CAR<br>Domicilio: Av. 44 N&ordm;1463, La Plata, Provincia de Buenos Aires.<br>Email: embajadores@gruporandazzo.com.ar<br>Vigencia: desde el 14/08/2026.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OVERLAY POLÍTICAS ══ -->
+<div class="overlay" id="ov-pol" onclick="closeOnBackdrop(event,'pol')">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <span class="overlay-title">POL&Iacute;TICAS INTERNAS &mdash; BORRADOR PARA REVISI&Oacute;N GERENCIAL</span>
+      <button class="overlay-close" onclick="closeOverlay('pol')"><svg viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="overlay-body">
+      <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:28px;">Pol&iacute;tica integrada Finanzas + Recursos Humanos. <strong style="color:var(--amber)">2 puntos requieren decisi&oacute;n antes de publicar.</strong></p>
+
+      <!-- DECISIONS -->
+      <div class="dec-grid-ov">
+        <div class="dec-card">
+          <div class="dec-num">1</div>
+          <div class="dec-body">
+            <div class="dec-q">&iquest;C&oacute;mo identificar al &aacute;rea comercial exclu&iacute;da?</div>
+            <div class="dec-ctx">RRHH nombr&oacute; Setter, Closer y Fisher. &iquest;Roles espec&iacute;ficos o redacci&oacute;n general?</div>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="p1" value="a"><div class="opt-body"><div class="opt-title">Roles espec&iacute;ficos</div><div class="opt-desc">"...roles de Setter, Closer y Fisher."</div></div></label>
+              <label class="opt"><input type="radio" name="p1" value="b"><div class="opt-body"><div class="opt-title">Redacci&oacute;n general + roles de referencia</div><div class="opt-desc">"...&aacute;rea comercial de ventas (Setter, Closer, Fisher y cualquier otro de captaci&oacute;n/cierre)."</div><span class="opt-rec">Recomendado</span></div></label>
+            </div>
+          </div>
+        </div>
+        <div class="dec-card">
+          <div class="dec-num">2</div>
+          <div class="dec-body">
+            <div class="dec-q">Referidos con contacto entre 90 d&iacute;as y 12 meses</div>
+            <div class="dec-ctx">RRHH: corte en 90 d&iacute;as. T&C originales: zona gris con revisi&oacute;n manual.</div>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="p2" value="a"><div class="opt-body"><div class="opt-title">Regla binaria</div><div class="opt-desc">Menos de 90 d&iacute;as: inv&aacute;lido. M&aacute;s de 90 d&iacute;as: v&aacute;lido.</div><span class="opt-rec">Recomendado</span></div></label>
+              <label class="opt"><input type="radio" name="p2" value="b"><div class="opt-body"><div class="opt-title">Zona intermedia con revisi&oacute;n manual</div><div class="opt-desc">90d &mdash; 12m: revisi&oacute;n Finanzas. +12m: v&aacute;lido autom&aacute;tico.</div></div></label>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="chart-card">
-        <div class="chart-title">VENTAS CON PREVENTA — PENDIENTES DE PAGO</div>
-        <div class="chart-wrap" style="height:auto;overflow-x:auto">
-          <table class="rank-table" id="pvTable"></table>
-        </div>
+
+      <!-- POLÍTICA COMPLETA -->
+      <div class="pol-section-h">EL PROGRAMA</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">&iquest;Qu&eacute; es el Programa?</div><div class="pol-a"><p>Programa organizado por el Grupo Randazzo (KIARA AUTOMOTORA S.A., PEARA S.A., AUTOS CIARA S.A. y MOVILIS RENT A CAR) mediante el cual Embajadores recomiendan a terceros la compra de veh&iacute;culos y reciben <strong>$500.000 brutos</strong> cuando se concreta la venta.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Vigencia</div><div class="pol-a"><p>Tres (3) meses desde la publicaci&oacute;n, con vencimiento al <strong>14 de noviembre de 2026</strong>. Extensi&oacute;n a definir en semana 4 del plan de implementaci&oacute;n.</p></div></div>
+      </div>
+      <div class="pol-section-h">ALCANCE Y PARTICIPANTES</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">&iquest;Qui&eacute;nes pueden participar?</div><div class="pol-a"><p><strong>Externos:</strong> personas f&iacute;sicas &ge;18 a&ntilde;os. Alta por formulario web; validaci&oacute;n Contable en hasta 3 horas h&aacute;biles (d&iacute;as h&aacute;biles).<br><strong>Empleados:</strong> todos excepto el &aacute;rea comercial de ventas <em>[Decisi&oacute;n 1 pendiente]</em>. Reciben link en su correo corporativo.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">&iquest;Qui&eacute;nes quedan exclu&iacute;dos?</div><div class="pol-a"><p>Personal del &aacute;rea comercial de ventas &middot; Quienes hayan proporcionado datos falsos &middot; Quienes hayan sido exclu&iacute;dos previamente &middot; El propio Embajador (auto-referencias inv&aacute;lidas).</p></div></div>
+      </div>
+      <div class="pol-section-h">VALIDEZ — REGLA DE 90 D&Iacute;AS</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">Ventana previa (90 d&iacute;as antes de la carga)</div><div class="pol-a"><p>Si el referido tuvo cualquier contacto con el Grupo en los <strong>90 d&iacute;as anteriores</strong> a la carga: referencia inv&aacute;lida. Previene que contactos de otros canales sean cargados al Programa. La referencia tampoco puede ser retroactiva si el referido ya est&aacute; en gesti&oacute;n activa (regla anti-bypass).</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Ventana activa (90 d&iacute;as para cerrar)</div><div class="pol-a"><p>Una vez cargado el referido, la operaci&oacute;n tiene <strong>90 d&iacute;as</strong> para concretarse. Durante ese per&iacute;odo no puede ser cargado por otro Embajador. Pasado el plazo sin venta: puede volver a cargarse.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Rango 90 d&iacute;as &mdash; 12 meses</div><div class="pol-a"><div class="pol-note amber">Decisi&oacute;n 2 pendiente: definir si aplica regla binaria o zona intermedia con revisi&oacute;n manual.</div></div></div>
+      </div>
+      <div class="pol-section-h">BENEFICIO Y DEVENGAMIENTO</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">Monto del beneficio</div><div class="pol-a"><p><strong>$500.000 brutos</strong> por Operaci&oacute;n Elegible. El neto puede ser inferior por retenciones impositivas (AFIP). Se genera por Cliente Referido, no por veh&iacute;culo. Una segunda compra del mismo cliente no genera segundo pago.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Cu&aacute;ndo se devenga</div><div class="pol-a"><p>Al producirse la <strong>entrega efectiva del veh&iacute;culo</strong>, o al perfeccionarse la suscripci&oacute;n al Plan de Ahorro. La entrega es el disparador; el cobro se procesa en los plazos que correspondan seg&uacute;n el tipo de Embajador.</p></div></div>
+      </div>
+      <div class="pol-section-h">MODALIDADES DE PAGO</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">Externo — Consumidor Final</div><div class="pol-a"><p>Transferencia bancaria al <strong>CBU registrado en el formulario</strong>. Plazo: 7 d&iacute;as h&aacute;biles desde la entrega. No se aceptan CVU.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Externo — Monotributista / Resp. Inscripto</div><div class="pol-a"><p>Transferencia al CBU. Requiere emisi&oacute;n previa de Factura C (Mono) o Factura B con IVA (RI). Plazo: 7 d&iacute;as h&aacute;biles desde la entrega <em>o</em> desde la recepci&oacute;n de la factura v&aacute;lida, lo que ocurra &uacute;ltimo. El Grupo practica retenciones de Ganancias/IVA/IIBB e informa el neto antes de pagar.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Empleado del Grupo</div><div class="pol-a"><p>Gestionado por Recursos Humanos. Pago en efectivo con el <strong>pr&oacute;ximo sueldo</strong> del mes en que se produjo la entrega o suscripci&oacute;n. El empleado firma recibo de conformidad interno.</p></div></div>
+      </div>
+      <div class="pol-section-h">CASOS ESPECIALES</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">Venta a nombre del c&oacute;nyuge</div><div class="pol-a"><p>Cuando la titularidad o el cr&eacute;dito queda a nombre de una persona distinta al referido, el vendedor debe <strong>vincular manualmente el c&oacute;digo del Embajador a la preventa antes del cierre</strong>. Sin esa vinculaci&oacute;n, el beneficio no puede procesarse.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Plan de Ahorro</div><div class="pol-a"><p>Las suscripciones al Plan de Ahorro tambi&eacute;n generan el beneficio. Se devenga al perfeccionarse la suscripci&oacute;n (estado SUSCRIPCION). Mismos plazos de pago que compra directa.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Alta en fin de semana</div><div class="pol-a"><p>Las inscripciones realizadas el viernes despu&eacute;s del horario o durante el fin de semana son validadas el pr&oacute;ximo d&iacute;a h&aacute;bil. El Embajador no puede comenzar a referir hasta recibir confirmaci&oacute;n del link.</p></div></div>
+      </div>
+      <div class="pol-section-h">EXCLUSIONES Y CONTROL</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">Pr&aacute;cticas prohibidas y consecuencias</div><div class="pol-a">
+          <table class="pol-table">
+            <tr><th>Pr&aacute;ctica prohibida</th><th>Consecuencia</th></tr>
+            <tr><td>Auto-referencia</td><td>Referencia inv&aacute;lida &middot; Posible exclusi&oacute;n</td></tr>
+            <tr><td>Carga retroactiva (referido en gesti&oacute;n)</td><td>Referencia inv&aacute;lida</td></tr>
+            <tr><td>Datos falsos o sin consentimiento</td><td>Exclusi&oacute;n &middot; Acciones legales</td></tr>
+            <tr><td>Cobrar a referidos en nombre del Grupo</td><td>Exclusi&oacute;n &middot; Acciones legales</td></tr>
+            <tr><td>Uso no autorizado de marcas del Grupo</td><td>Exclusi&oacute;n</td></tr>
+            <tr><td>Manipulaci&oacute;n del sistema</td><td>Exclusi&oacute;n &middot; Reintegro &middot; Acciones legales</td></tr>
+          </table>
+        </div></div>
+      </div>
+      <div class="pol-section-h">CONTACTO</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">Canales oficiales</div><div class="pol-a"><p>Consultas: <strong style="color:var(--cream)">embajadores@gruporandazzo.com.ar</strong><br>Legales (Ley 25.326): legales@gruporandazzo.com.ar<br>Domicilio: Av. 44 N&ordm;1463, La Plata, Provincia de Buenos Aires.</p></div></div>
       </div>
     </div>
-
-  </div><!-- /dashboard -->
-</div><!-- /tab-metricas -->
+  </div>
+</div>
 
 </div><!-- /page -->
 
 <script>
-/* ═══════════════════════════════════════
-   AUTH
-═══════════════════════════════════════ */
-;(async () => {
-  try {
+/* AUTH */
+;(async()=>{
+  try{
     await _sbReady;
-    const { data: { session } } = await _sb.auth.getSession();
-    if (!session) { window.location.replace('login.html'); return; }
-    document.getElementById('navUser').textContent = session.user.email;
+    const{data:{session}}=await _sb.auth.getSession();
+    if(!session){window.location.replace('login.html');return;}
+    document.getElementById('navUser').textContent=session.user.email;
     document.getElementById('auth-check').classList.add('off');
     startLoader();
-    _sb.auth.onAuthStateChange(ev => { if (ev==='SIGNED_OUT') window.location.replace('login.html'); });
-  } catch(e) { window.location.replace('login.html'); }
+    _sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT')window.location.replace('login.html');});
+  }catch(e){window.location.replace('login.html');}
 })();
-async function signOut() { await _sbReady; await _sb.auth.signOut(); window.location.replace('login.html'); }
+async function signOut(){await _sbReady;await _sb.auth.signOut();window.location.replace('login.html');}
 
-/* ═══════════════════════════════════════
-   LOADER
-═══════════════════════════════════════ */
-function startLoader() {
-  const loader = document.getElementById('loader'); loader.classList.add('on');
-  const WORD = 'EMBAJADORES'; const lw = document.getElementById('lWord');
-  WORD.split('').forEach((c,i) => {
-    const s = document.createElement('span'); s.className='l-ch'+(i===0?' hi':'');
-    s.textContent=c; s.style.animationDelay=(i*.065+.1)+'s'; lw.appendChild(s);
-  });
-  const ms = WORD.length*65+100+900;
-  setTimeout(() => {
-    loader.classList.add('out');
-    document.getElementById('page').classList.add('vis');
-    setTimeout(() => { loader.style.display='none'; }, 600);
-  }, ms);
+/* LOADER */
+function startLoader(){
+  const l=document.getElementById('loader');l.classList.add('on');
+  const W='EMBAJADORES',lw=document.getElementById('lWord');
+  W.split('').forEach((c,i)=>{const s=document.createElement('span');s.className='l-ch'+(i===0?' hi':'');s.textContent=c;s.style.animationDelay=(i*.06+.1)+'s';lw.appendChild(s);});
+  setTimeout(()=>{l.classList.add('out');document.getElementById('page').classList.add('vis');setTimeout(()=>{l.style.display='none';},600);},W.length*60+100+850);
 }
 
-/* ═══════════════════════════════════════
-   TABS
-═══════════════════════════════════════ */
-function showTab(id) {
-  document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.h-tab').forEach(t => t.classList.remove('active'));
+/* TABS */
+function showTab(id){
+  document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.h-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
-  const tabs = document.querySelectorAll('.h-tab');
-  const map = {programa:0,politicas:1,metricas:2};
-  tabs[map[id]].classList.add('active');
+  const map={programa:0,metricas:1};
+  document.querySelectorAll('.h-tab')[map[id]].classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-/* ═══════════════════════════════════════
-   FAQ ACCORDION
-═══════════════════════════════════════ */
-document.querySelectorAll('.faq-q').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const expanded = btn.getAttribute('aria-expanded')==='true';
-    document.querySelectorAll('.faq-q').forEach(b => { b.setAttribute('aria-expanded','false'); b.nextElementSibling.style.maxHeight=null; });
-    if (!expanded) { btn.setAttribute('aria-expanded','true'); btn.nextElementSibling.style.maxHeight=btn.nextElementSibling.scrollHeight+'px'; }
+/* OVERLAYS */
+function openOverlay(id){document.getElementById('ov-'+id).classList.add('open');document.body.style.overflow='hidden';}
+function closeOverlay(id){document.getElementById('ov-'+id).classList.remove('open');document.body.style.overflow='';}
+function closeOnBackdrop(e,id){if(e.target===document.getElementById('ov-'+id))closeOverlay(id);}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeOverlay('tyc');closeOverlay('pol');}});
+
+/* DECISIONS */
+document.querySelectorAll('.opts .opt input').forEach(inp=>{
+  inp.addEventListener('change',()=>{
+    document.querySelectorAll(`.opt input[name="${inp.name}"]`).forEach(i=>{i.closest('.opt').style.borderColor='';i.closest('.opt').style.background='';});
+    inp.closest('.opt').style.borderColor='rgba(180,208,0,.5)';inp.closest('.opt').style.background='rgba(180,208,0,.08)';
+    const a=document.querySelector('input[name="p1"]:checked'),b=document.querySelector('input[name="p2"]:checked');
+    if(a&&b){document.querySelectorAll('.dec-card').forEach(c=>{c.style.borderColor='rgba(74,222,128,.3)';c.style.background='rgba(74,222,128,.05)';c.querySelector('.dec-num').style.background='#4ADE80';});}
   });
 });
 
-/* ═══════════════════════════════════════
-   DECISIONS VISUAL
-═══════════════════════════════════════ */
-document.querySelectorAll('.opt input').forEach(inp => {
-  inp.addEventListener('change', () => {
-    document.querySelectorAll(`.opt input[name="${inp.name}"]`).forEach(i => {
-      i.closest('.opt').style.borderColor=''; i.closest('.opt').style.background='';
-    });
-    inp.closest('.opt').style.borderColor='rgba(180,208,0,.5)';
-    inp.closest('.opt').style.background='rgba(180,208,0,.08)';
-    const d1=document.querySelector('input[name="d1"]:checked');
-    const d2=document.querySelector('input[name="d2"]:checked');
-    if(d1&&d2){
-      document.querySelectorAll('.dec-card').forEach(c=>{
-        c.style.borderColor='rgba(74,222,128,.3)'; c.style.background='rgba(74,222,128,.05)';
-        c.querySelector('.dec-num').style.background='#4ADE80';
-      });
-    }
+/* FAQ */
+document.querySelectorAll('.faq-q').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const ex=btn.getAttribute('aria-expanded')==='true';
+    document.querySelectorAll('.faq-q').forEach(b=>{b.setAttribute('aria-expanded','false');b.nextElementSibling.style.maxHeight=null;});
+    if(!ex){btn.setAttribute('aria-expanded','true');btn.nextElementSibling.style.maxHeight=btn.nextElementSibling.scrollHeight+'px';}
   });
 });
 
-/* ═══════════════════════════════════════
-   FILE PARSING
-═══════════════════════════════════════ */
-const DATA = {emb:null, ref:null, pv:null};
-function parseCSV(text) {
-  const lines = text.replace(/\r/g,'').split('\n');
-  let start = 0;
-  if (lines[0].startsWith('sep=')) start = 1;
-  const headers = lines[start].split(';').map(h=>h.trim().replace(/"/g,''));
-  const rows = [];
-  for (let i=start+1; i<lines.length; i++) {
-    if (!lines[i].trim()) continue;
-    const cols = lines[i].split(';').map(c=>c.trim().replace(/"/g,''));
-    if (cols.length < 2) continue;
-    const obj={}; headers.forEach((h,j)=>obj[h]=cols[j]||''); rows.push(obj);
-  }
+/* FILE PARSING */
+const DATA={emb:null,ref:null,pv:null};
+function parseCSV(text){
+  const lines=text.replace(/\r/g,'').split('\n');let s=0;
+  if(lines[0].startsWith('sep='))s=1;
+  const h=lines[s].split(';').map(v=>v.trim().replace(/"/g,''));
+  const rows=[];
+  for(let i=s+1;i<lines.length;i++){if(!lines[i].trim())continue;const c=lines[i].split(';').map(v=>v.trim().replace(/"/g,''));if(c.length<2)continue;const o={};h.forEach((k,j)=>o[k]=c[j]||'');rows.push(o);}
   return rows;
 }
-function loadFile(input, key) {
-  const file = input.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    DATA[key] = parseCSV(e.target.result);
-    const card = document.getElementById('uc-'+key);
-    card.classList.add('loaded');
-    document.getElementById('uc-'+key+'-name').textContent = '✓ '+file.name;
-    const allLoaded = DATA.emb && DATA.ref && DATA.pv;
-    document.getElementById('btnProcess').classList.toggle('vis', allLoaded);
-  };
-  reader.readAsText(file, 'latin1');
+function loadFile(input,key){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{DATA[key]=parseCSV(e.target.result);document.getElementById('uc-'+key).classList.add('loaded');document.getElementById('uc-'+key+'-name').textContent='✓ '+f.name;document.getElementById('btnProcess').classList.toggle('vis',!!(DATA.emb&&DATA.ref&&DATA.pv));};
+  r.readAsText(f,'latin1');
 }
 
-/* ═══════════════════════════════════════
-   PROCESS & VISUALIZE
-═══════════════════════════════════════ */
-let charts = {};
-function destroyChart(id) { if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+/* CHARTS */
+let ch={};function dc(id){if(ch[id]){ch[id].destroy();delete ch[id];}}
+function grp(arr,key){const m={};arr.forEach(r=>{const v=r[key]||'?';m[v]=(m[v]||0)+1;});return m;}
+Chart.defaults.color='rgba(236,239,224,.5)';Chart.defaults.borderColor='rgba(236,239,224,.08)';
 
-function cnt(arr, key, val) { return arr.filter(r=>r[key]===val).length; }
-function grp(arr, key) {
-  const m={}; arr.forEach(r=>{ const v=r[key]||'Sin datos'; m[v]=(m[v]||0)+1; });
-  return m;
-}
-
-function processData() {
-  const pv = DATA.pv; const emb = DATA.emb; const ref = DATA.ref;
-  const withPV = pv.filter(r=>r['PREVENTA']&&r['PREVENTA'].trim()&&r['PREVENTA']!='nan');
-  const totalEmb = emb.length;
-  const totalRefs = pv.length;
-  const totalVentas = withPV.length;
-  const monto = totalVentas * 500000;
-
-  // KPIs
-  document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi-c k-lime"><div class="kpi-val lime">${totalEmb}</div><div class="kpi-label">Embajadores registrados</div></div>
-    <div class="kpi-c k-blue"><div class="kpi-val">${totalRefs}</div><div class="kpi-label">Referencias totales</div></div>
-    <div class="kpi-c k-green"><div class="kpi-val green">${totalVentas}</div><div class="kpi-label">Ventas con preventa</div></div>
-    <div class="kpi-c k-amber"><div class="kpi-val" style="font-size:28px">$${(monto/1000000).toFixed(1)}M</div><div class="kpi-label">Potencial bruto a pagar</div></div>
-  `;
-
-  // Estados
-  const rawEstados = grp(pv, 'Estado');
-  const estadosClean = {
-    'Finalizado':0,'Asignado':0,'Referido':0,'Presupuesto':0,'Preventa':0,'Suscripcion':0,'Entregado':0,'En negociaci\u00f3n':0
-  };
-  Object.entries(rawEstados).forEach(([k,v]) => {
-    if(k==='Finalizado') estadosClean['Finalizado']+=v;
-    else if(k==='Asignado') estadosClean['Asignado']+=v;
-    else if(k==='Referido') estadosClean['Referido']+=v;
-    else if(k.includes('Presupuesto')&&k.includes('Vinculado')) estadosClean['En negociaci\u00f3n']+=v;
-    else if(k.includes('DNI Igual')) estadosClean['Preventa']+=v;
-    else estadosClean['Otros']=(estadosClean['Otros']||0)+v;
-  });
-  const eLabels = Object.keys(estadosClean).filter(k=>estadosClean[k]>0);
-  const eVals   = eLabels.map(k=>estadosClean[k]);
-  const eColors = {'Finalizado':'#64748B','Asignado':'#38BDF8','Referido':'#94A3B8','Presupuesto':'#FCD34D','En negociaci\u00f3n':'#F59E0B','Preventa':'#4ADE80','Suscripcion':'#C4B5FD','Entregado':'#B4D000','Otros':'#475569'};
-
-  destroyChart('estados');
-  charts['estados'] = new Chart(document.getElementById('chartEstados'), {
-    type:'bar',
-    data:{ labels:eLabels, datasets:[{ data:eVals, backgroundColor:eLabels.map(l=>eColors[l]||'#64748B'), borderRadius:3, borderSkipped:false }] },
-    options:{ plugins:{legend:{display:false}}, responsive:true, maintainAspectRatio:false,
-      scales:{ x:{ticks:{color:'rgba(236,239,224,.5)',font:{size:10}},grid:{color:'rgba(236,239,224,.05)'}}, y:{ticks:{color:'rgba(236,239,224,.5)',font:{size:10}},grid:{color:'rgba(236,239,224,.08)'}} } }
-  });
-
-  // Operaciones
-  const ops = grp(pv,'TIPO OPERACION');
-  const opLabels=Object.keys(ops), opVals=opLabels.map(k=>ops[k]);
-  destroyChart('ops');
-  charts['ops'] = new Chart(document.getElementById('chartOps'),{
-    type:'doughnut',
-    data:{labels:opLabels,datasets:[{data:opVals,backgroundColor:['#38BDF8','#B4D000','#C4B5FD','#F59E0B'],borderWidth:0,hoverOffset:4}]},
-    options:{plugins:{legend:{labels:{color:'rgba(236,239,224,.6)',font:{size:11}}}},responsive:true,maintainAspectRatio:false}
-  });
-
-  // Sistemas (ventas)
-  const sis = grp(withPV,'SISTEMA');
-  const sisL=Object.keys(sis), sisV=sisL.map(k=>sis[k]);
-  destroyChart('sistemas');
-  charts['sistemas'] = new Chart(document.getElementById('chartSistemas'),{
-    type:'bar',
-    data:{labels:sisL,datasets:[{data:sisV,backgroundColor:'#B4D000',borderRadius:3,borderSkipped:false}]},
-    options:{plugins:{legend:{display:false}},responsive:true,maintainAspectRatio:false,
-      scales:{x:{ticks:{color:'rgba(236,239,224,.5)',font:{size:11}},grid:{color:'rgba(236,239,224,.05)'}},y:{ticks:{color:'rgba(236,239,224,.5)',font:{size:10}},grid:{color:'rgba(236,239,224,.08)'}}}}
-  });
-
-  // Embajadores por tipo
-  const embTipos = {};
-  emb.forEach(r=>{ const t=(r['Tipo']||'').split('Se cargo')[0].trim()||'Otro'; embTipos[t]=(embTipos[t]||0)+1; });
-  destroyChart('embTipo');
-  charts['embTipo'] = new Chart(document.getElementById('chartEmbTipo'),{
-    type:'doughnut',
-    data:{labels:Object.keys(embTipos),datasets:[{data:Object.values(embTipos),backgroundColor:['#38BDF8','#B4D000','#C4B5FD'],borderWidth:0,hoverOffset:4}]},
-    options:{plugins:{legend:{labels:{color:'rgba(236,239,224,.6)',font:{size:11}}}},responsive:true,maintainAspectRatio:false}
-  });
-
-  // Ranking embajadores
-  const rankMap = {};
-  pv.forEach(r=>{ const e=r['EMBAJADOR']||'?'; if(!rankMap[e]) rankMap[e]={refs:0,ventas:0,tipo:r['TIPO EMBAJADOR']||''}; rankMap[e].refs++; });
-  withPV.forEach(r=>{ const e=r['EMBAJADOR']||'?'; if(rankMap[e]) rankMap[e].ventas++; });
-  const sorted = Object.entries(rankMap).sort((a,b)=>b[1].refs-a[1].refs).slice(0,12);
-  document.getElementById('rankTable').innerHTML = `
-    <tr><th>#</th><th>Embajador</th><th>Tipo</th><th>Referencias</th><th>Ventas</th></tr>
-    ${sorted.map(([n,d],i)=>`<tr>
-      <td style="color:var(--muted)">${i+1}</td>
-      <td class="name">${n}</td>
-      <td><span class="badge-mini ${d.tipo==='Cliente'?'bm-cli':'bm-emp'}">${d.tipo}</span></td>
-      <td class="lime">${d.refs}</td>
-      <td class="green">${d.ventas||0}</td>
-    </tr>`).join('')}
-  `;
-
-  // Tabla pagos pendientes
-  document.getElementById('pvTable').innerHTML = `
-    <tr><th>ID</th><th>Referido</th><th>Embajador</th><th>Preventa</th><th>Sistema</th><th>Entrega</th></tr>
-    ${withPV.slice(0,15).map(r=>`<tr>
-      <td>${r['ID']}</td>
-      <td class="name">${r['NOMBRE']} ${r['APELLIDO']}</td>
-      <td>${r['EMBAJADOR']}</td>
-      <td class="lime">${r['PREVENTA']}</td>
-      <td>${r['SISTEMA']||'-'}</td>
-      <td>${r['FECHA ENTREGA']||'—'}</td>
-    </tr>`).join('')}
-    ${withPV.length>15?`<tr><td colspan="6" style="text-align:center;color:var(--muted);font-style:italic">... y ${withPV.length-15} m&aacute;s</td></tr>`:''}
-  `;
-
+function processData(){
+  const pv=DATA.pv,emb=DATA.emb;
+  const wPV=pv.filter(r=>r['PREVENTA']&&r['PREVENTA'].trim()&&r['PREVENTA']!='nan');
+  document.getElementById('kpiRow').innerHTML=`
+    <div class="kpi-c k-lime"><div class="kpi-val lime">${emb.length}</div><div class="kpi-label">Embajadores registrados</div></div>
+    <div class="kpi-c k-blue"><div class="kpi-val">${pv.length}</div><div class="kpi-label">Referencias totales</div></div>
+    <div class="kpi-c k-green"><div class="kpi-val green">${wPV.length}</div><div class="kpi-label">Ventas con preventa</div></div>
+    <div class="kpi-c k-amber"><div class="kpi-val" style="font-size:28px">$${(wPV.length*500000/1000000).toFixed(1)}M</div><div class="kpi-label">Potencial bruto a pagar</div></div>`;
+  const raw=grp(pv,'Estado'),ec={Finalizado:0,Asignado:0,Referido:0,'En negociaci\u00f3n':0,Preventa:0};
+  Object.entries(raw).forEach(([k,v])=>{if(k==='Finalizado')ec.Finalizado+=v;else if(k==='Asignado')ec.Asignado+=v;else if(k==='Referido')ec.Referido+=v;else if(k.includes('Vinculado'))ec['En negociaci\u00f3n']+=v;else if(k.includes('DNI'))ec.Preventa+=v;else ec.Otros=(ec.Otros||0)+v;});
+  const el=Object.keys(ec).filter(k=>ec[k]>0),ev=el.map(k=>ec[k]);
+  const eC={Finalizado:'#64748B',Asignado:'#38BDF8',Referido:'#94A3B8','En negociaci\u00f3n':'#F59E0B',Preventa:'#4ADE80',Otros:'#475569'};
+  dc('estados');ch['estados']=new Chart(document.getElementById('chartEstados'),{type:'bar',data:{labels:el,datasets:[{data:ev,backgroundColor:el.map(l=>eC[l]||'#64748B'),borderRadius:3,borderSkipped:false}]},options:{plugins:{legend:{display:false}},responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{font:{size:10}},grid:{color:'rgba(236,239,224,.05)'}},y:{ticks:{font:{size:10}},grid:{color:'rgba(236,239,224,.08)'}}}}});
+  const ops=grp(pv,'TIPO OPERACION');dc('ops');ch['ops']=new Chart(document.getElementById('chartOps'),{type:'doughnut',data:{labels:Object.keys(ops),datasets:[{data:Object.values(ops),backgroundColor:['#38BDF8','#B4D000','#C4B5FD','#F59E0B'],borderWidth:0,hoverOffset:4}]},options:{plugins:{legend:{labels:{font:{size:11}}}},responsive:true,maintainAspectRatio:false}});
+  const sis=grp(wPV,'SISTEMA');dc('sistemas');ch['sistemas']=new Chart(document.getElementById('chartSistemas'),{type:'bar',data:{labels:Object.keys(sis),datasets:[{data:Object.values(sis),backgroundColor:'#B4D000',borderRadius:3,borderSkipped:false}]},options:{plugins:{legend:{display:false}},responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{font:{size:11}},grid:{color:'rgba(236,239,224,.05)'}},y:{ticks:{font:{size:10}}}}}});
+  const et={};emb.forEach(r=>{const t=(r['Tipo']||'').split('Se cargo')[0].trim()||'Otro';et[t]=(et[t]||0)+1;});
+  dc('embTipo');ch['embTipo']=new Chart(document.getElementById('chartEmbTipo'),{type:'doughnut',data:{labels:Object.keys(et),datasets:[{data:Object.values(et),backgroundColor:['#38BDF8','#B4D000','#C4B5FD'],borderWidth:0,hoverOffset:4}]},options:{plugins:{legend:{labels:{font:{size:11}}}},responsive:true,maintainAspectRatio:false}});
+  const rm={};pv.forEach(r=>{const e=r['EMBAJADOR']||'?';if(!rm[e])rm[e]={refs:0,v:0,t:r['TIPO EMBAJADOR']||''};rm[e].refs++;});
+  wPV.forEach(r=>{const e=r['EMBAJADOR']||'?';if(rm[e])rm[e].v++;});
+  const s=Object.entries(rm).sort((a,b)=>b[1].refs-a[1].refs).slice(0,12);
+  document.getElementById('rankTable').innerHTML=`<tr><th>#</th><th>Embajador</th><th>Tipo</th><th>Refs</th><th>Ventas</th></tr>${s.map(([n,d],i)=>`<tr><td style="color:var(--muted)">${i+1}</td><td class="name">${n}</td><td><span class="badge-mini ${d.t==='Cliente'?'bm-cli':'bm-emp'}">${d.t}</span></td><td class="lime">${d.refs}</td><td class="green">${d.v||0}</td></tr>`).join('')}`;
+  document.getElementById('pvTable').innerHTML=`<tr><th>ID</th><th>Referido</th><th>Embajador</th><th>PV</th><th>Sistema</th></tr>${wPV.slice(0,15).map(r=>`<tr><td>${r['ID']}</td><td class="name">${r['NOMBRE']} ${r['APELLIDO']}</td><td>${r['EMBAJADOR']}</td><td class="lime">${r['PREVENTA']}</td><td>${r['SISTEMA']||'-'}</td></tr>`).join('')}${wPV.length>15?`<tr><td colspan="5" style="text-align:center;color:var(--muted);font-style:italic">... y ${wPV.length-15} m\u00e1s</td></tr>`:''}`;
   document.getElementById('dashboard').classList.add('vis');
   document.getElementById('dashboard').scrollIntoView({behavior:'smooth',block:'start'});
 }
-
-/* ═══════════════════════════════════════
-   CHART.JS DEFAULTS
-═══════════════════════════════════════ */
-Chart.defaults.color = 'rgba(236,239,224,.5)';
-Chart.defaults.borderColor = 'rgba(236,239,224,.08)';
 </script>
 </body>
 </html>
