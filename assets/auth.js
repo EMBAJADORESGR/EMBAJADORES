@@ -1,6 +1,5 @@
 /* ════════════════════════════════════════
    GRUPO RANDAZZO — Auth compartida
-   Supabase se carga via CDN antes de este script
 ════════════════════════════════════════ */
 
 let _sb;
@@ -9,7 +8,6 @@ const _sbReady = fetch('/api/config')
   .then(cfg => { _sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey); })
   .catch(() => {});
 
-// Verifica sesión al cargar la página
 async function authInit() {
   try {
     await _sbReady;
@@ -33,7 +31,6 @@ async function signOut() {
   window.location.replace('/login.html');
 }
 
-// Loader genérico — solo letras, sin logo (ya se ve en la página)
 function startLoader() {
   const loader = document.getElementById('loader');
   if (!loader) return;
@@ -57,5 +54,4 @@ function startLoader() {
   }, WORD.length * 50 + 400 + 700);
 }
 
-// Iniciar al cargar el DOM
 document.addEventListener('DOMContentLoaded', authInit);
