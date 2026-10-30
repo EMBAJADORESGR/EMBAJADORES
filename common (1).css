@@ -1,0 +1,93 @@
+/* ════════════════════════════════════════
+   GRUPO RANDAZZO — Estilos compartidos
+════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=Poppins:wght@800;900&display=swap');
+
+:root {
+  --ink:  #060705; --ink1: #0A0C08; --ink2: #0F110C;
+  --lime: #B4D000; --l10: rgba(180,208,0,.10); --l20: rgba(180,208,0,.20); --l30: rgba(180,208,0,.30);
+  --cream:#ECEFE0; --muted:rgba(236,239,224,.42); --faint:rgba(236,239,224,.05); --border:rgba(236,239,224,.08);
+  --amber:#F59E0B; --a-bg:rgba(245,158,11,.06); --a-bd:rgba(245,158,11,.22);
+  --green:#4ADE80; --g-bg:rgba(74,222,128,.07);  --g-bd:rgba(74,222,128,.2);
+  --red-tx:#FCA5A5;
+  --ff: "DM Sans", system-ui, sans-serif;
+}
+
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:16px; scroll-behavior:smooth; }
+body { font-family:var(--ff); background:var(--ink); color:var(--cream); -webkit-font-smoothing:antialiased; overflow-x:hidden; min-height:100vh; }
+a { color:inherit; text-decoration:none; }
+
+/* ── AUTH OVERLAY ── */
+#auth-check { position:fixed; inset:0; background:var(--ink); z-index:10000; display:flex; align-items:center; justify-content:center; }
+#auth-check.off { display:none; }
+.ac-spinner { width:24px; height:24px; border:2px solid var(--border); border-top-color:var(--lime); border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── LOADER ── */
+#loader { position:fixed; inset:0; background:var(--ink); z-index:9999; display:none; flex-direction:column; align-items:center; justify-content:center; gap:24px; }
+#loader.on { display:flex; }
+.ld-logo { opacity:0; animation:fadeIn .6s ease .1s forwards; }
+.ld-logo img { height:72px; width:auto; object-fit:contain; filter:brightness(1.1); }
+.ld-word { display:flex; gap:.04em; }
+.ld-ch { font-family:"Poppins","DM Sans",sans-serif; font-size:clamp(36px,6vw,72px); font-weight:800; letter-spacing:.06em; color:rgba(236,239,224,.55); opacity:0; transform:translateY(-28px); filter:blur(4px); animation:chIn .4s cubic-bezier(.22,1,.36,1) forwards; }
+.ld-ch.hi { color:var(--lime); }
+.ld-line { width:40px; height:2px; background:var(--lime); transform:scaleX(0); transform-origin:left; animation:lscale .6s ease forwards; border-radius:1px; }
+@keyframes fadeIn { to { opacity:1; } }
+@keyframes chIn { to { opacity:1; transform:none; filter:blur(0); } }
+@keyframes lscale { to { transform:scaleX(1); } }
+#loader.out { animation:lout .55s cubic-bezier(.76,0,.24,1) forwards; }
+@keyframes lout { 0% { clip-path:inset(0 0 0 0); } 100% { clip-path:inset(0 0 100% 0); } }
+#page { opacity:0; transition:opacity .4s ease; }
+#page.vis { opacity:1; }
+
+/* ── HEADER ── */
+header {
+  position:sticky; top:0; z-index:200;
+  background:rgba(6,7,5,.94); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 40px; height:56px;
+}
+.h-logo { display:flex; align-items:center; }
+.h-logo img { height:38px; width:auto; object-fit:contain; filter:brightness(1.1); }
+.h-tabs { display:flex; gap:2px; background:var(--faint); border:1px solid var(--border); border-radius:4px; padding:3px; }
+.h-tab { font-size:11px; font-weight:600; letter-spacing:.06em; padding:7px 20px; border-radius:2px; cursor:pointer; color:var(--muted); background:none; border:none; font-family:var(--ff); transition:color .2s, background .2s; text-decoration:none; display:inline-block; }
+.h-tab:hover { color:var(--cream); }
+.h-tab.active { background:var(--lime); color:var(--ink); }
+.h-right { display:flex; align-items:center; gap:10px; }
+.h-user { font-size:11px; color:var(--muted); max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.btn-so { font-size:11px; font-weight:500; color:var(--muted); background:none; border:1px solid var(--border); padding:6px 14px; border-radius:3px; cursor:pointer; font-family:var(--ff); transition:color .2s, border-color .2s; }
+.btn-so:hover { color:var(--cream); border-color:rgba(236,239,224,.2); }
+
+/* ── PAGE CONTENT ── */
+.page-content { padding:56px 40px; max-width:1100px; margin:0 auto; }
+
+/* ── SHARED COMPONENTS ── */
+.s-kicker { font-size:10px; font-weight:700; letter-spacing:.16em; color:var(--lime); margin-bottom:10px; display:flex; align-items:center; gap:10px; }
+.s-kicker::after { content:''; flex:0 0 20px; height:1px; background:var(--lime); }
+.s-h { font-size:clamp(28px,3.2vw,46px); font-weight:300; line-height:1.08; margin-bottom:8px; letter-spacing:-.01em; }
+.s-h em { font-style:normal; color:var(--lime); font-weight:700; }
+.s-sub { font-size:14px; color:var(--muted); line-height:1.7; max-width:54ch; margin-bottom:44px; }
+.divider { height:1px; background:var(--border); margin:44px 0; }
+
+/* ── OVERLAYS ── */
+.overlay { position:fixed; inset:0; z-index:500; background:rgba(6,7,5,.7); backdrop-filter:blur(6px); opacity:0; pointer-events:none; transition:opacity .3s ease; display:flex; align-items:flex-end; }
+.overlay.open { opacity:1; pointer-events:all; }
+.overlay-panel { background:var(--ink1); border-top:1px solid var(--border); border-radius:14px 14px 0 0; width:100%; max-height:92vh; overflow-y:auto; transform:translateY(100%); transition:transform .42s cubic-bezier(.32,0,.67,0); }
+.overlay.open .overlay-panel { transform:translateY(0); transition:transform .42s cubic-bezier(.33,1,.68,1); }
+.overlay-header { position:sticky; top:0; background:var(--ink1); border-bottom:1px solid var(--border); padding:16px 40px; display:flex; align-items:center; justify-content:space-between; z-index:10; }
+.overlay-title { font-size:12px; font-weight:700; letter-spacing:.08em; color:var(--muted); }
+.overlay-close { width:30px; height:30px; border-radius:50%; background:var(--faint); border:1px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s; }
+.overlay-close:hover { background:rgba(236,239,224,.1); }
+.overlay-close svg { width:11px; height:11px; stroke:var(--muted); fill:none; stroke-width:1.5; stroke-linecap:round; }
+.overlay-body { padding:40px 40px 56px; max-width:820px; margin:0 auto; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px) {
+  header { padding:0 20px; }
+  .page-content { padding:36px 20px; }
+  .h-user { display:none; }
+  .overlay-header { padding:14px 20px; }
+  .overlay-body { padding:28px 20px 48px; }
+}
