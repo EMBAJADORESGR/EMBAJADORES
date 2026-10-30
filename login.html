@@ -155,7 +155,7 @@ body{font-family:var(--ff-u);background:var(--ink);color:var(--cream);min-height
 ;(async () => {
   await _sbReady;
   const { data: { session } } = await _sb.auth.getSession();
-  if (session) window.location.replace('/index.html');
+  if (session) window.location.replace('/pages/programa.html');
 })();
 
 /* Login con email y contraseña */
@@ -178,7 +178,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     btn.classList.remove('loading');
     btn.disabled = false;
   } else {
-    window.location.replace('/index.html');
+    window.location.replace('/pages/programa.html');
   }
 });
 
@@ -199,7 +199,7 @@ document.getElementById('magicBtn').addEventListener('click', async () => {
   await _sbReady;
   const { error } = await _sb.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: window.location.origin + '/index.html' }
+    options: { emailRedirectTo: window.location.origin + '/pages/programa.html' }
   });
 
   if (!error) {
