@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programa — Grupo Randazzo Embajadores</title>
+<link rel="stylesheet" href="../assets/common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+.pol-btns{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:48px;}
+.pol-btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.02em;cursor:pointer;font-family:var(--ff);border:none;transition:all .2s;}
+.pol-btn svg{width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;}
+.pol-btn-tyc{background:var(--faint);border:1px solid var(--border);color:var(--cream);}
+.pol-btn-tyc:hover{border-color:rgba(236,239,224,.2);background:rgba(236,239,224,.07);}
+.pol-btn-reg{background:var(--lime);color:var(--ink);}
+.pol-btn-reg:hover{opacity:.85;}
+.notice{display:flex;align-items:flex-start;gap:10px;background:var(--l10);border:1px solid var(--l20);border-left:3px solid var(--lime);border-radius:3px;padding:12px 16px;margin-bottom:24px;}
+.notice svg{width:14px;height:14px;flex-shrink:0;margin-top:1px;stroke:var(--lime);fill:none;stroke-width:2;stroke-linecap:round;}
+.notice p{font-size:13px;color:var(--muted);line-height:1.55;}
+.notice p strong{color:var(--cream);}
+/* Steps */
+.steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);margin-bottom:44px;}
+.step-c{background:var(--ink1);padding:28px 22px 24px;border-top:2px solid transparent;transition:border-color .2s,background .2s;}
+.step-c.hi{border-top-color:var(--lime);}
+.step-c:hover{background:var(--ink2);}
+.step-n{font-size:10px;font-weight:700;color:var(--lime);letter-spacing:.1em;margin-bottom:14px;}
+.step-title{font-size:17px;font-weight:600;margin-bottom:8px;}
+.step-desc{font-size:13px;color:var(--muted);line-height:1.6;}
+/* States */
+.states-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:44px;}
+.state-row{display:grid;grid-template-columns:130px 1fr;gap:16px;align-items:center;padding:12px 16px;background:var(--faint);border:1px solid var(--border);border-radius:3px;transition:background .2s;}
+.state-row:hover{background:rgba(236,239,224,.07);}
+.state-row.pago{background:rgba(180,208,0,.03);border-color:var(--l20);}
+.s-badge{padding:4px 10px;border-radius:2px;font-size:10px;font-weight:700;letter-spacing:.06em;width:fit-content;}
+.sb-ref{background:rgba(148,163,184,.12);color:#94A3B8;}
+.sb-asi{background:rgba(14,165,233,.12);color:#38BDF8;}
+.sb-pre{background:rgba(245,158,11,.12);color:#FCD34D;}
+.sb-fin{background:rgba(100,116,139,.12);color:#94A3B8;}
+.sb-pv{background:rgba(34,197,94,.12);color:#4ADE80;}
+.sb-sus{background:rgba(139,92,246,.12);color:#C4B5FD;}
+.sb-ent{background:rgba(180,208,0,.15);color:var(--lime);border:1px solid var(--l20);}
+.state-desc{font-size:13px;color:var(--muted);line-height:1.4;}
+/* FAQ */
+.faq-section-title{font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--lime);padding-bottom:10px;border-bottom:1px solid rgba(180,208,0,.18);margin:32px 0 10px;}
+.faq-item{border-bottom:1px solid var(--border);}
+.faq-q{width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:16px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;font-family:var(--ff);}
+.faq-q-text{font-size:15px;font-weight:500;color:var(--cream);line-height:1.4;}
+.faq-icon{width:22px;height:22px;border-radius:50%;border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .3s,border-color .2s;}
+.faq-icon svg{width:10px;height:10px;stroke:var(--muted);fill:none;stroke-width:1.5;stroke-linecap:round;}
+.faq-q[aria-expanded="true"] .faq-icon{transform:rotate(45deg);border-color:var(--lime);}
+.faq-q[aria-expanded="true"] .faq-icon svg{stroke:var(--lime);}
+.faq-body{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1);}
+.faq-body-inner{padding:2px 0 20px;font-size:14px;color:var(--muted);line-height:1.75;}
+.faq-body-inner p{margin-bottom:8px;}
+.faq-body-inner p:last-child{margin-bottom:0;}
+.faq-body-inner strong{color:var(--cream);}
+.faq-body-inner .lime{color:var(--lime);font-weight:600;}
+.faq-note{display:flex;gap:8px;padding:10px 14px;border-radius:3px;font-size:12px;line-height:1.55;margin-top:10px;}
+.faq-note.warn{background:var(--a-bg);border:1px solid var(--a-bd);color:#FCD34D;}
+.faq-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;}
+.faq-table th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border);}
+.faq-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--muted);}
+.faq-table tr:last-child td{border-bottom:none;}
+.faq-table td strong{color:var(--cream);}
+/* Overlay políticas */
+.pol-section-h{font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--muted);margin:28px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.pol-qa-list{display:flex;flex-direction:column;}
+.pol-qa{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:18px 0;border-bottom:1px solid var(--border);align-items:start;}
+.pol-qa:last-child{border-bottom:none;}
+.pol-q{font-size:12px;font-weight:600;color:var(--lime);line-height:1.4;}
+.pol-a{font-size:13px;color:rgba(236,239,224,.72);line-height:1.75;}
+.pol-a p{margin-bottom:8px;}
+.pol-a p:last-child{margin-bottom:0;}
+.pol-a strong{color:var(--cream);}
+.pol-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px;}
+.pol-table th{padding:7px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);}
+.pol-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);}
+.pol-table tr:last-child td{border-bottom:none;}
+.pol-table td strong{color:var(--cream);}
+.tyc-section-title{font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--lime);padding-bottom:10px;border-bottom:1px solid rgba(180,208,0,.18);margin:28px 0 14px;}
+.tyc-p{font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:14px;}
+.tyc-p strong{color:var(--cream);}
+@media(max-width:900px){.steps-grid{grid-template-columns:1fr 1fr;}.states-grid{grid-template-columns:1fr;}.pol-qa{grid-template-columns:1fr;gap:6px;}}
+@media(max-width:600px){.steps-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div id="auth-check"><div class="ac-spinner"></div></div>
+<div id="loader">
+  <div class="ld-logo"><img src="../logo.png" alt="Grupo Randazzo"></div>
+  <div><div class="ld-word" id="lWord"></div><div class="ld-line" style="animation-delay:1.3s"></div></div>
+</div>
+<div id="page">
+
+<header>
+  <a href="programa.html" class="h-logo"><img src="../logo.png" alt="Grupo Randazzo"></a>
+  <div class="h-tabs">
+    <a href="programa.html" class="h-tab active">PROGRAMA</a>
+    <a href="metricas.html" class="h-tab">M&Eacute;TRICAS</a>
+  </div>
+  <div class="h-right">
+    <span class="h-user" id="navUser"></span>
+    <button class="btn-so" onclick="signOut()">Salir</button>
+  </div>
+</header>
+
+<main class="page-content">
+  <div class="s-kicker">Programa de Embajadores de Marca</div>
+  <h1 class="s-h">Refer&iacute;. Gan&aacute;. <em>$500.000.</em></h1>
+  <p class="s-sub">Recomend&aacute; a alguien que quiera un auto en Grupo Randazzo. Cuando se concreta la operaci&oacute;n elegible, el beneficio es tuyo.</p>
+
+  <div class="notice">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <p><strong>Registro exclusivo para personas externas al Grupo.</strong> Los empleados participan por un canal interno gestionado por Recursos Humanos. El link se entrega de <strong style="color:var(--lime)">forma inmediata</strong> al completar el formulario.</p>
+  </div>
+
+  <div class="pol-btns">
+    <button class="pol-btn pol-btn-tyc" onclick="openOverlay('tyc')">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      T&eacute;rminos y Condiciones
+    </button>
+    <button class="pol-btn pol-btn-reg" onclick="openOverlay('reg')">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Reglamento Completo
+    </button>
+  </div>
+
+  <!-- PASOS -->
+  <div class="steps-grid">
+    <div class="step-c hi"><div class="step-n">01</div><div class="step-title">Registrate</div><div class="step-desc">Complet&aacute; el formulario. Recib&iacute;s tu link &uacute;nico de forma inmediata y pod&eacute;s empezar a referir desde ese momento.</div></div>
+    <div class="step-c"><div class="step-n">02</div><div class="step-title">Compart&iacute; tu link</div><div class="step-desc">Envial&oacute; a quien quiera comprar un auto. Por WhatsApp, email o cualquier medio que prefieras.</div></div>
+    <div class="step-c"><div class="step-n">03</div><div class="step-title">Tu referido compra</div><div class="step-desc">El equipo comercial lo acompa&ntilde;a. Para compra directa: entrega del veh&iacute;culo. Plan de Ahorro: pago de la tercera cuota.</div></div>
+    <div class="step-c"><div class="step-n">04</div><div class="step-title">Cobras</div><div class="step-desc">7 d&iacute;as h&aacute;biles desde que se cumple la condici&oacute;n de devengamiento. El pago llega directo a tu cuenta bancaria.</div></div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="s-kicker">Estados del referido</div>
+  <p style="font-size:14px;color:var(--muted);margin-bottom:20px;">Cada referido avanza por estos estados. El estado <strong style="color:var(--lime)">ENTREGADO</strong> (compra directa) o el pago de la <strong style="color:var(--lime)">TERCERA CUOTA</strong> (Plan de Ahorro) activan el pago del beneficio.</p>
+
+  <div class="states-grid">
+    <div class="state-row"><span class="s-badge sb-ref">REFERIDO</span><span class="state-desc">El referido se carg&oacute; con &eacute;xito. El equipo comercial toma contacto pr&oacute;ximamente.</span></div>
+    <div class="state-row"><span class="s-badge sb-asi">ASIGNADO</span><span class="state-desc">Est&aacute; siendo atendido por un asesor comercial del Grupo.</span></div>
+    <div class="state-row"><span class="s-badge sb-pre">PRESUPUESTO</span><span class="state-desc">Recibi&oacute; un presupuesto por el veh&iacute;culo de inter&eacute;s. Negociaci&oacute;n activa.</span></div>
+    <div class="state-row"><span class="s-badge sb-fin">FINALIZADO</span><span class="state-desc">No realiz&oacute; una operaci&oacute;n. No genera beneficio. Puede recargarse pasados 90 d&iacute;as.</span></div>
+    <div class="state-row pago"><span class="s-badge sb-pv">PREVENTA</span><span class="state-desc">Operaci&oacute;n confirmada con n&uacute;mero de preventa. Compra directa: cerca del cobro.</span></div>
+    <div class="state-row pago"><span class="s-badge sb-sus">SUSCRIPCION</span><span class="state-desc">Suscripci&oacute;n al Plan de Ahorro perfeccionada. Beneficio activo al pago de la 3&ordf; cuota.</span></div>
+    <div class="state-row pago" style="grid-column:1/-1"><span class="s-badge sb-ent">ENTREGADO</span><span class="state-desc" style="color:var(--cream)"><strong>El veh&iacute;culo fue entregado</strong> (compra directa) o el referido <strong>abona la 3&ordf; cuota</strong> (Plan de Ahorro). El beneficio queda devengado e inicia el plazo de pago.</span></div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="s-kicker">Preguntas frecuentes</div>
+
+  <div class="faq-section-title">EL PROGRAMA</div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Qu&eacute; es el Programa y cu&aacute;nto dura?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
+  <div class="faq-body"><div class="faq-body-inner"><p>Programa del Grupo Randazzo (KIARA AUTOMOTORA S.A., PEARA S.A., AUTOS CIARA S.A. y MOVILIS RENT A CAR) mediante el cual Embajadores recomiendan a terceros la compra de veh&iacute;culos y reciben <strong class="lime">$500.000 brutos</strong> cuando se cumple la condici&oacute;n de devengamiento.</p><p>Vigencia: hasta el <strong class="lime">31 de diciembre de 2026</strong>. El Grupo puede extenderlo, suspenderlo o finalizarlo con comunicaci&oacute;n previa. La finalizaci&oacute;n no afecta beneficios ya devengados.</p></div></div></div>
+
+  <div class="faq-section-title">REGISTRO Y ALTA</div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Este formulario es para empleados del Grupo?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
+  <div class="faq-body"><div class="faq-body-inner"><p><strong>No.</strong> El formulario es exclusivamente para <strong>personas externas</strong>. Los empleados participan por un canal interno gestionado por RRHH y reciben su link en el correo corporativo.</p></div></div></div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Cu&aacute;ndo puedo empezar a referir?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
+  <div class="faq-body"><div class="faq-body-inner"><p>Al completar el formulario recib&iacute;s tu link <strong class="lime">de inmediato</strong> y pod&eacute;s empezar a referir desde ese momento, incluso en fin de semana. El &aacute;rea Contable verifica los datos bancarios de forma asincr&oacute;nica, sin bloquear tu operatoria.</p></div></div></div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Qu&eacute; pasa si Contable pide corregir mi CBU?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
+  <div class="faq-body"><div class="faq-body-inner"><p>Si el CBU no coincide con el titular de la cuenta, Contable te notifica con el motivo y te pide que corrijas los datos. <strong>Tus referidos ya cargados siguen siendo v&aacute;lidos.</strong> Solo el pago queda en pausa hasta confirmar el CBU correcto.</p></div></div></div>
+
+  <div class="faq-section-title">QUI&Eacute;NES PARTICIPAN</div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Qui&eacute;nes pueden ser Embajadores?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
+  <div class="faq-body"><div class="faq-body-inner"><p>— <strong>Externos:</strong> &ge;18 a&ntilde;os. Alta por formulario web con link inmediato.<br>— <strong>Empleados:</strong> todos excepto el personal del &aacute;rea comercial de ventas. Link en correo corporativo.</p></div></div></div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Qui&eacute;nes NO pueden participar?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
+  <div class="faq-body"><div class="faq-body-inner"><p>Personal del &aacute;rea comercial de ventas del Grupo &middot; Quienes hayan proporcionado datos falsos &middot; El propio Embajador (auto-referencias inv&aacute;lidas).</p></div></div></div>
+
+  <div class="faq-section-title">REGLA DE 90 D&Iacute;AS</div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Cu&aacute;ndo es v&aacute;lida una referencia?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
+  <div class="faq-body"><div class="faq-body-inner"><p><strong>Ventana previa:</strong> si el referido tuvo contacto con el Grupo en los &uacute;ltimos 90 d&iacute;as, la referencia no es v&aacute;lida.<br><strong>No retroactiva:</strong> si el referido ya est&aacute; siendo atendido activamente, tampoco es v&aacute;lida.<br><strong>M&aacute;s de 90 d&iacute;as sin contacto:</strong> v&aacute;lida.</p></div></div></div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Cu&aacute;nto tiempo tiene el referido para comprar?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
+  <div class="faq-body"><div class="faq-body-inner"><p>Una vez cargado, la operaci&oacute;n tiene <strong class="lime">90 d&iacute;as</strong> para concretarse. Si no se vende, el referido puede volver a cargarse pasado ese plazo. Durante los 90 d&iacute;as no puede ser cargado por otro Embajador.</p></div></div></div>
+
+  <div class="faq-section-title">BENEFICIO Y PAGO</div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Cu&aacute;ndo se devenga el beneficio?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
+  <div class="faq-body"><div class="faq-body-inner"><p><strong>Compra directa:</strong> cuando se produce la entrega efectiva del veh&iacute;culo al referido.<br><strong>Plan de Ahorro:</strong> cuando el referido abona efectivamente la <strong class="lime">tercera cuota</strong> de su suscripci&oacute;n. La sola suscripci&oacute;n o el pago de las primeras dos cuotas <em>no generan derecho al beneficio.</em></p></div></div></div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Cu&aacute;nto vale el beneficio y c&oacute;mo se cobra?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
+  <div class="faq-body"><div class="faq-body-inner">
+    <table class="faq-table">
+      <tr><th>Tipo</th><th>Modalidad</th><th>Plazo compra directa</th><th>Plazo Plan de Ahorro</th><th>Doc.</th></tr>
+      <tr><td><strong>Externo Cons. Final</strong></td><td>Transferencia CBU</td><td>7 d&iacute;as h&aacute;biles desde entrega</td><td>7 d&iacute;as h&aacute;biles desde 3&ordf; cuota</td><td>CBU (no CVU)</td></tr>
+      <tr><td><strong>Monotributista</strong></td><td>Transferencia CBU</td><td>7 d&iacute;as h&aacute;biles*</td><td>7 d&iacute;as h&aacute;biles**</td><td>Factura C + CBU</td></tr>
+      <tr><td><strong>Resp. Inscripto</strong></td><td>Transferencia CBU</td><td>7 d&iacute;as h&aacute;biles*</td><td>7 d&iacute;as h&aacute;biles**</td><td>Factura A + CBU</td></tr>
+      <tr><td><strong>Empleado</strong></td><td>Pr&oacute;ximo sueldo</td><td>Pr&oacute;x. liquidaci&oacute;n</td><td>Tras confirmar 3&ordf; cuota</td><td>Gesti&oacute;n RRHH</td></tr>
+    </table>
+    <div class="faq-note warn">*Desde entrega o factura v&aacute;lida, lo &uacute;ltimo. **Desde que se cumplen ambas: 3&ordf; cuota pagada y factura v&aacute;lida recibida.</div>
+  </div></div></div>
+
+  <div class="faq-section-title">CASOS ESPECIALES</div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Qu&eacute; pasa si el auto queda a nombre de otra persona?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
+  <div class="faq-body"><div class="faq-body-inner"><p>Cuando el cr&eacute;dito o la titularidad queda a nombre de una persona distinta al referido, el sistema pierde la trazabilidad porque los DNI no coinciden. El vendedor debe <strong>vincular manualmente el c&oacute;digo del Embajador a la preventa antes del cierre</strong>. Sin esa vinculaci&oacute;n el beneficio no puede procesarse. Avis&aacute; a embajadores@gruporandazzo.com.ar.</p></div></div></div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;El Plan de Ahorro genera beneficio?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
+  <div class="faq-body"><div class="faq-body-inner"><p>S&iacute;. El beneficio se devenga cuando el referido abona efectivamente la <strong class="lime">tercera cuota</strong> de su suscripci&oacute;n. La sola suscripci&oacute;n o el pago de las cuotas 1 y 2 no generan derecho al cobro. El &aacute;rea de Plan de Ahorro confirma el pago de la tercera cuota antes de habilitar la gesti&oacute;n del pago.</p></div></div></div>
+</main>
+
+<!-- OVERLAY T&C -->
+<div class="overlay" id="ov-tyc" onclick="closeOnBackdrop(event,'tyc')">
+  <div class="overlay-panel">
+    <div class="overlay-header"><span class="overlay-title">T&Eacute;RMINOS Y CONDICIONES</span><button class="overlay-close" onclick="closeOverlay('tyc')"><svg viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+    <div class="overlay-body">
+      <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:28px;">T&eacute;rminos y condiciones vigentes hasta el 31 de diciembre de 2026.</p>
+      <div class="tyc-section-title">1. EMPRESAS PARTICIPANTES</div>
+      <p class="tyc-p">KIARA AUTOMOTORA S.A. &middot; PEARA S.A. &middot; AUTOS CIARA S.A. &middot; MOVILIS RENT A CAR ("Grupo Randazzo"). Domicilio: Av. 44 N&ordm;1463, La Plata, Buenos Aires.</p>
+      <div class="tyc-section-title">2. DEFINICIONES CLAVE</div>
+      <p class="tyc-p"><strong>Embajador:</strong> &ge;18 a&ntilde;os, registrado y con enlace &uacute;nico.<br><strong>Referencia V&aacute;lida:</strong> registrada antes del primer contacto comercial del Referido (sin antecedente en los &uacute;ltimos 90 d&iacute;as).<br><strong>Operaci&oacute;n Elegible:</strong> compraventa con entrega realizada, o suscripci&oacute;n a Plan de Ahorro con pago efectivo de la tercera cuota.<br><strong>Pago &Uacute;nico:</strong> <strong style="color:var(--lime)">$500.000 brutos</strong> por Operaci&oacute;n Elegible.</p>
+      <div class="tyc-section-title">3. ALTA Y PARTICIPACI&Oacute;N</div>
+      <p class="tyc-p"><strong>El formulario es exclusivamente para personas externas al Grupo.</strong> Al completarlo, el Embajador recibe su link de forma inmediata y puede referir sin demoras. La verificaci&oacute;n del CBU es asincr&oacute;nica; si no coincide con el titular, Contable notifica para corregir. Los referidos ya cargados son siempre v&aacute;lidos; el pago queda en pausa hasta confirmar el CBU.</p>
+      <p class="tyc-p">La referencia no es v&aacute;lida si el Referido tuvo contacto en los 90 d&iacute;as anteriores. Una vez cargado, el Referido tiene 90 d&iacute;as para concretar la operaci&oacute;n.</p>
+      <div class="tyc-section-title">4. DEVENGAMIENTO DEL BENEFICIO</div>
+      <p class="tyc-p"><strong>Compra directa:</strong> entrega efectiva del veh&iacute;culo.<br><strong>Plan de Ahorro:</strong> pago efectivo de la tercera cuota. La suscripci&oacute;n o las cuotas 1 y 2 no devengan el beneficio.</p>
+      <div class="tyc-section-title">5. PAGO — $500.000 BRUTOS</div>
+      <p class="tyc-p"><strong>Consumidor Final:</strong> transferencia al CBU en 7 d&iacute;as h&aacute;biles desde el devengamiento. No se aceptan CVU.<br><strong>Mono/RI:</strong> idem + Factura C o Factura A (RI). Plazo: 7 d&iacute;as h&aacute;biles desde el devengamiento o la factura, lo &uacute;ltimo. Se practican retenciones AFIP.<br><strong>Empleados:</strong> pr&oacute;ximo sueldo una vez devengado el beneficio. Gestiona RRHH.</p>
+      <div class="tyc-section-title">6. EXCLUSIONES</div>
+      <p class="tyc-p">Auto-referencias &middot; Carga retroactiva &middot; Datos falsos &middot; Manipulaci&oacute;n del sistema. El incumplimiento puede dar lugar a exclusi&oacute;n y acciones legales.</p>
+      <div class="tyc-section-title">7. CONTACTO</div>
+      <p class="tyc-p">embajadores@gruporandazzo.com.ar &middot; legales@gruporandazzo.com.ar &middot; www.gruporandazzo.com</p>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY REGLAMENTO COMPLETO -->
+<div class="overlay" id="ov-reg" onclick="closeOnBackdrop(event,'reg')">
+  <div class="overlay-panel">
+    <div class="overlay-header"><span class="overlay-title">REGLAMENTO Y CONDICIONES DE PARTICIPACI&Oacute;N</span><button class="overlay-close" onclick="closeOverlay('reg')"><svg viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+    <div class="overlay-body">
+      <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:36px;">Reglamento oficial. Vigente hasta el <strong style="color:var(--lime)">31 de diciembre de 2026</strong>.</p>
+
+      <div class="pol-section-h">EL PROGRAMA</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">&iquest;Qu&eacute; es el Programa?</div><div class="pol-a"><p>Programa organizado por el Grupo Randazzo (KIARA AUTOMOTORA S.A., PEARA S.A., AUTOS CIARA S.A. y MOVILIS RENT A CAR). Los Embajadores recomiendan a terceros la compra de veh&iacute;culos. Cuando esa recomendaci&oacute;n deriva en una operaci&oacute;n elegible y se cumple la condici&oacute;n de devengamiento, el Embajador recibe un beneficio de <strong>$500.000 brutos</strong>.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Vigencia</div><div class="pol-a"><p>Tres (3) meses desde su publicaci&oacute;n y, en todos los casos, hasta el <strong>31 de diciembre de 2026</strong>. El Grupo podr&aacute; extenderlo, suspenderlo o finalizarlo. La finalizaci&oacute;n no afectar&aacute; los beneficios ya devengados.</p></div></div>
+      </div>
+
+      <div class="pol-section-h">ALCANCE Y PARTICIPANTES</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">&iquest;Qui&eacute;nes pueden participar?</div><div class="pol-a"><p><strong>Personas externas al Grupo:</strong> cualquier persona f&iacute;sica mayor de 18 a&ntilde;os. Se registran mediante el formulario habilitado en el sitio oficial.</p><p><strong>Empleados del Grupo:</strong> todos los empleados, con excepci&oacute;n del personal del &aacute;rea comercial de ventas. Reciben su link personalizado en el correo corporativo.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">&iquest;Qui&eacute;nes quedan excluidos?</div><div class="pol-a"><p>Personal del &aacute;rea comercial de ventas &middot; Personas con datos falsos o excluidas previamente &middot; Auto-referencias (el Embajador no puede referirse a s&iacute; mismo).</p></div></div>
+      </div>
+
+      <div class="pol-section-h">VALIDEZ — REGLA DE 90 D&Iacute;AS</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">Ventana previa (90 d&iacute;as antes)</div><div class="pol-a"><p>Si el Referido registra cualquier contacto con el Grupo durante los 90 d&iacute;as anteriores a la fecha de carga, la referencia no ser&aacute; v&aacute;lida. Si el Referido ya est&aacute; siendo atendido activamente por un asesor, tampoco ser&aacute; v&aacute;lida, aunque no hayan transcurrido 90 d&iacute;as.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Ventana activa (90 d&iacute;as para concretar)</div><div class="pol-a"><p>Una vez cargado el Referido, la operaci&oacute;n tendr&aacute; 90 d&iacute;as para concretarse. Durante ese per&iacute;odo, el mismo Referido no podr&aacute; ser cargado por otro Embajador. Transcurridos los 90 d&iacute;as sin operaci&oacute;n elegible, el Referido podr&aacute; volver a ser presentado.</p></div></div>
+      </div>
+
+      <div class="pol-section-h">BENEFICIO Y DEVENGAMIENTO</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">Monto</div><div class="pol-a"><p><strong>$500.000 brutos</strong> por cada Operaci&oacute;n Elegible. El importe neto puede ser inferior por retenciones impositivas. Se genera por cada veh&iacute;culo entregado en compra directa, o por suscripci&oacute;n a Plan de Ahorro que cumpla la condici&oacute;n de devengamiento.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">&iquest;Cu&aacute;ndo se devenga?</div><div class="pol-a"><p><strong>Compra directa:</strong> cuando se produce la entrega efectiva del veh&iacute;culo al Referido.<br><strong>Plan de Ahorro:</strong> &uacute;nicamente cuando el Referido haya abonado efectivamente la <strong>tercera cuota</strong> de su suscripci&oacute;n. La sola suscripci&oacute;n o el pago de las cuotas 1 y 2 no generan derecho al beneficio.</p></div></div>
+      </div>
+
+      <div class="pol-section-h">MODALIDADES DE PAGO</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">Externo — Consumidor Final</div><div class="pol-a"><p><strong>Plazo compra directa:</strong> 7 d&iacute;as h&aacute;biles desde la entrega efectiva.<br><strong>Plazo Plan de Ahorro:</strong> 7 d&iacute;as h&aacute;biles desde el pago efectivo de la tercera cuota.<br><strong>Documentaci&oacute;n:</strong> CBU de cuenta bancaria cuyo titular sea el Embajador. No se aceptan CVU.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Externo — Mono / Resp. Inscripto</div><div class="pol-a"><p><strong>Plazo compra directa:</strong> 7 d&iacute;as h&aacute;biles desde la entrega o desde la factura v&aacute;lida, lo que ocurra &uacute;ltimo.<br><strong>Plazo Plan de Ahorro:</strong> 7 d&iacute;as h&aacute;biles desde que se cumplan ambas: pago de la tercera cuota y factura v&aacute;lida recibida.<br><strong>Documentaci&oacute;n:</strong> Factura C (Mono) o Factura A con IVA discriminado (RI) a nombre de la Empresa Participante. Se practicar&aacute;n las retenciones impositivas que correspondan.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Empleado del Grupo</div><div class="pol-a"><p>Gestionado por RRHH. El beneficio se liquidar&aacute; junto con el pr&oacute;ximo sueldo que corresponda, una vez devengado. Para Plan de Ahorro: una vez confirmado el pago efectivo de la tercera cuota.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Alta y verificaci&oacute;n bancaria</div><div class="pol-a"><p>Al completar el formulario, el Embajador recibe su link de forma <strong>inmediata</strong> y puede comenzar a referir sin demoras. La verificaci&oacute;n del CBU es asincr&oacute;nica. Si el CBU no corresponde al titular, Contable notifica al Embajador para que corrija los datos. Los Referidos ya cargados <strong>permanecen v&aacute;lidos</strong>; el pago queda en pausa hasta confirmar el CBU.</p></div></div>
+      </div>
+
+      <div class="pol-section-h">CASOS ESPECIALES</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">Venta a otro nombre</div><div class="pol-a"><p>El vendedor debe vincular manualmente el c&oacute;digo del Embajador a la preventa antes del cierre. Sin esa vinculaci&oacute;n el beneficio no puede procesarse. Avisar a <strong style="color:var(--cream)">embajadores@gruporandazzo.com.ar</strong>.</p></div></div>
+        <div class="pol-qa"><div class="pol-q">Plan de Ahorro</div><div class="pol-a"><p>El beneficio se devenga cuando el Referido abona efectivamente la <strong>tercera cuota</strong>. La sola suscripci&oacute;n o el pago de las cuotas 1 y 2 no generan derecho al cobro. El &aacute;rea responsable verificar&aacute; y confirmar&aacute; el pago antes de habilitar el cobro al Embajador.</p></div></div>
+      </div>
+
+      <div class="pol-section-h">EXCLUSIONES Y CONTROL</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">Pr&aacute;cticas prohibidas</div><div class="pol-a">
+          <table class="pol-table">
+            <tr><th>Pr&aacute;ctica</th><th>Consecuencia</th></tr>
+            <tr><td>Auto-referencia</td><td>Referencia inv&aacute;lida</td></tr>
+            <tr><td>Carga retroactiva de referido en gesti&oacute;n</td><td>Referencia inv&aacute;lida</td></tr>
+            <tr><td>Datos falsos o sin consentimiento del Referido</td><td>Exclusi&oacute;n del Programa</td></tr>
+            <tr><td>Cobrar dinero a Referidos en nombre del Grupo</td><td>Exclusi&oacute;n &middot; Acciones legales</td></tr>
+            <tr><td>Uso no autorizado de marcas del Grupo</td><td>Exclusi&oacute;n &middot; Acciones legales</td></tr>
+            <tr><td>Manipulaci&oacute;n del sistema</td><td>Exclusi&oacute;n &middot; Reintegro &middot; Acciones legales</td></tr>
+          </table>
+        </div></div>
+      </div>
+
+      <div class="pol-section-h">CONTACTO</div>
+      <div class="pol-qa-list">
+        <div class="pol-qa"><div class="pol-q">Canales oficiales</div><div class="pol-a"><p>Consultas: <strong style="color:var(--cream)">embajadores@gruporandazzo.com.ar</strong><br>Datos personales (Ley 25.326): legales@gruporandazzo.com.ar<br>Domicilio: Av. 44 N&ordm;1463, La Plata, Provincia de Buenos Aires. &middot; www.gruporandazzo.com</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+<script src="../assets/auth.js"></script>
+<script>
+function openOverlay(id){document.getElementById('ov-'+id).classList.add('open');document.body.style.overflow='hidden';}
+function closeOverlay(id){document.getElementById('ov-'+id).classList.remove('open');document.body.style.overflow='';}
+function closeOnBackdrop(e,id){if(e.target===document.getElementById('ov-'+id))closeOverlay(id);}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){['tyc','reg'].forEach(closeOverlay);}});
+document.querySelectorAll('.faq-q').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const ex=btn.getAttribute('aria-expanded')==='true';
+    document.querySelectorAll('.faq-q').forEach(b=>{b.setAttribute('aria-expanded','false');b.nextElementSibling.style.maxHeight=null;});
+    if(!ex){btn.setAttribute('aria-expanded','true');btn.nextElementSibling.style.maxHeight=btn.nextElementSibling.scrollHeight+'px';}
+  });
+});
+</script>
+</body>
+</html>
