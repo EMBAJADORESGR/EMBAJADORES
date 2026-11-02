@@ -314,7 +314,10 @@ CREATE POLICY "auth_all" ON emb_dataset FOR ALL TO authenticated USING (true) WI
       <div class="modal-info"><strong>Impacto:</strong> esta entrada suma al total de Entregados y al monto pendiente de pago. Puede marcarse como pagada desde la tabla de Gesti&oacute;n.</div>
       <form id="manForm" onsubmit="submitManual(event)">
         <div class="form-grid">
-          <div class="f-group"><label class="f-label">Embajador *</label><input class="f-input" name="embajador" placeholder="Nombre del embajador" required></div>
+          <div class="f-group"><label class="f-label">Embajador *</label>
+            <input class="f-input" name="embajador" id="inputEmbajador" list="listEmbajadores" placeholder="Escribí o seleccioná un embajador" required autocomplete="off">
+            <datalist id="listEmbajadores"></datalist>
+          </div>
           <div class="f-group"><label class="f-label">Referido (quien compr&oacute;) *</label><input class="f-input" name="referido" placeholder="Nombre del referido" required></div>
         </div>
         <div class="form-grid">
@@ -325,7 +328,7 @@ CREATE POLICY "auth_all" ON emb_dataset FOR ALL TO authenticated USING (true) WI
         </div>
         <div class="form-grid">
           <div class="f-group"><label class="f-label">Fecha de entrega</label><input class="f-input" type="date" name="fecha_entrega"></div>
-          <div class="f-group"><label class="f-label">Motivo</label><input class="f-input" name="motivo" value="Cónyuge — preventa a nombre de tercero"></div>
+          <div class="f-group"><label class="f-label">Motivo</label><input class="f-input" name="motivo" placeholder="Ej: C&oacute;nyuge, cr&eacute;dito a nombre de tercero..."></div>
         </div>
         <div class="form-grid full">
           <div class="f-group"><label class="f-label">Notas</label><textarea class="f-textarea" name="notas" placeholder="Ej: DNI del c&oacute;nyuge, nombre en la preventa, confirmado por..."></textarea></div>
@@ -578,7 +581,26 @@ async function unmarkPaid(id,preventa){
 }
 
 /* ════ MODAL MANUAL ════ */
-function openModal(){document.getElementById('modalBg').classList.add('open');document.body.style.overflow='hidden';}
+function openModal(){
+  document.getElementById('modalBg').classList.add('open');
+  document.body.style.overflow='hidden';
+  populateEmbajadoresList();
+}
+
+function populateEmbajadoresList(){
+  const dl = document.getElementById('listEmbajadores');
+  if(!dl) return;
+  // Obtener embajadores únicos del dataset actual o del raw
+  const names = new Set();
+  if(window._rawKPI && window._rawKPI._ref){
+    window._rawKPI._ref.forEach(r => { if(r._e) names.add(r._e); });
+  }
+  // También agregar los que ya están en manuales
+  _manuales.forEach(m => { if(m.embajador) names.add(m.embajador); });
+  // Ordenar y poblar
+  const sorted = [...names].sort((a,b) => a.localeCompare(b,'es'));
+  dl.innerHTML = sorted.map(n => `<option value="${n.replace(/"/g,'&quot;')}">`).join('');
+}
 function closeModal(){document.getElementById('modalBg').classList.remove('open');document.body.style.overflow='';}
 function closeModalBg(e){if(e.target===document.getElementById('modalBg'))closeModal();}
 
