@@ -58,12 +58,25 @@
 #met-dashboard{display:none;}
 #met-dashboard.vis{display:block;}
 .kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);margin-bottom:1px;}
-.kpi-strip2{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);margin-bottom:14px;}
-.kpi-cell2{background:var(--ink2);padding:14px 15px;border-left:3px solid transparent;}
-.kpi-cell2.k-lime{border-left-color:var(--lime);}
-.kpi-cell2.k-green{border-left-color:var(--green);}
-.kpi-v2{font-size:22px;font-weight:700;line-height:1;margin-bottom:3px;color:var(--cream);}
-.kpi-v2 span{font-size:14px;font-weight:400;color:var(--muted);margin-left:4px;}
+.kpi-float-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.kpi-float{
+  background:linear-gradient(135deg,var(--ink1) 0%,var(--ink2) 100%);
+  border:1px solid var(--border);border-radius:12px;padding:22px 24px;
+  position:relative;overflow:hidden;
+}
+.kpi-float::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--lime) 0%,transparent 70%);}
+.kpi-float.k-green::before{background:linear-gradient(90deg,var(--green) 0%,transparent 70%);}
+.kf-icon{width:32px;height:32px;background:var(--l10);border:1px solid var(--l20);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.kf-icon.g{background:rgba(74,222,128,.08);border-color:var(--g-bd);}
+.kf-icon svg{width:15px;height:15px;stroke:var(--lime);fill:none;stroke-width:2;stroke-linecap:round;}
+.kf-icon.g svg{stroke:var(--green);}
+.kf-v{font-size:44px;font-weight:700;color:var(--cream);line-height:1;margin-bottom:4px;letter-spacing:-.02em;}
+.kf-v .kf-total{font-size:22px;font-weight:400;color:var(--muted);margin-left:6px;}
+.kf-label{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);margin-bottom:14px;}
+.kf-bar-track{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.kf-bar-fill{height:100%;background:var(--lime);border-radius:2px;transition:width .6s ease;}
+.kf-bar-fill.g{background:var(--green);}
+.kf-sub{font-size:11px;color:var(--muted);margin-top:8px;}
 .kpi-cell{background:var(--ink1);padding:18px 15px;border-top:2px solid transparent;}
 .kpi-cell.k-lime{border-top-color:var(--lime);}.kpi-cell.k-green{border-top-color:var(--green);}
 .kpi-cell.k-amber{border-top-color:var(--amber);}.kpi-cell.k-blue{border-top-color:#60A5FA;}
@@ -80,8 +93,9 @@
 .cbox{background:var(--ink1);border:1px solid var(--border);border-radius:5px;padding:18px;}
 .cbox-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .cbox-title{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted);}
-.ch{position:relative;height:190px;}
-.ch.tall{height:265px;}
+.ch{position:relative;height:220px;display:flex;align-items:center;justify-content:center;}
+.ch canvas{max-width:100%!important;}
+.ch.tall{height:280px;}
 .ch.hist{height:140px;}
 /* Tables */
 .mt{width:100%;border-collapse:collapse;font-size:12px;}
@@ -90,8 +104,11 @@
 .mt td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:middle;}
 .mt td.name{color:var(--cream);font-weight:500;}
 .mt td.lime{color:var(--lime);font-weight:600;}
+.mt td.green{color:var(--green);font-weight:600;}
 .mt td.r{text-align:right;}
 .mt tr:hover td{color:var(--cream);}
+.sale-dot{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--green);}
+.sale-dot::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;}
 /* Tags */
 .tag-pen{font-size:10px;font-weight:700;padding:3px 8px;border-radius:2px;background:var(--a-bg);border:1px solid var(--a-bd);color:var(--amber);white-space:nowrap;}
 .tag-paid{font-size:10px;font-weight:700;padding:3px 8px;border-radius:2px;background:rgba(74,222,128,.08);border:1px solid var(--g-bd);color:var(--green);white-space:nowrap;}
@@ -263,15 +280,25 @@ CREATE POLICY "auth_all" ON emb_dataset FOR ALL TO authenticated USING (true) WI
       <div class="kpi-cell k-amber"><div class="kpi-v amber" id="kPag">—</div><div class="kpi-l">Beneficios pagados</div><div class="kpi-sub" id="kPagS"></div></div>
       <div class="kpi-cell k-gray"><div class="kpi-v" id="kMonto" style="font-size:20px;margin-top:10px">—</div><div class="kpi-l">Pendiente de pago</div><div class="kpi-sub" id="kMontoS"></div></div>
     </div>
-    <!-- KPIs fila 2: embajadores con PV -->
-    <div class="kpi-strip2">
-      <div class="kpi-cell2 k-lime">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--muted);margin-bottom:6px;">EMBAJADORES CON PREVENTA ASIGNADA</div>
-        <div class="kpi-v2" id="kEmbPV">—<span id="kEmbPVSub"></span></div>
+    <!-- KPIs flotantes: embajadores con PV -->
+    <div class="kpi-float-row">
+      <div class="kpi-float">
+        <div class="kf-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <div class="kf-label">EMBAJADORES CON PREVENTA ASIGNADA</div>
+        <div class="kf-v" id="kEmbPV">—<span class="kf-total" id="kEmbPVSub"></span></div>
+        <div class="kf-bar-track"><div class="kf-bar-fill" id="kEmbPVBar" style="width:0%"></div></div>
+        <div class="kf-sub" id="kEmbPVDesc"></div>
       </div>
-      <div class="kpi-cell2 k-green">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--muted);margin-bottom:6px;">EMBAJADORES CON BENEFICIO PAGADO</div>
-        <div class="kpi-v2" id="kEmbPagados">—<span id="kEmbPagadosSub"></span></div>
+      <div class="kpi-float k-green">
+        <div class="kf-icon g">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="kf-label">EMBAJADORES CON BENEFICIO PAGADO</div>
+        <div class="kf-v" id="kEmbPag">—<span class="kf-total" id="kEmbPagSub"></span></div>
+        <div class="kf-bar-track"><div class="kf-bar-fill g" id="kEmbPagBar" style="width:0%"></div></div>
+        <div class="kf-sub" id="kEmbPagDesc"></div>
       </div>
     </div>
 
@@ -284,7 +311,7 @@ CREATE POLICY "auth_all" ON emb_dataset FOR ALL TO authenticated USING (true) WI
     <!-- Charts row 2 -->
     <div class="cg cg-2">
       <div class="cbox"><div class="cbox-title">ENTREGADOS POR SISTEMA</div><div class="ch"><canvas id="cSis"></canvas></div></div>
-      <div class="cbox"><div class="cbox-title">TOP 10 EMBAJADORES</div><div class="ch tall"><canvas id="cTopEmp"></canvas></div></div>
+      <div class="cbox"><div class="cbox-title">TOP 10 EMBAJADORES — RANKING GENERAL</div><div class="ch tall"><canvas id="cTopEmp"></canvas></div></div>
     </div>
     <!-- Histórico -->
     <div class="cbox" id="histBox" style="display:none;margin-bottom:10px;">
@@ -294,7 +321,11 @@ CREATE POLICY "auth_all" ON emb_dataset FOR ALL TO authenticated USING (true) WI
     <!-- Tables -->
     <div class="cg cg-2">
       <div class="cbox"><div class="cbox-title">POR TEAM (CRM)</div><div style="overflow-x:auto"><table class="mt" id="tTeams"></table></div></div>
-      <div class="cbox"><div class="cbox-title">EMBAJADORES EXTERNOS</div><div style="overflow-x:auto"><table class="mt" id="tExt"></table></div></div>
+      <div class="cbox"><div class="cbox-title">TOP EMPLEADOS — REFS Y VENTAS EFECTIVAS</div><div style="overflow-x:auto"><table class="mt" id="tTopEmpl"></table></div></div>
+    </div>
+    <div class="cbox" style="margin-bottom:10px;">
+      <div class="cbox-title">EMBAJADORES EXTERNOS — REFS Y VENTAS EFECTIVAS</div>
+      <div style="overflow-x:auto"><table class="mt" id="tExt"></table></div>
     </div>
     <!-- Gestión de pagos -->
     <div class="cbox" style="margin-bottom:10px;">
@@ -536,7 +567,24 @@ const EC={'Finalizado':C.gray,'Asignado':C.blue,'Referido':'#94A3B8','Pres. vinc
 const OC={'Usados':C.blue,'0KM':C.lime,'Plan de Ahorro':C.purple,'Ventas Especiales':C.amber,'Sin definir':C.gray};
 Chart.defaults.color='rgba(236,239,224,.45)';Chart.defaults.borderColor='rgba(236,239,224,.07)';Chart.defaults.font.family='"DM Sans",sans-serif';Chart.defaults.font.size=11;
 function dc(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
-function donut(id,labels,data,cols){dc(id);CH[id]=new Chart(document.getElementById(id),{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:cols,borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{padding:10,boxWidth:9,font:{size:10}}}}}});}
+function donut(id,labels,data,cols){
+  dc(id);
+  CH[id]=new Chart(document.getElementById(id),{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:cols,borderWidth:0,hoverOffset:4}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'65%',
+      layout:{padding:{top:8,bottom:8}},
+      plugins:{
+        legend:{
+          position:'right',
+          align:'center',
+          labels:{padding:14,boxWidth:10,font:{size:10},color:'rgba(236,239,224,.55)'}
+        }
+      }
+    }
+  });
+}
 function barC(id,labels,data,lbl,col,hz){dc(id);CH[id]=new Chart(document.getElementById(id),{type:'bar',data:{labels,datasets:[{label:lbl,data,backgroundColor:col,borderRadius:3,borderSkipped:false}]},options:{indexAxis:hz?'y':'x',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(236,239,224,.05)'},ticks:{font:{size:10}}},y:{grid:{color:'rgba(236,239,224,.07)'},ticks:{font:{size:10}}}}}});}
 
 function renderDash(k){
@@ -553,9 +601,15 @@ function renderDash(k){
   barC('cSis',Object.keys(k.sis),Object.values(k.sis),'Entregas',C.lime,false);
   barC('cTopEmp',k.topAll.map(x=>x[0]),k.topAll.map(x=>x[1]),'Refs',C.lA,true);
   const tms=Object.entries(k.tm).sort((a,b)=>b[1]-a[1]);
-  // KPIs fila 2
-  $('kEmbPV').innerHTML = `${k.embConPV}<span>de ${k.totalEmb} activos</span>`;
-  $('kEmbPagados').innerHTML = `${k.embPagados}<span>de ${k.embConPV} con PV (${k.embConPV>0?Math.round(k.embPagados/k.embConPV*100):0}%)</span>`;
+  // KPI flotantes
+  $('kEmbPV').innerHTML=`${k.embConPV}<span class="kf-total">/ ${k.totalEmb}</span>`;
+  $('kEmbPVSub').textContent='';
+  $('kEmbPVBar').style.width=`${k.totalEmb>0?Math.round(k.embConPV/k.totalEmb*100):0}%`;
+  $('kEmbPVDesc').textContent=`${k.totalEmb>0?Math.round(k.embConPV/k.totalEmb*100):0}% de los embajadores activos tiene al menos una venta`;
+  $('kEmbPag').innerHTML=`${k.embPagados}<span class="kf-total">/ ${k.embConPV}</span>`;
+  $('kEmbPagSub').textContent='';
+  $('kEmbPagBar').style.width=`${k.embConPV>0?Math.round(k.embPagados/k.embConPV*100):0}%`;
+  $('kEmbPagDesc').textContent=`${k.embConPV>0?Math.round(k.embPagados/k.embConPV*100):0}% de los embajadores con preventa ya cobr\u00f3 su beneficio`;
 
   $('tTeams').innerHTML=`<tr><th>#</th><th>Team</th><th class="r">Refs</th><th class="r">%</th></tr>`+tms.map(([t,n],i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${t}</td><td class="lime">${n}</td><td class="r">${(n/k.total*100).toFixed(0)}%</td></tr>`).join('');
   $('tExt').innerHTML=`<tr><th>#</th><th>Embajador ext.</th><th class="r">Refs</th></tr>`+k.topExt.map(([n,v],i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${n}</td><td class="lime">${v}</td></tr>`).join('');
