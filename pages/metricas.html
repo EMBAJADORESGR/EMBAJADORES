@@ -218,17 +218,20 @@ CREATE POLICY "auth_all" ON emb_dataset FOR ALL TO authenticated USING (true) WI
   <div class="upload-grid">
     <div class="upload-card" id="uc-reg"><input class="uc-input" type="file" accept=".csv,.xls,.txt" onchange="loadMet(this,'reg')">
       <div class="uc-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
-      <div class="uc-title">Registro de Embajadores</div><div class="uc-desc">Embajadores.xls / registro.csv</div>
+      <div class="uc-title">Registro de Embajadores</div>
+      <div class="uc-desc">Embajadores.xls</div>
       <div class="uc-name" id="uc-reg-n"></div>
     </div>
     <div class="upload-card" id="uc-ref"><input class="uc-input" type="file" accept=".csv,.xls,.txt" onchange="loadMet(this,'ref')">
       <div class="uc-icon"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg></div>
-      <div class="uc-title">Reporte de Referidos</div><div class="uc-desc">reporte_embajadores.csv</div>
+      <div class="uc-title">Reporte de Referidos</div>
+      <div class="uc-desc">Reporte_Embajadores.xls</div>
       <div class="uc-name" id="uc-ref-n"></div>
     </div>
     <div class="upload-card" id="uc-pv"><input class="uc-input" type="file" accept=".csv,.xls,.txt" onchange="loadMet(this,'pv')">
       <div class="uc-icon"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg></div>
-      <div class="uc-title">Reporte de Preventas</div><div class="uc-desc">reporte_preventas.csv</div>
+      <div class="uc-title">Reporte de Preventas <span style="font-size:9px;color:var(--lime);font-weight:400">✱ requerido</span></div>
+      <div class="uc-desc">Reporte_Embajadores_Preventas.xls</div>
       <div class="uc-name" id="uc-pv-n"></div>
     </div>
   </div>
@@ -473,7 +476,7 @@ function loadMet(inp,k){
     MF[k]=parseCSV(e.target.result);
     document.getElementById('uc-'+k).classList.add('loaded');
     document.getElementById('uc-'+k+'-n').textContent='✓ '+f.name;
-    if(MF.ref&&MF.pv){
+    if(MF.pv){
       document.getElementById('btnProcess').classList.add('vis');
       document.getElementById('filterBar').style.display='flex';
     }
@@ -546,7 +549,7 @@ function calcKPIs(ref,pv,reg){
 /* ════ PROCESS ════ */
 async function metProcess(){
   const reg=MF.reg||[];
-  const ref=cleanRef(MF.ref), pv=cleanPV(MF.pv);
+  const ref=cleanRef(MF.pv), pv=cleanPV(MF.pv);
   window._rawKPI={_ref:ref,_pv:pv,_reg:reg};
   const k=calcKPIs(ref,pv,reg);
   renderDash(k);
@@ -609,26 +612,27 @@ function barC(id,labels,data,lbl,col,hz){dc(id);CH[id]=new Chart(document.getEle
 
 function renderDash(k){
   const $=id=>document.getElementById(id);
+  const n=v=>(!isNaN(v)&&v!==undefined&&v!==null)?v:0;
   // KPI strip principal
-  $('kReg').textContent=k.totalReg||k.totalEmb;
-  $('kRegS').textContent=`${k.empEmb} empl · ${k.extEmb} ext activos`;
-  $('kRef').textContent=k.total;
-  $('kRefS').textContent=`${k.refEmp} empl · ${k.refExt} ext`;
-  $('kEnt').textContent=k.totalEnt;
+  $('kReg').textContent=n(k.totalReg)||n(k.totalEmb)||'—';
+  $('kRegS').textContent=`${n(k.empEmb)} empl · ${n(k.extEmb)} ext activos`;
+  $('kRef').textContent=n(k.total);
+  $('kRefS').textContent=`${n(k.refEmp)} empl · ${n(k.refExt)} ext`;
+  $('kEnt').textContent=n(k.totalEnt);
   $('kEntS').textContent=_manuales.length?`${_manuales.length} manuales incl.`:'';
-  $('kPag').textContent=k.pagados;
-  $('kPagS').textContent=`${k.totalEnt-k.pagados} pendientes`;
-  $('kMonto').textContent=`$${(k.montoPend/1e6).toFixed(1)}M`;
-  $('kMontoS').textContent=`${k.totalEnt-k.pagados} × $500k`;
+  $('kPag').textContent=n(k.pagados);
+  $('kPagS').textContent=`${n(k.totalEnt)-n(k.pagados)} pendientes`;
+  $('kMonto').textContent=`$${((n(k.montoPend))/1e6).toFixed(1)}M`;
+  $('kMontoS').textContent=`${n(k.totalEnt)-n(k.pagados)} × $500k`;
   // KPI flotantes — SIN tocar sub-elements internos
-  const pct1=k.totalEmb>0?Math.round(k.embConPV/k.totalEmb*100):0;
-  const pct2=k.embConPV>0?Math.round(k.embPagados/k.embConPV*100):0;
-  $('kEmbPV').textContent=k.embConPV;
-  $('kEmbPVTotal').textContent=`/ ${k.totalEmb} activos`;
+  const pct1=n(k.totalEmb)>0?Math.round(n(k.embConPV)/n(k.totalEmb)*100):0;
+  const pct2=n(k.embConPV)>0?Math.round(n(k.embPagados)/n(k.embConPV)*100):0;
+  $('kEmbPV').textContent=n(k.embConPV);
+  $('kEmbPVTotal').textContent=`/ ${n(k.totalEmb)} activos`;
   $('kEmbPVBar').style.width=`${pct1}%`;
   $('kEmbPVDesc').textContent=`${pct1}% de los embajadores tiene al menos una venta`;
-  $('kEmbPag').textContent=k.embPagados;
-  $('kEmbPagTotal').textContent=`/ ${k.embConPV} con PV`;
+  $('kEmbPag').textContent=n(k.embPagados);
+  $('kEmbPagTotal').textContent=`/ ${n(k.embConPV)} con PV`;
   $('kEmbPagBar').style.width=`${pct2}%`;
   $('kEmbPagDesc').textContent=`${pct2}% de los embajadores con preventa ya cobró`;
   // Donuts
