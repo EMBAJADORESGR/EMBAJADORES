@@ -287,7 +287,7 @@ CREATE POLICY "auth_all" ON emb_dataset FOR ALL TO authenticated USING (true) WI
           <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         </div>
         <div class="kf-label">EMBAJADORES CON PREVENTA ASIGNADA</div>
-        <div class="kf-v" id="kEmbPV">—<span class="kf-total" id="kEmbPVSub"></span></div>
+        <div class="kf-v"><span id="kEmbPV">—</span> <span class="kf-total" id="kEmbPVTotal"></span></div>
         <div class="kf-bar-track"><div class="kf-bar-fill" id="kEmbPVBar" style="width:0%"></div></div>
         <div class="kf-sub" id="kEmbPVDesc"></div>
       </div>
@@ -296,7 +296,7 @@ CREATE POLICY "auth_all" ON emb_dataset FOR ALL TO authenticated USING (true) WI
           <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <div class="kf-label">EMBAJADORES CON BENEFICIO PAGADO</div>
-        <div class="kf-v" id="kEmbPag">—<span class="kf-total" id="kEmbPagSub"></span></div>
+        <div class="kf-v"><span id="kEmbPag">—</span> <span class="kf-total" id="kEmbPagTotal"></span></div>
         <div class="kf-bar-track"><div class="kf-bar-fill g" id="kEmbPagBar" style="width:0%"></div></div>
         <div class="kf-sub" id="kEmbPagDesc"></div>
       </div>
@@ -609,30 +609,58 @@ function barC(id,labels,data,lbl,col,hz){dc(id);CH[id]=new Chart(document.getEle
 
 function renderDash(k){
   const $=id=>document.getElementById(id);
+  // KPI strip principal
   $('kReg').textContent=k.totalReg||k.totalEmb;
   $('kRegS').textContent=`${k.empEmb} empl · ${k.extEmb} ext activos`;
-  $('kRef').textContent=k.total;$('kRefS').textContent=`${k.refEmp} empl · ${k.refExt} ext`;
-  $('kEnt').textContent=k.totalEnt;$('kEntS').textContent=_manuales.length?`${_manuales.length} manuales incl.`:'Sistema + manual';
-  $('kPag').textContent=k.pagados;$('kPagS').textContent=`${k.totalEnt-k.pagados} pendientes`;
-  $('kMonto').textContent=`$${(k.montoPend/1e6).toFixed(1)}M`;$('kMontoS').textContent=`${k.totalEnt-k.pagados} × $500k`;
-  const eL=Object.keys(k.est),eD=Object.values(k.est);donut('cEstado',eL,eD,eL.map(l=>EC[l]||C.gray));
-  const oL=Object.keys(k.ops),oD=Object.values(k.ops);donut('cOp',oL,oD,oL.map(l=>OC[l]||C.gray));
+  $('kRef').textContent=k.total;
+  $('kRefS').textContent=`${k.refEmp} empl · ${k.refExt} ext`;
+  $('kEnt').textContent=k.totalEnt;
+  $('kEntS').textContent=_manuales.length?`${_manuales.length} manuales incl.`:'';
+  $('kPag').textContent=k.pagados;
+  $('kPagS').textContent=`${k.totalEnt-k.pagados} pendientes`;
+  $('kMonto').textContent=`$${(k.montoPend/1e6).toFixed(1)}M`;
+  $('kMontoS').textContent=`${k.totalEnt-k.pagados} × $500k`;
+  // KPI flotantes — SIN tocar sub-elements internos
+  const pct1=k.totalEmb>0?Math.round(k.embConPV/k.totalEmb*100):0;
+  const pct2=k.embConPV>0?Math.round(k.embPagados/k.embConPV*100):0;
+  $('kEmbPV').textContent=k.embConPV;
+  $('kEmbPVTotal').textContent=`/ ${k.totalEmb} activos`;
+  $('kEmbPVBar').style.width=`${pct1}%`;
+  $('kEmbPVDesc').textContent=`${pct1}% de los embajadores tiene al menos una venta`;
+  $('kEmbPag').textContent=k.embPagados;
+  $('kEmbPagTotal').textContent=`/ ${k.embConPV} con PV`;
+  $('kEmbPagBar').style.width=`${pct2}%`;
+  $('kEmbPagDesc').textContent=`${pct2}% de los embajadores con preventa ya cobró`;
+  // Donuts
+  const eL=Object.keys(k.est),eD=Object.values(k.est);
+  donut('cEstado',eL,eD,eL.map(l=>EC[l]||C.gray));
+  const oL=Object.keys(k.ops),oD=Object.values(k.ops);
+  donut('cOp',oL,oD,oL.map(l=>OC[l]||C.gray));
   donut('cTipo',['Empleados','Externos'],[k.refEmp,k.refExt],[C.blue,C.lime]);
+  // Barras
   barC('cSis',Object.keys(k.sis),Object.values(k.sis),'Entregas',C.lime,false);
   barC('cTopEmp',k.topAll.map(x=>x[0]),k.topAll.map(x=>x[1]),'Refs',C.lA,true);
+  // Teams
   const tms=Object.entries(k.tm).sort((a,b)=>b[1]-a[1]);
-  // KPI flotantes
-  $('kEmbPV').innerHTML=`${k.embConPV}<span class="kf-total">/ ${k.totalEmb}</span>`;
-  $('kEmbPVSub').textContent='';
-  $('kEmbPVBar').style.width=`${k.totalEmb>0?Math.round(k.embConPV/k.totalEmb*100):0}%`;
-  $('kEmbPVDesc').textContent=`${k.totalEmb>0?Math.round(k.embConPV/k.totalEmb*100):0}% de los embajadores activos tiene al menos una venta`;
-  $('kEmbPag').innerHTML=`${k.embPagados}<span class="kf-total">/ ${k.embConPV}</span>`;
-  $('kEmbPagSub').textContent='';
-  $('kEmbPagBar').style.width=`${k.embConPV>0?Math.round(k.embPagados/k.embConPV*100):0}%`;
-  $('kEmbPagDesc').textContent=`${k.embConPV>0?Math.round(k.embPagados/k.embConPV*100):0}% de los embajadores con preventa ya cobr\u00f3 su beneficio`;
-
-  $('tTeams').innerHTML=`<tr><th>#</th><th>Team</th><th class="r">Refs</th><th class="r">%</th></tr>`+tms.map(([t,n],i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${t}</td><td class="lime">${n}</td><td class="r">${(n/k.total*100).toFixed(0)}%</td></tr>`).join('');
-  $('tExt').innerHTML=`<tr><th>#</th><th>Embajador ext.</th><th class="r">Refs</th></tr>`+k.topExt.map(([n,v],i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${n}</td><td class="lime">${v}</td></tr>`).join('');
+  $('tTeams').innerHTML=`<tr><th>#</th><th>Team</th><th class="r">Refs</th><th class="r">%</th></tr>`+
+    tms.map(([t,n],i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${t}</td><td class="lime">${n}</td><td class="r">${(n/k.total*100).toFixed(0)}%</td></tr>`).join('');
+  // Mapa ventas por embajador
+  const sv={};
+  k.entDet.forEach(r=>{sv[r.emb]=(sv[r.emb]||0)+1;});
+  // Top empleados con ventas
+  if($('tTopEmpl')){
+    $('tTopEmpl').innerHTML=`<tr><th>#</th><th>Embajador</th><th class="r">Refs</th><th class="r">Ventas</th></tr>`+
+      k.topAll.map(([n,v],i)=>{
+        const s=sv[n]||0;
+        return `<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${n}</td><td class="lime">${v}</td><td class="r">${s>0?`<span class="sale-dot">${s}</span>`:'<span style="color:var(--muted);font-size:10px">—</span>'}</td></tr>`;
+      }).join('');
+  }
+  // Externos con ventas
+  $('tExt').innerHTML=`<tr><th>#</th><th>Embajador externo</th><th class="r">Refs</th><th class="r">Ventas</th></tr>`+
+    k.topExt.map(([n,v],i)=>{
+      const s=sv[n]||0;
+      return `<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${n}</td><td class="lime">${v}</td><td class="r">${s>0?`<span class="sale-dot">${s}</span>`:'<span style="color:var(--muted);font-size:10px">—</span>'}</td></tr>`;
+    }).join('');
   renderGestion(k);
   renderHistChart();
 }
