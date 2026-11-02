@@ -57,7 +57,13 @@
 /* KPIs */
 #met-dashboard{display:none;}
 #met-dashboard.vis{display:block;}
-.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);margin-bottom:14px;}
+.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);margin-bottom:1px;}
+.kpi-strip2{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);margin-bottom:14px;}
+.kpi-cell2{background:var(--ink2);padding:14px 15px;border-left:3px solid transparent;}
+.kpi-cell2.k-lime{border-left-color:var(--lime);}
+.kpi-cell2.k-green{border-left-color:var(--green);}
+.kpi-v2{font-size:22px;font-weight:700;line-height:1;margin-bottom:3px;color:var(--cream);}
+.kpi-v2 span{font-size:14px;font-weight:400;color:var(--muted);margin-left:4px;}
 .kpi-cell{background:var(--ink1);padding:18px 15px;border-top:2px solid transparent;}
 .kpi-cell.k-lime{border-top-color:var(--lime);}.kpi-cell.k-green{border-top-color:var(--green);}
 .kpi-cell.k-amber{border-top-color:var(--amber);}.kpi-cell.k-blue{border-top-color:#60A5FA;}
@@ -257,6 +263,18 @@ CREATE POLICY "auth_all" ON emb_dataset FOR ALL TO authenticated USING (true) WI
       <div class="kpi-cell k-amber"><div class="kpi-v amber" id="kPag">—</div><div class="kpi-l">Beneficios pagados</div><div class="kpi-sub" id="kPagS"></div></div>
       <div class="kpi-cell k-gray"><div class="kpi-v" id="kMonto" style="font-size:20px;margin-top:10px">—</div><div class="kpi-l">Pendiente de pago</div><div class="kpi-sub" id="kMontoS"></div></div>
     </div>
+    <!-- KPIs fila 2: embajadores con PV -->
+    <div class="kpi-strip2">
+      <div class="kpi-cell2 k-lime">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--muted);margin-bottom:6px;">EMBAJADORES CON PREVENTA ASIGNADA</div>
+        <div class="kpi-v2" id="kEmbPV">—<span id="kEmbPVSub"></span></div>
+      </div>
+      <div class="kpi-cell2 k-green">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--muted);margin-bottom:6px;">EMBAJADORES CON BENEFICIO PAGADO</div>
+        <div class="kpi-v2" id="kEmbPagados">—<span id="kEmbPagadosSub"></span></div>
+      </div>
+    </div>
+
     <!-- Charts row 1 -->
     <div class="cg cg-3">
       <div class="cbox"><div class="cbox-title">ESTADO DEL PIPELINE</div><div class="ch"><canvas id="cEstado"></canvas></div></div>
@@ -487,11 +505,16 @@ function calcKPIs(ref,pv,reg){
   const pagados=entDet.filter(r=>pagSet.has(r.pv)&&r.pv!=='—').length;
   const montoPend=(totalEnt-pagados)*500000;
   const regLen=typeof reg==='object'&&reg!==null?(reg.length||0):0;
+  // Embajadores únicos con preventa
+  const embConPV = new Set(entDet.map(r=>r.emb)).size;
+  // Embajadores únicos con al menos un pago realizado
+  const embPagados = new Set(entDet.filter(r=>pagSet.has(r.pv)&&r.pv!=='—').map(r=>r.emb)).size;
+
   return{total:ref.length,totalEmb:emvs.length,totalReg:regLen,
     empEmb:emvs.filter(e=>e.t!=='Externo').length,extEmb:emvs.filter(e=>e.t==='Externo').length,
     refEmp:ref.filter(r=>r._t!=='Externo').length,refExt:ref.filter(r=>r._t==='Externo').length,
     totalEnt,pagados,montoPend,vincSF:vsf.length,sinVinc:pv.filter(r=>!r._v).length,
-    est,ops,tm,sis,topAll,topExt,entDet,pagSet};
+    embConPV,embPagados,est,ops,tm,sis,topAll,topExt,entDet,pagSet};
 }
 
 /* ════ PROCESS ════ */
@@ -530,6 +553,10 @@ function renderDash(k){
   barC('cSis',Object.keys(k.sis),Object.values(k.sis),'Entregas',C.lime,false);
   barC('cTopEmp',k.topAll.map(x=>x[0]),k.topAll.map(x=>x[1]),'Refs',C.lA,true);
   const tms=Object.entries(k.tm).sort((a,b)=>b[1]-a[1]);
+  // KPIs fila 2
+  $('kEmbPV').innerHTML = `${k.embConPV}<span>de ${k.totalEmb} activos</span>`;
+  $('kEmbPagados').innerHTML = `${k.embPagados}<span>de ${k.embConPV} con PV (${k.embConPV>0?Math.round(k.embPagados/k.embConPV*100):0}%)</span>`;
+
   $('tTeams').innerHTML=`<tr><th>#</th><th>Team</th><th class="r">Refs</th><th class="r">%</th></tr>`+tms.map(([t,n],i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${t}</td><td class="lime">${n}</td><td class="r">${(n/k.total*100).toFixed(0)}%</td></tr>`).join('');
   $('tExt').innerHTML=`<tr><th>#</th><th>Embajador ext.</th><th class="r">Refs</th></tr>`+k.topExt.map(([n,v],i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${n}</td><td class="lime">${v}</td></tr>`).join('');
   renderGestion(k);
@@ -542,7 +569,7 @@ function renderGestion(k){
     const paid=k.pagSet.has(r.pv)&&r.pv!=='—';
     const pe=_pagos.find(p=>p.preventa===r.pv);
     const statusCell=paid
-      ?`<span class="tag-paid">✓ Pagado${pe?.fecha_pago?' '+pe.fecha_pago:''}</span>&nbsp;<button class="btn-row btn-unpay" onclick="unmarkPaid('${pe?.id}','${esc(r.pv)}')">Deshacer</button>`
+      ?`<span class="tag-paid">✓ Pagado${pe?.fecha_pago?' '+pe.fecha_pago:''}</span>`
       :`<button class="btn-row btn-mark-paid" onclick="markPaid('${esc(r.pv)}','${esc(r.emb)}','${esc(r.ref)}','${r.sis}')">Marcar pagado</button>`;
     const tipoCell=r.manual?`<span class="tag-manual">Manual</span>&nbsp;<button class="btn-row btn-del" onclick="deleteManual('${r.manId}')">✕</button>`:`<span style="color:var(--muted);font-size:10px">Auto</span>`;
     return `<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${r.emb}</td><td>${r.ref}</td><td class="lime">${r.pv}</td><td>${r.sis}</td><td>${r.fe||'—'}</td><td>${tipoCell}</td><td class="r">${statusCell}</td></tr>`;
