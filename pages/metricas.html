@@ -453,7 +453,7 @@ async function saveToCloud() {
 }
 
 function reconstruct(ds) {
-  const ref=(ds.ref_data||[]).map(r=>({_e:r.e,_t:r.t,_op:r.op,_tm:r.tm,'FECHA CONSULTA':r.fc}));
+  const ref=(ds.ref_data||[]).map(r=>({'ID':r.id,_e:r.e,_t:r.t,_op:r.op,_tm:r.tm,'FECHA CONSULTA':r.fc}));
   const pv=(ds.pv_data||[]).map(r=>({'ID':r.id,'NOMBRE':r.n,'APELLIDO':r.a,_e:r.e,_v:r.v,_fe:r.fe,_sis:r.sis,_pv:r.pv,'Estado':r.est,'FECHA CONSULTA':r.fc}));
   return {_ref:ref,_pv:pv,_reg:{length:ds.reg_count||0}};
 }
@@ -549,21 +549,42 @@ function calcKPIs(ref,pv,reg){
 /* ════ PROCESS ════ */
 async function metProcess(){
   const reg=MF.reg||[];
-  const ref=cleanRef(MF.pv), pv=cleanPV(MF.pv);
-  window._rawKPI={_ref:ref,_pv:pv,_reg:reg};
-  const k=calcKPIs(ref,pv,reg);
+  const newRef=cleanRef(MF.pv), newPV=cleanPV(MF.pv);
+
+  // Merge acumulativo con datos existentes en la nube
+  let mergedRef=newRef, mergedPV=newPV;
+  let mergedRegCount=reg.length||0;
+  if(_sbOk){
+    try{
+      const {data:snap}=await _sb.from('emb_dataset').select('*').order('created_at',{ascending:false}).limit(1);
+      if(snap&&snap.length>0){
+        const ds=snap[0];
+        const cloudRef=(ds.ref_data||[]).map(r=>({'ID':r.id,_e:r.e,_t:r.t,_op:r.op,_tm:r.tm,'FECHA CONSULTA':r.fc}));
+        const cloudPV=(ds.pv_data||[]).map(r=>({'ID':r.id,'NOMBRE':r.n,'APELLIDO':r.a,_e:r.e,_v:r.v,_fe:r.fe,_sis:r.sis,_pv:r.pv,'Estado':r.est,'FECHA CONSULTA':r.fc}));
+        // Merge por ID: datos nuevos sobreescriben los existentes; IDs nuevos se agregan
+        const rMap={}; cloudRef.forEach(r=>{if(r['ID'])rMap[r['ID']]=r;}); newRef.forEach(r=>{if(r['ID'])rMap[r['ID']]=r;});
+        mergedRef=Object.values(rMap);
+        const pMap={}; cloudPV.forEach(r=>{if(r['ID'])pMap[r['ID']]=r;}); newPV.forEach(r=>{if(r['ID'])pMap[r['ID']]=r;});
+        mergedPV=Object.values(pMap);
+        if(!mergedRegCount&&ds.reg_count) mergedRegCount=ds.reg_count;
+      }
+    }catch(e){console.warn('merge cloud err',e);}
+  }
+
+  window._rawKPI={_ref:mergedRef,_pv:mergedPV,_reg:{length:mergedRegCount}};
+  const k=calcKPIs(mergedRef,mergedPV,{length:mergedRegCount});
   renderDash(k);
   document.getElementById('met-dashboard').classList.add('vis');
   ['btnSaveCloud','btnSnap'].forEach(id=>document.getElementById(id).classList.add('vis'));
   document.getElementById('met-dashboard').scrollIntoView({behavior:'smooth',block:'start'});
-  // Guardar automáticamente en Supabase
+  // Guardar acumulado en Supabase
   await autoSaveToCloud();
 }
 
 async function autoSaveToCloud(){
   if(!_sbOk||!window._rawKPI) return;
   const raw=window._rawKPI;
-  const refData=raw._ref.map(r=>({e:r._e,t:r._t,op:r._op,tm:r._tm,fc:r['FECHA CONSULTA']||''}));
+  const refData=raw._ref.map(r=>({id:r['ID'],e:r._e,t:r._t,op:r._op,tm:r._tm,fc:r['FECHA CONSULTA']||''}));
   const pvData=raw._pv.map(r=>({id:r['ID'],n:(r['NOMBRE']||'').trim(),a:(r['APELLIDO']||'').trim(),
     e:r._e,v:r._v,fe:r._fe,sis:r._sis,pv:r._pv,est:(r['Estado']||''),fc:(r['FECHA CONSULTA']||'')}));
   const {error}=await _sb.from('emb_dataset').insert({
