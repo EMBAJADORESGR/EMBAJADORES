@@ -429,6 +429,14 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
             <input class="f-input" name="embajador" id="inputEmbajador" list="listEmbajadores" placeholder="Escribí o seleccioná un embajador" required autocomplete="off">
             <datalist id="listEmbajadores"></datalist>
           </div>
+          <div class="f-group"><label class="f-label">Tipo de embajador *</label>
+            <select class="f-select" name="tipo_emb" required>
+              <option value="Empleado" selected>Empleado</option>
+              <option value="Externo">Externo</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid">
           <div class="f-group"><label class="f-label">Referido (quien compr&oacute;) *</label><input class="f-input" name="referido" placeholder="Nombre del referido" required></div>
         </div>
         <div class="form-grid">
@@ -598,7 +606,7 @@ function calcKPIs(ref,pv,reg){
   const topExt=Object.entries(xr).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const entDet=[
     ...ent.map(r=>({id:`pv:${r._pv}`,emb:r._e,tipo:embTipoMap[r._e]||'Empleado',ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`,pv:r._pv,sis:r._sis,fe:r._fe,manual:false})),
-    ...mans.map(m=>({id:`man:${m.id}`,manId:m.id,emb:m.embajador,tipo:'Manual',ref:m.referido,pv:m.preventa||'—',sis:m.sistema||'—',fe:m.fecha_entrega||'—',manual:true,motivo:m.motivo}))
+    ...mans.map(m=>({id:`man:${m.id}`,manId:m.id,emb:m.embajador,tipo:m.tipo||'Empleado',ref:m.referido,pv:m.preventa||'—',sis:m.sistema||'—',fe:m.fecha_entrega||'—',manual:true,motivo:m.motivo}))
   ];
   const pagados=entDet.filter(r=>pagSet.has(r.pv)&&r.pv!=='—').length;
   const montoPend=(totalEnt-pagados)*500000;
@@ -717,7 +725,7 @@ async function syncTramites(pvData){
     }catch(e){console.warn('syncTramites err',e);}
   }
   // Ordenar por fecha consulta más reciente primero
-  const parseFC=s=>{if(!s)return 0;const p=s.split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]).getTime():0;};
+  const parseFC=s=>{if(!s)return 0;const ds=s.split(' ')[0];const p=ds.split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]).getTime():0;};
   nuevas.sort((a,b)=>parseFC(b.fc)-parseFC(a.fc));
   cambios.sort((a,b)=>parseFC(b.fc)-parseFC(a.fc));
   return {nuevas, cambios, fecha:today};
@@ -831,7 +839,7 @@ function filterEstados(){
   const hasta=document.getElementById('epFiltHasta')?.value;
   const lbl=document.getElementById('epTotalLbl');
   if(!window._estDetFull) return;
-  const parseFC=s=>{if(!s)return 0;const p=s.split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]).getTime():0;};
+  const parseFC=s=>{if(!s)return 0;const ds=s.split(' ')[0];const p=ds.split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]).getTime():0;};
   const parseISO=s=>{if(!s)return null;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).getTime();};
   const tsDesde=parseISO(desde), tsHasta=parseISO(hasta);
   const filtEst={}, filtDet={};
@@ -863,7 +871,7 @@ function clearEstFilter(){
 function buildEstDetTable(rows){
   if(!rows.length)return'<div style="padding:10px 16px;font-size:11px;color:var(--muted)">Sin registros</div>';
   // Ordenar por fecha más reciente
-  const parseFC=s=>{if(!s)return 0;const p=s.split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]).getTime():0;};
+  const parseFC=s=>{if(!s)return 0;const ds=s.split(' ')[0];const p=ds.split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]).getTime():0;};
   rows=rows.slice().sort((a,b)=>parseFC(b.fc)-parseFC(a.fc));
   let t=`<table class="ep-dt"><thead><tr><th>Apellido y nombre</th><th>Embajador</th><th>Preventa</th><th>Fecha consulta</th></tr></thead><tbody>`;
   rows.forEach(r=>{
@@ -1043,6 +1051,7 @@ async function submitManual(e){
   const form=e.target, btn=document.getElementById('btnSub');
   btn.disabled=true;btn.textContent='Guardando...';
   const entry={embajador:form.embajador.value.trim(),referido:form.referido.value.trim(),
+    tipo:form.tipo_emb.value||'Empleado',
     preventa:form.preventa.value.trim()||null,sistema:form.sistema.value||null,
     fecha_entrega:form.fecha_entrega.value||null,motivo:form.motivo.value.trim(),
     notas:form.notas.value.trim()||null,activo:true};
