@@ -103,6 +103,32 @@
 .kpi-v.lime{color:var(--lime);}.kpi-v.green{color:var(--green);}.kpi-v.amber{color:var(--amber);}
 .kpi-l{font-size:10px;font-weight:600;letter-spacing:.04em;color:var(--muted);}
 .kpi-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+/* Estados Panel */
+#estados-panel{display:none;margin-bottom:16px;background:var(--ink1);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+#estados-panel.vis{display:block;}
+.ep-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--faint);}
+.ep-hdr-title{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--cream);}
+.ep-hdr-total{font-size:11px;color:var(--muted);}
+.ep-row{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;}
+.ep-row:hover{background:var(--faint);}
+.ep-row:last-of-type{border-bottom:none;}
+.ep-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ep-name{font-size:12px;font-weight:600;color:var(--cream);flex:1;}
+.ep-bar-wrap{width:80px;flex-shrink:0;}
+.ep-bar-track{height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;}
+.ep-bar-fill{height:100%;border-radius:2px;}
+.ep-count{font-size:18px;font-weight:700;color:var(--cream);min-width:36px;text-align:right;}
+.ep-pct{font-size:10px;color:var(--muted);min-width:34px;text-align:right;}
+.ep-chev{color:var(--muted);font-size:10px;margin-left:4px;transition:transform .2s;flex-shrink:0;}
+.ep-chev.open{transform:rotate(180deg);}
+.ep-detail{display:none;border-bottom:1px solid var(--border);}
+.ep-detail.open{display:block;}
+.ep-dt{width:100%;border-collapse:collapse;font-size:11px;background:var(--ink2);}
+.ep-dt th{padding:6px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);}
+.ep-dt td{padding:6px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--muted);}
+.ep-dt td.name{color:var(--cream);font-weight:500;}
+.ep-dt td.pv{color:var(--lime);font-family:monospace;font-size:10px;}
+.ep-dt tr:hover td{background:rgba(255,255,255,.03);}
 /* Charts */
 .cg{display:grid;gap:10px;margin-bottom:10px;}
 .cg-3{grid-template-columns:repeat(3,1fr);}
@@ -330,6 +356,8 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       </div>
     </div>
 
+    <!-- Estados por trámite -->
+    <div id="estados-panel"></div>
     <!-- Charts row 1 -->
     <div class="cg cg-3">
       <div class="cbox"><div class="cbox-title">ESTADO DEL PIPELINE</div><div class="ch"><canvas id="cEstado"></canvas></div></div>
@@ -545,7 +573,14 @@ function calcKPIs(ref,pv,reg){
   const mans=_manuales.filter(m=>m.activo);
   const totalEnt=ent.length+manBase+mans.length;
   const pagSet=new Set(_pagos.map(p=>p.preventa));
-  const est={};pv.forEach(r=>{let s=(r['Estado']||'Sin estado').trim();if(s.includes('Vinculado'))s='Pres. vinculado';else if(s.includes('DNI'))s='Vinculado (DNI)';est[s]=(est[s]||0)+1;});
+  const normEst=s=>{s=(s||'Sin estado').trim();if(s.includes('DNI'))return'Vinculado (DNI)';if(s.includes('Vinculado'))return'Pres. vinculado';return s||'Sin estado';};
+  const est={},estDet={};
+  pv.forEach(r=>{
+    const s=normEst(r['Estado']);
+    est[s]=(est[s]||0)+1;
+    if(!estDet[s])estDet[s]=[];
+    estDet[s].push({nombre:(r['NOMBRE']||'').trim(),apellido:(r['APELLIDO']||'').trim(),emb:r._e||'',pv:r._pv||'',fc:r['FECHA CONSULTA']||''});
+  });
   const ops={};ref.forEach(r=>{ops[r._op]=(ops[r._op]||0)+1;});
   const tm={};ref.forEach(r=>{tm[r._tm]=(tm[r._tm]||0)+1;});
   const sis={};ent.forEach(r=>{const k=r._sis||'?';sis[k]=(sis[k]||0)+1;});
@@ -566,11 +601,11 @@ function calcKPIs(ref,pv,reg){
   // Embajadores únicos con al menos un pago realizado
   const embPagados = new Set(entDet.filter(r=>pagSet.has(r.pv)&&r.pv!=='—').map(r=>r.emb)).size;
 
-  return{total:ref.length,totalEmb:emvs.length,totalReg:regLen,
+  return{total:ref.length,totalPV:pv.length,totalEmb:emvs.length,totalReg:regLen,
     empEmb:emvs.filter(e=>e.t!=='Externo').length,extEmb:emvs.filter(e=>e.t==='Externo').length,
     refEmp:ref.filter(r=>r._t!=='Externo').length,refExt:ref.filter(r=>r._t==='Externo').length,
     totalEnt,pagados,montoPend,vincSF:vsf.length,sinVinc:pv.filter(r=>!r._v).length,
-    embConPV,embPagados,est,ops,tm,sis,topAll,topExt,entDet,pagSet};
+    embConPV,embPagados,est,estDet,ops,tm,sis,topAll,topExt,entDet,pagSet};
 }
 
 /* ════ PROCESS ════ */
@@ -674,6 +709,10 @@ async function syncTramites(pvData){
       if(upRes) _tramites=upRes;
     }catch(e){console.warn('syncTramites err',e);}
   }
+  // Ordenar por fecha consulta más reciente primero
+  const parseFC=s=>{if(!s)return 0;const p=s.split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]).getTime():0;};
+  nuevas.sort((a,b)=>parseFC(b.fc)-parseFC(a.fc));
+  cambios.sort((a,b)=>parseFC(b.fc)-parseFC(a.fc));
   return {nuevas, cambios, fecha:today};
 }
 
@@ -723,6 +762,63 @@ function renderNovedades({nuevas=[], cambios=[], fecha=''}){
   el.innerHTML=html;
 }
 
+/* ════ ESTADOS PANEL ════ */
+const EST_ORDER=['Vinculado (DNI)','Pres. vinculado','Asignado','Referido','Finalizado','Sin estado'];
+const EST_COLOR={'Vinculado (DNI)':'#4ADE80','Pres. vinculado':'#F59E0B','Asignado':'#38BDF8','Referido':'#94A3B8','Finalizado':'#64748B','Sin estado':'#475569'};
+
+function renderEstadosPanel(est, estDet, total){
+  const el=document.getElementById('estados-panel');
+  if(!el||!Object.keys(est).length){if(el)el.classList.remove('vis');return;}
+  el.classList.add('vis');
+
+  // Ordenar estados: primero los de EST_ORDER, luego el resto
+  const keys=Object.keys(est).sort((a,b)=>{
+    const ia=EST_ORDER.indexOf(a),ib=EST_ORDER.indexOf(b);
+    if(ia>=0&&ib>=0)return ia-ib;
+    if(ia>=0)return-1;if(ib>=0)return 1;
+    return b-a;
+  });
+
+  let html=`<div class="ep-hdr"><span class="ep-hdr-title">TRÁMITES POR ESTADO</span><span class="ep-hdr-total">${total} en total</span></div>`;
+
+  keys.forEach(s=>{
+    const cnt=est[s]||0, pct=total>0?Math.round(cnt/total*100):0;
+    const col=EST_COLOR[s]||'#64748B';
+    const key=s.replace(/[^a-zA-Z0-9]/g,'_');
+    html+=`<div class="ep-row" onclick="toggleEst('${key}')">
+      <span class="ep-dot" style="background:${col}"></span>
+      <span class="ep-name">${s}</span>
+      <div class="ep-bar-wrap"><div class="ep-bar-track"><div class="ep-bar-fill" style="width:${pct}%;background:${col}"></div></div></div>
+      <span class="ep-count">${cnt}</span>
+      <span class="ep-pct">${pct}%</span>
+      <span class="ep-chev" id="epchev_${key}">▾</span>
+    </div>
+    <div class="ep-detail" id="epdet_${key}">${buildEstDetTable(estDet[s]||[])}</div>`;
+  });
+
+  el.innerHTML=html;
+}
+
+function buildEstDetTable(rows){
+  if(!rows.length)return'<div style="padding:10px 16px;font-size:11px;color:var(--muted)">Sin registros</div>';
+  // Ordenar por fecha más reciente
+  const parseFC=s=>{if(!s)return 0;const p=s.split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]).getTime():0;};
+  rows=rows.slice().sort((a,b)=>parseFC(b.fc)-parseFC(a.fc));
+  let t=`<table class="ep-dt"><thead><tr><th>Apellido y nombre</th><th>Embajador</th><th>Preventa</th><th>Fecha consulta</th></tr></thead><tbody>`;
+  rows.forEach(r=>{
+    t+=`<tr><td class="name">${r.apellido}${r.nombre?' '+r.nombre:''}</td><td>${r.emb||'—'}</td><td class="pv">${r.pv||'—'}</td><td>${r.fc||'—'}</td></tr>`;
+  });
+  return t+'</tbody></table>';
+}
+
+function toggleEst(key){
+  const det=document.getElementById('epdet_'+key);
+  const chev=document.getElementById('epchev_'+key);
+  if(!det)return;
+  const open=det.classList.toggle('open');
+  if(chev)chev.classList.toggle('open',open);
+}
+
 /* ════ CHARTS ════ */
 const CH={};
 const C={lime:'#B4D000',lA:'rgba(180,208,0,.7)',blue:'#38BDF8',purple:'#C4B5FD',amber:'#F59E0B',green:'#4ADE80',gray:'#64748B',gray2:'#475569'};
@@ -756,8 +852,9 @@ function renderDash(k){
   // KPI strip principal
   $('kReg').textContent=n(k.totalReg)||n(k.totalEmb)||'—';
   $('kRegS').textContent=`${n(k.empEmb)} empl · ${n(k.extEmb)} ext activos`;
-  $('kRef').textContent=n(k.total);
-  $('kRefS').textContent=`${n(k.refEmp)} empl · ${n(k.refExt)} ext`;
+  $('kRef').textContent=n(k.totalPV||k.total);
+  $('kRefS').textContent=`${n(k.totalPV)-n(k.sinVinc)} con prev · ${n(k.sinVinc)} sin prev`;
+  renderEstadosPanel(k.est||{}, k.estDet||{}, n(k.totalPV||k.total));
   $('kEnt').textContent=n(k.totalEnt);
   $('kEntS').textContent=_manuales.length?`${_manuales.length} manuales incl.`:'';
   $('kPag').textContent=n(k.pagados);
