@@ -109,10 +109,14 @@
 .ep-hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--faint);}
 .ep-hdr-title{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--cream);}
 .ep-hdr-total{font-size:11px;color:var(--muted);margin-left:auto;}
-.ep-filt{display:flex;align-items:center;gap:6px;margin-left:8px;}
+.ep-filt{display:flex;align-items:center;gap:6px;margin-left:8px;flex-wrap:wrap;}
 .ep-filt-lbl{font-size:10px;color:var(--muted);white-space:nowrap;}
 .ep-date-in{background:var(--card);border:1px solid var(--border);border-radius:5px;color:var(--cream);font-size:11px;padding:3px 7px;outline:none;cursor:pointer;color-scheme:dark;}
 .ep-date-in:focus{border-color:var(--lime);}
+.ep-emb-in{background:var(--card);border:1px solid var(--border);border-radius:5px;color:var(--cream);font-size:11px;padding:3px 9px;outline:none;width:160px;}
+.ep-emb-in:focus{border-color:var(--lime);}
+.ep-emb-in::placeholder{color:var(--muted);}
+.ep-filt-div{width:1px;height:14px;background:var(--border);margin:0 2px;}
 .ep-filt-clr{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:4px;transition:color .15s;}
 .ep-filt-clr:hover{color:var(--cream);}
 .ep-row{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;}
@@ -786,19 +790,26 @@ function renderEstadosPanel(est, estDet, total){
   if(!el||!Object.keys(est).length){if(el)el.classList.remove('vis');return;}
   el.classList.add('vis');
 
-  // Guardar datos completos para filtrado
   window._estDetFull=estDet;
   window._estFull=est;
   window._estTotal=total;
 
+  // Armar lista de embajadores únicos
+  const allEmbs=new Set();
+  Object.values(estDet).forEach(rows=>rows.forEach(r=>{if(r.emb)allEmbs.add(r.emb);}));
+  const embOpts=[...allEmbs].sort().map(e=>`<option value="${e}">`).join('');
+
   el.innerHTML=`<div class="ep-hdr">
     <span class="ep-hdr-title">TRÁMITES POR ESTADO</span>
     <div class="ep-filt">
+      <input type="text" id="epFiltEmb" class="ep-emb-in" list="epEmbList" placeholder="Embajador..." oninput="filterEstados()" autocomplete="off">
+      <datalist id="epEmbList">${embOpts}</datalist>
+      <span class="ep-filt-div"></span>
       <label class="ep-filt-lbl">Desde</label>
       <input type="date" id="epFiltDesde" class="ep-date-in" onchange="filterEstados()">
       <label class="ep-filt-lbl">Hasta</label>
       <input type="date" id="epFiltHasta" class="ep-date-in" onchange="filterEstados()">
-      <button class="ep-filt-clr" onclick="clearEstFilter()" title="Limpiar filtro">✕</button>
+      <button class="ep-filt-clr" onclick="clearEstFilter()" title="Limpiar filtros">✕</button>
     </div>
     <span class="ep-hdr-total" id="epTotalLbl">${total} en total</span>
   </div>
@@ -837,6 +848,7 @@ function renderEstBody(est, estDet, total){
 function filterEstados(){
   const desde=document.getElementById('epFiltDesde')?.value;
   const hasta=document.getElementById('epFiltHasta')?.value;
+  const emb=(document.getElementById('epFiltEmb')?.value||'').trim().toLowerCase();
   const lbl=document.getElementById('epTotalLbl');
   if(!window._estDetFull) return;
   const parseFC=s=>{if(!s)return 0;const ds=s.split(' ')[0];const p=ds.split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]).getTime():0;};
@@ -845,24 +857,36 @@ function filterEstados(){
   const filtEst={}, filtDet={};
   Object.entries(window._estDetFull).forEach(([s,rows])=>{
     const fr=rows.filter(r=>{
+      // filtro por embajador (siempre se aplica)
+      if(emb && !(r.emb||'').toLowerCase().includes(emb)) return false;
+      // filtro por fecha (solo si hay fecha válida)
       const ts=parseFC(r.fc);
-      if(!ts) return true;
-      if(tsDesde!==null && ts<tsDesde) return false;
-      if(tsHasta!==null && ts>tsHasta+86399999) return false;
+      if(ts){
+        if(tsDesde!==null && ts<tsDesde) return false;
+        if(tsHasta!==null && ts>tsHasta+86399999) return false;
+      }
       return true;
     });
     if(fr.length){filtEst[s]=fr.length;filtDet[s]=fr;}
   });
   const filtTotal=Object.values(filtEst).reduce((a,b)=>a+b,0);
-  if(lbl) lbl.textContent=filtTotal===window._estTotal?`${filtTotal} en total`:`${filtTotal} de ${window._estTotal}`;
+  const hayFiltro=emb||desde||hasta;
+  if(lbl) lbl.textContent=(!hayFiltro||filtTotal===window._estTotal)?`${filtTotal} en total`:`${filtTotal} de ${window._estTotal}`;
   renderEstBody(filtEst, filtDet, filtTotal);
+  // Si filtró por embajador → auto-expandir todos los estados
+  if(emb){
+    document.querySelectorAll('#ep-body .ep-detail').forEach(d=>d.classList.add('open'));
+    document.querySelectorAll('#ep-body .ep-chev').forEach(c=>c.classList.add('open'));
+  }
 }
 
 function clearEstFilter(){
   const d=document.getElementById('epFiltDesde');
   const h=document.getElementById('epFiltHasta');
+  const eb=document.getElementById('epFiltEmb');
   if(d) d.value='';
   if(h) h.value='';
+  if(eb) eb.value='';
   const lbl=document.getElementById('epTotalLbl');
   if(lbl) lbl.textContent=`${window._estTotal} en total`;
   if(window._estFull&&window._estDetFull) renderEstBody(window._estFull,window._estDetFull,window._estTotal);
