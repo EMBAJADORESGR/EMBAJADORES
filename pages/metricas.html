@@ -11,6 +11,24 @@
 .met-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px;}
 .cloud-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--lime);background:var(--l10);border:1px solid var(--l20);border-radius:3px;padding:5px 10px;}
 .cloud-badge svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;}
+/* Novedades */
+#novedades{display:none;margin-bottom:16px;background:var(--ink1);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.nov-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--faint);}
+.nov-header-title{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--cream);}
+.nov-header-date{font-size:10px;color:var(--muted);}
+.nov-section{padding:12px 16px;}
+.nov-section+.nov-section{border-top:1px solid var(--border);}
+.nov-section-title{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.nov-count{background:var(--l10);color:var(--lime);border:1px solid var(--l20);border-radius:10px;padding:1px 8px;font-size:10px;font-weight:700;}
+.nov-count.g{background:rgba(74,222,128,.08);color:var(--green);border-color:var(--g-bd);}
+.nov-list{display:flex;flex-direction:column;gap:5px;max-height:260px;overflow-y:auto;}
+.nov-row{display:flex;align-items:center;gap:8px;font-size:11px;padding:4px 0;}
+.nov-name{color:var(--cream);font-weight:600;min-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nov-emb{color:var(--muted);flex:1;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nov-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap;letter-spacing:.04em;flex-shrink:0;}
+.nov-arrow{color:var(--muted);font-size:10px;flex-shrink:0;}
+.nov-more{font-size:10px;color:var(--muted);padding-top:6px;font-style:italic;}
+.nov-empty{font-size:11px;color:var(--muted);padding:8px 0;}
 /* Upload */
 .upload-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
 .upload-card{background:var(--ink1);border:1.5px dashed var(--border);border-radius:6px;padding:20px 14px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;}
@@ -209,7 +227,12 @@ CREATE POLICY "auth_all" ON emb_manuales FOR ALL TO authenticated USING (true) W
 -- Dataset compartido (permite ver métricas sin subir CSV)
 CREATE TABLE IF NOT EXISTS emb_dataset (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), label TEXT, ref_data JSONB, pv_data JSONB, reg_count INT DEFAULT 0, created_at TIMESTAMPTZ DEFAULT NOW());
 ALTER TABLE emb_dataset ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "auth_all" ON emb_dataset FOR ALL TO authenticated USING (true) WITH CHECK (true);</div>
+CREATE POLICY "auth_all" ON emb_dataset FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- Historial de estados por trámite (seguimiento diario)
+CREATE TABLE IF NOT EXISTS emb_tramites (id INT PRIMARY KEY, nombre TEXT, apellido TEXT, embajador TEXT, tipo TEXT, estado TEXT, estado_prev TEXT, fc_consulta TEXT, updated_at TIMESTAMPTZ DEFAULT NOW());
+ALTER TABLE emb_tramites ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) WITH CHECK (true);</div>
     <button class="btn-copy" onclick="copySQL()">Copiar SQL</button>
     <button class="btn-copy" style="margin-left:8px;color:var(--green)" onclick="document.getElementById('setupPanel').style.display='none'">Ya ejecut&eacute; el SQL ✓</button>
   </div>
@@ -275,6 +298,8 @@ CREATE POLICY "auth_all" ON emb_dataset FOR ALL TO authenticated USING (true) WI
 
   <!-- DASHBOARD -->
   <div id="met-dashboard">
+    <!-- NOVEDADES DEL DÍA -->
+    <div id="novedades"></div>
     <!-- KPIs -->
     <div class="kpi-strip">
       <div class="kpi-cell k-lime"><div class="kpi-v lime" id="kReg">—</div><div class="kpi-l">Embajadores registrados</div><div class="kpi-sub" id="kRegS"></div></div>
@@ -402,21 +427,23 @@ const OP_MAP = {'0KM':'0KM','USADOS':'Usados','PLAN_AHORRO':'Plan de Ahorro','VE
 const SNAP_KEY = 'gr_emb_v2';
 
 /* ════ STATE ════ */
-let _pagos=[], _manuales=[], _sbOk=false;
+let _pagos=[], _manuales=[], _tramites=[], _sbOk=false;
 
 /* ════ SUPABASE — CARGAR Y GUARDAR ════ */
 async function loadSupabaseData() {
   try {
     await _sbReady;
-    const [r1,r2,r3] = await Promise.all([
+    const [r1,r2,r3,r4] = await Promise.all([
       _sb.from('emb_pagos').select('*'),
       _sb.from('emb_manuales').select('*').eq('activo',true),
-      _sb.from('emb_dataset').select('*').order('created_at',{ascending:false}).limit(1)
+      _sb.from('emb_dataset').select('*').order('created_at',{ascending:false}).limit(1),
+      _sb.from('emb_tramites').select('*')
     ]);
     if(r1.error||r2.error||r3.error){document.getElementById('setupPanel').classList.add('vis');return;}
-    _pagos   = r1.data||[];
-    _manuales= r2.data||[];
-    _sbOk    = true;
+    _pagos    = r1.data||[];
+    _manuales = r2.data||[];
+    _tramites = r4.data||[];
+    _sbOk     = true;
     // Intentar cargar dataset guardado
     if(r3.data&&r3.data.length>0){
       const ds = r3.data[0];
@@ -572,8 +599,13 @@ async function metProcess(){
   }
 
   window._rawKPI={_ref:mergedRef,_pv:mergedPV,_reg:{length:mergedRegCount}};
+
+  // Detectar novedades vs estado guardado en Supabase
+  const novedades = await syncTramites(mergedPV);
+
   const k=calcKPIs(mergedRef,mergedPV,{length:mergedRegCount});
   renderDash(k);
+  renderNovedades(novedades);
   document.getElementById('met-dashboard').classList.add('vis');
   ['btnSaveCloud','btnSnap'].forEach(id=>document.getElementById(id).classList.add('vis'));
   document.getElementById('met-dashboard').scrollIntoView({behavior:'smooth',block:'start'});
@@ -602,6 +634,93 @@ async function autoSaveToCloud(){
       }
     } catch(e){}
   }
+}
+
+/* ════ TRAMITES — SYNC & NOVEDADES ════ */
+async function syncTramites(pvData){
+  const today = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const nuevas=[], cambios=[];
+  if(!_sbOk) return {nuevas, cambios, fecha:today};
+
+  const saved={};
+  _tramites.forEach(t=>{ saved[t.id]=t; });
+
+  const upserts=[];
+  pvData.forEach(row=>{
+    const id=row['ID'];
+    if(!id) return;
+    const nombre=(row['NOMBRE']||'').trim();
+    const apellido=(row['APELLIDO']||'').trim();
+    const embajador=row._e||'';
+    const tipo=row._op||row._v||'';
+    const estado=row['Estado']||'Sin estado';
+    const fc=row['FECHA CONSULTA']||'';
+
+    if(!saved[id]){
+      nuevas.push({id,nombre,apellido,embajador,tipo,estado,fc});
+      upserts.push({id,nombre,apellido,embajador,tipo,estado,estado_prev:null,fc_consulta:fc,updated_at:new Date().toISOString()});
+    } else {
+      const estadoAnterior=saved[id].estado;
+      upserts.push({id,nombre,apellido,embajador,tipo,estado,estado_prev:estadoAnterior,fc_consulta:fc,updated_at:new Date().toISOString()});
+      if(estado!==estadoAnterior){
+        cambios.push({id,nombre,apellido,embajador,tipo,estadoAnterior,estadoNuevo:estado,fc});
+      }
+    }
+  });
+
+  if(upserts.length>0){
+    try{
+      const {data:upRes}=await _sb.from('emb_tramites').upsert(upserts,{onConflict:'id'}).select();
+      if(upRes) _tramites=upRes;
+    }catch(e){console.warn('syncTramites err',e);}
+  }
+  return {nuevas, cambios, fecha:today};
+}
+
+function renderNovedades({nuevas=[], cambios=[], fecha=''}){
+  const el=document.getElementById('novedades');
+  if(!el) return;
+  if(nuevas.length+cambios.length===0){el.style.display='none';return;}
+  el.style.display='block';
+
+  const estBadge=est=>{
+    const map={
+      'Finalizado':'background:rgba(100,116,139,.18);color:#94A3B8;border:1px solid rgba(100,116,139,.3)',
+      'Asignado':'background:rgba(56,189,248,.10);color:#38BDF8;border:1px solid rgba(56,189,248,.25)',
+      'Referido':'background:rgba(148,163,184,.10);color:#94A3B8;border:1px solid rgba(148,163,184,.2)',
+      'Pres. vinculado':'background:rgba(245,158,11,.10);color:#F59E0B;border:1px solid rgba(245,158,11,.25)',
+      'Vinculado (DNI)':'background:rgba(74,222,128,.10);color:#4ADE80;border:1px solid rgba(74,222,128,.25)',
+      'Sin estado':'background:rgba(71,85,105,.15);color:#64748B;border:1px solid rgba(71,85,105,.3)'
+    };
+    const s=map[est]||map['Sin estado'];
+    return `<span class="nov-badge" style="${s}">${est}</span>`;
+  };
+
+  let html=`<div class="nov-header">
+    <span class="nov-header-title">📋 NOVEDADES DEL DÍA</span>
+    <span class="nov-header-date">${fecha}</span>
+  </div>`;
+
+  const MAX=8;
+  if(nuevas.length>0){
+    html+=`<div class="nov-section"><div class="nov-section-title">NUEVAS CONSULTAS INGRESADAS <span class="nov-count">${nuevas.length}</span></div><div class="nov-list">`;
+    nuevas.slice(0,MAX).forEach(r=>{
+      html+=`<div class="nov-row"><span class="nov-name">${r.apellido}${r.nombre?' '+r.nombre:''}</span><span class="nov-emb">${r.embajador}</span>${estBadge(r.estado)}</div>`;
+    });
+    if(nuevas.length>MAX) html+=`<div class="nov-more">…y ${nuevas.length-MAX} más</div>`;
+    html+=`</div></div>`;
+  }
+
+  if(cambios.length>0){
+    html+=`<div class="nov-section"><div class="nov-section-title">CAMBIOS DE ESTADO <span class="nov-count g">${cambios.length}</span></div><div class="nov-list">`;
+    cambios.slice(0,MAX).forEach(r=>{
+      html+=`<div class="nov-row"><span class="nov-name">${r.apellido}${r.nombre?' '+r.nombre:''}</span><span class="nov-emb">${r.embajador}</span>${estBadge(r.estadoAnterior)}<span class="nov-arrow">→</span>${estBadge(r.estadoNuevo)}</div>`;
+    });
+    if(cambios.length>MAX) html+=`<div class="nov-more">…y ${cambios.length-MAX} más</div>`;
+    html+=`</div></div>`;
+  }
+
+  el.innerHTML=html;
 }
 
 /* ════ CHARTS ════ */
