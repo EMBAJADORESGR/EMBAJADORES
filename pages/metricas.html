@@ -106,9 +106,15 @@
 /* Estados Panel */
 #estados-panel{display:none;margin-bottom:16px;background:var(--ink1);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
 #estados-panel.vis{display:block;}
-.ep-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--faint);}
+.ep-hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--faint);}
 .ep-hdr-title{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--cream);}
-.ep-hdr-total{font-size:11px;color:var(--muted);}
+.ep-hdr-total{font-size:11px;color:var(--muted);margin-left:auto;}
+.ep-filt{display:flex;align-items:center;gap:6px;margin-left:8px;}
+.ep-filt-lbl{font-size:10px;color:var(--muted);white-space:nowrap;}
+.ep-date-in{background:var(--card);border:1px solid var(--border);border-radius:5px;color:var(--cream);font-size:11px;padding:3px 7px;outline:none;cursor:pointer;color-scheme:dark;}
+.ep-date-in:focus{border-color:var(--lime);}
+.ep-filt-clr{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:4px;transition:color .15s;}
+.ep-filt-clr:hover{color:var(--cream);}
 .ep-row{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;}
 .ep-row:hover{background:var(--faint);}
 .ep-row:last-of-type{border-bottom:none;}
@@ -574,12 +580,13 @@ function calcKPIs(ref,pv,reg){
   const totalEnt=ent.length+manBase+mans.length;
   const pagSet=new Set(_pagos.map(p=>p.preventa));
   const normEst=s=>{s=(s||'Sin estado').trim();if(s.includes('DNI'))return'Vinculado (DNI)';if(s.includes('Vinculado'))return'Pres. vinculado';return s||'Sin estado';};
+  const embTipoMap={};ref.forEach(r=>{embTipoMap[r._e]=r._t;});
   const est={},estDet={};
   pv.forEach(r=>{
     const s=normEst(r['Estado']);
     est[s]=(est[s]||0)+1;
     if(!estDet[s])estDet[s]=[];
-    estDet[s].push({nombre:(r['NOMBRE']||'').trim(),apellido:(r['APELLIDO']||'').trim(),emb:r._e||'',pv:r._pv||'',fc:r['FECHA CONSULTA']||''});
+    estDet[s].push({nombre:(r['NOMBRE']||'').trim(),apellido:(r['APELLIDO']||'').trim(),emb:r._e||'',tipo:embTipoMap[r._e]||'Empleado',pv:r._pv||'',fc:r['FECHA CONSULTA']||''});
   });
   const ops={};ref.forEach(r=>{ops[r._op]=(ops[r._op]||0)+1;});
   const tm={};ref.forEach(r=>{tm[r._tm]=(tm[r._tm]||0)+1;});
@@ -590,8 +597,8 @@ function calcKPIs(ref,pv,reg){
   const topAll=Object.entries(er).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const topExt=Object.entries(xr).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const entDet=[
-    ...ent.map(r=>({id:`pv:${r._pv}`,emb:r._e,ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`,pv:r._pv,sis:r._sis,fe:r._fe,manual:false})),
-    ...mans.map(m=>({id:`man:${m.id}`,manId:m.id,emb:m.embajador,ref:m.referido,pv:m.preventa||'—',sis:m.sistema||'—',fe:m.fecha_entrega||'—',manual:true,motivo:m.motivo}))
+    ...ent.map(r=>({id:`pv:${r._pv}`,emb:r._e,tipo:embTipoMap[r._e]||'Empleado',ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`,pv:r._pv,sis:r._sis,fe:r._fe,manual:false})),
+    ...mans.map(m=>({id:`man:${m.id}`,manId:m.id,emb:m.embajador,tipo:'Manual',ref:m.referido,pv:m.preventa||'—',sis:m.sistema||'—',fe:m.fecha_entrega||'—',manual:true,motivo:m.motivo}))
   ];
   const pagados=entDet.filter(r=>pagSet.has(r.pv)&&r.pv!=='—').length;
   const montoPend=(totalEnt-pagados)*500000;
@@ -771,16 +778,37 @@ function renderEstadosPanel(est, estDet, total){
   if(!el||!Object.keys(est).length){if(el)el.classList.remove('vis');return;}
   el.classList.add('vis');
 
-  // Ordenar estados: primero los de EST_ORDER, luego el resto
+  // Guardar datos completos para filtrado
+  window._estDetFull=estDet;
+  window._estFull=est;
+  window._estTotal=total;
+
+  el.innerHTML=`<div class="ep-hdr">
+    <span class="ep-hdr-title">TRÁMITES POR ESTADO</span>
+    <div class="ep-filt">
+      <label class="ep-filt-lbl">Desde</label>
+      <input type="date" id="epFiltDesde" class="ep-date-in" onchange="filterEstados()">
+      <label class="ep-filt-lbl">Hasta</label>
+      <input type="date" id="epFiltHasta" class="ep-date-in" onchange="filterEstados()">
+      <button class="ep-filt-clr" onclick="clearEstFilter()" title="Limpiar filtro">✕</button>
+    </div>
+    <span class="ep-hdr-total" id="epTotalLbl">${total} en total</span>
+  </div>
+  <div id="ep-body"></div>`;
+
+  renderEstBody(est, estDet, total);
+}
+
+function renderEstBody(est, estDet, total){
+  const bodyEl=document.getElementById('ep-body');
+  if(!bodyEl) return;
   const keys=Object.keys(est).sort((a,b)=>{
     const ia=EST_ORDER.indexOf(a),ib=EST_ORDER.indexOf(b);
     if(ia>=0&&ib>=0)return ia-ib;
     if(ia>=0)return-1;if(ib>=0)return 1;
     return b-a;
   });
-
-  let html=`<div class="ep-hdr"><span class="ep-hdr-title">TRÁMITES POR ESTADO</span><span class="ep-hdr-total">${total} en total</span></div>`;
-
+  let html='';
   keys.forEach(s=>{
     const cnt=est[s]||0, pct=total>0?Math.round(cnt/total*100):0;
     const col=EST_COLOR[s]||'#64748B';
@@ -795,8 +823,41 @@ function renderEstadosPanel(est, estDet, total){
     </div>
     <div class="ep-detail" id="epdet_${key}">${buildEstDetTable(estDet[s]||[])}</div>`;
   });
+  bodyEl.innerHTML=html;
+}
 
-  el.innerHTML=html;
+function filterEstados(){
+  const desde=document.getElementById('epFiltDesde')?.value;
+  const hasta=document.getElementById('epFiltHasta')?.value;
+  const lbl=document.getElementById('epTotalLbl');
+  if(!window._estDetFull) return;
+  const parseFC=s=>{if(!s)return 0;const p=s.split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]).getTime():0;};
+  const parseISO=s=>{if(!s)return null;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).getTime();};
+  const tsDesde=parseISO(desde), tsHasta=parseISO(hasta);
+  const filtEst={}, filtDet={};
+  Object.entries(window._estDetFull).forEach(([s,rows])=>{
+    const fr=rows.filter(r=>{
+      const ts=parseFC(r.fc);
+      if(!ts) return true;
+      if(tsDesde!==null && ts<tsDesde) return false;
+      if(tsHasta!==null && ts>tsHasta+86399999) return false;
+      return true;
+    });
+    if(fr.length){filtEst[s]=fr.length;filtDet[s]=fr;}
+  });
+  const filtTotal=Object.values(filtEst).reduce((a,b)=>a+b,0);
+  if(lbl) lbl.textContent=filtTotal===window._estTotal?`${filtTotal} en total`:`${filtTotal} de ${window._estTotal}`;
+  renderEstBody(filtEst, filtDet, filtTotal);
+}
+
+function clearEstFilter(){
+  const d=document.getElementById('epFiltDesde');
+  const h=document.getElementById('epFiltHasta');
+  if(d) d.value='';
+  if(h) h.value='';
+  const lbl=document.getElementById('epTotalLbl');
+  if(lbl) lbl.textContent=`${window._estTotal} en total`;
+  if(window._estFull&&window._estDetFull) renderEstBody(window._estFull,window._estDetFull,window._estTotal);
 }
 
 function buildEstDetTable(rows){
@@ -806,7 +867,8 @@ function buildEstDetTable(rows){
   rows=rows.slice().sort((a,b)=>parseFC(b.fc)-parseFC(a.fc));
   let t=`<table class="ep-dt"><thead><tr><th>Apellido y nombre</th><th>Embajador</th><th>Preventa</th><th>Fecha consulta</th></tr></thead><tbody>`;
   rows.forEach(r=>{
-    t+=`<tr><td class="name">${r.apellido}${r.nombre?' '+r.nombre:''}</td><td>${r.emb||'—'}</td><td class="pv">${r.pv||'—'}</td><td>${r.fc||'—'}</td></tr>`;
+    const ec=r.tipo==='Externo'?'color:#ffffff':r.tipo==='Manual'?'color:var(--muted)':'color:var(--lime)';
+    t+=`<tr><td class="name">${r.apellido}${r.nombre?' '+r.nombre:''}</td><td style="${ec}">${r.emb||'—'}</td><td class="pv">${r.pv||'—'}</td><td>${r.fc||'—'}</td></tr>`;
   });
   return t+'</tbody></table>';
 }
@@ -915,7 +977,8 @@ function renderGestion(k){
       ?`<span class="tag-paid">✓ Pagado${pe?.fecha_pago?' '+pe.fecha_pago:''}</span>`
       :`<button class="btn-row btn-mark-paid" onclick="markPaid('${esc(r.pv)}','${esc(r.emb)}','${esc(r.ref)}','${r.sis}')">Marcar pagado</button>`;
     const tipoCell=r.manual?`<span class="tag-manual">Manual</span>&nbsp;<button class="btn-row btn-del" onclick="deleteManual('${r.manId}')">✕</button>`:`<span style="color:var(--muted);font-size:10px">Auto</span>`;
-    return `<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${r.emb}</td><td>${r.ref}</td><td class="lime">${r.pv}</td><td>${r.sis}</td><td>${r.fe||'—'}</td><td>${tipoCell}</td><td class="r">${statusCell}</td></tr>`;
+    const embColor=r.tipo==='Externo'?'color:#ffffff':r.tipo==='Manual'?'color:var(--muted)':'color:var(--lime)';
+    return `<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name" style="${embColor}">${r.emb}</td><td>${r.ref}</td><td class="lime">${r.pv}</td><td>${r.sis}</td><td>${r.fe||'—'}</td><td>${tipoCell}</td><td class="r">${statusCell}</td></tr>`;
   }).join('');
   document.getElementById('tGestion').innerHTML=`<tr><th>#</th><th>Embajador</th><th>Referido</th><th>PV</th><th>Sistema</th><th>Fecha</th><th>Tipo</th><th class="r">Estado pago</th></tr>${rows}`;
   if(_manuales.length>0){
