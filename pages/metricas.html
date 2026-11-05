@@ -426,11 +426,32 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
           <button class="cl-btn" id="clS-ref" onclick="setClSort('ref')">Referidos</button>
         </div>
       </div>
+      <div class="cl-ctrl" style="margin-bottom:12px;">
+        <span style="font-size:10px;color:var(--muted)">Especialidad</span>
+        <button class="cl-btn active" data-esp="all" onclick="setClEsp('all')">Todas</button>
+        <button class="cl-btn" data-esp="0KM" onclick="setClEsp('0KM')">0KM</button>
+        <button class="cl-btn" data-esp="Usados" onclick="setClEsp('Usados')">Usados</button>
+        <button class="cl-btn" data-esp="Planes de ahorro" onclick="setClEsp('Planes de ahorro')">Planes</button>
+        <button class="cl-btn" data-esp="Ventas especiales" onclick="setClEsp('Ventas especiales')">Ventas especiales</button>
+      </div>
       <div style="overflow-x:auto"><table class="mt" id="tClosers"></table></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap;">
         <button class="cl-btn" id="clMore" onclick="toggleClAll()">Ver todos</button>
         <span style="font-size:10px;color:var(--muted)">Entregas seg&uacute;n reporte de Preventas con fecha real. Las entregas manuales no se atribuyen a un vendedor.</span>
       </div>
+    </div>
+    <!-- Detalle de preventas -->
+    <div class="cbox" id="prevdet-box" style="margin-bottom:10px;display:none;">
+      <div class="cbox-header">
+        <div class="cbox-title">DETALLE DE PREVENTAS &mdash; VENDEDOR Y ESPECIALIDAD</div>
+        <input type="text" id="pdQ" class="ep-emb-in" style="width:260px" placeholder="Buscar vendedor, embajador, referido, preventa..." oninput="paintPrevDet()" autocomplete="off">
+      </div>
+      <div id="pdNote" class="fn-s" style="margin:-4px 0 10px;"></div>
+      <div style="overflow:auto;max-height:460px"><table class="mt" id="tPrevDet"></table></div>
+    </div>
+    <div class="cbox" id="vend-box" style="margin-bottom:10px;display:none;">
+      <div class="cbox-title" style="margin-bottom:12px;">TOP VENDEDORES POR PREVENTA CERRADA</div>
+      <div style="overflow-x:auto"><table class="mt" id="tVend"></table></div>
     </div>
     <!-- Tables -->
     <div class="cg cg-2">
@@ -673,12 +694,26 @@ function calcKPIs(ref,pv,reg){
   const _cl={};
   pv.forEach(r=>{
     const c=((r['CLOSER']||'').trim())||'(sin asignar)';
-    if(!_cl[c])_cl[c]={closer:c,ref:0,prev:0,ent:0};
-    _cl[c].ref++;
-    if(r._v)_cl[c].prev++;
-    if(r._v&&r._fe)_cl[c].ent++;
+    if(!_cl[c])_cl[c]={closer:c,ref:0,prev:0,ent:0,by:{}};
+    const cat=espDe((r['PERFIL CRM']||'').trim());
+    if(!_cl[c].by[cat])_cl[c].by[cat]={ref:0,prev:0,ent:0};
+    _cl[c].ref++;_cl[c].by[cat].ref++;
+    if(r._v){_cl[c].prev++;_cl[c].by[cat].prev++;}
+    if(r._v&&r._fe){_cl[c].ent++;_cl[c].by[cat].ent++;}
   });
   const closers=Object.values(_cl);
+  closers.forEach(c=>{
+    const cats=Object.entries(c.by).sort((a,b)=>b[1].ref-a[1].ref);
+    c.esp=c.closer==='(sin asignar)'?'—':cats.slice(0,2).map(x=>x[0]).join(' · ');
+  });
+  // Detalle de cada preventa: vendedor que recibió el referido (CLOSER) + vendedor de la preventa (si el reporte trae esa columna)
+  const vendKey=pv.length?Object.keys(pv[0]).find(c=>/vend/i.test(c)&&!/closer/i.test(c)):null;
+  const prevDet=pv.filter(r=>r._v).map(r=>({
+    id:+r['ID'],pv:r._pv||'—',sis:r._sis||'—',fe:r._fe||'',
+    ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`,emb:r._e,
+    closer:((r['CLOSER']||'').trim())||'(sin asignar)',
+    esp:espDe((r['PERFIL CRM']||'').trim()),team:(r['PERFIL CRM']||'').trim(),
+    vendPV:vendKey?((r[vendKey]||'').trim()||'—'):null}));
   // Referidos con presupuesto/DNI vinculado en el CRM pero SIN número de preventa en el cruce (a revisar)
   const revisar=pv.filter(r=>!r._v&&/vinculado|dni igual/i.test(r['Estado']||'')).map(r=>({
     id:+r['ID'],ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`,emb:r._e,closer:((r['CLOSER']||'').trim())||'(sin asignar)',estado:(r['Estado']||'').trim()}));
@@ -687,7 +722,7 @@ function calcKPIs(ref,pv,reg){
     empEmb:emvs.filter(e=>e.t!=='Externo').length,extEmb:emvs.filter(e=>e.t==='Externo').length,
     refEmp:ref.filter(r=>r._t!=='Externo').length,refExt:ref.filter(r=>r._t==='Externo').length,
     totalEnt,pagados,montoPend,vincSF:vsf.length,sinVinc:pv.filter(r=>!r._v).length,
-    embConPV,embPagados,embConPrev,closers,revisar,vinc:pv.filter(r=>r._v).length,entSis:ent.length,
+    embConPV,embPagados,embConPrev,closers,revisar,prevDet,vendKey,vinc:pv.filter(r=>r._v).length,entSis:ent.length,
     est,estDet,ops,tm,sis,topAll,topExt,entDet,pagSet};
 }
 
@@ -1095,29 +1130,82 @@ function renderEmbudo(k){
   document.getElementById('embudo-grid').innerHTML=embudoHTML(k);
   document.getElementById('embudo-rev').innerHTML=revisarHTML(k);
 }
-let _clSort='ent',_clAll=false;
-function closersHTML(list,sort,all){
-  const rows=[...list].sort((a,b)=>(b[sort]-a[sort])||(b.ent-a.ent)||(b.prev-a.prev)||(b.ref-a.ref)||a.closer.localeCompare(b.closer,'es'));
+let _clSort='ent',_clAll=false,_clEsp='all';
+// Especialidad según el team del CRM (PERFIL CRM)
+function espDe(p){
+  const l=(p||'').toLowerCase();
+  if(l.includes('usado'))return 'Usados';
+  if(l.includes('plan'))return 'Planes de ahorro';
+  if(l.includes('especial'))return 'Ventas especiales';
+  if(/0\s*km/.test(l))return '0KM';
+  return (p||'').trim()||'Sin team';
+}
+function closersHTML(list,sort,all,esp){
+  esp=esp||'all';
+  const base=list.map(c=>{
+    if(esp==='all')return c;
+    const s=c.by&&c.by[esp];
+    return s?{...c,ref:s.ref,prev:s.prev,ent:s.ent}:null;
+  }).filter(Boolean);
+  const rows=base.sort((a,b)=>(b[sort]-a[sort])||(b.ent-a.ent)||(b.prev-a.prev)||(b.ref-a.ref)||a.closer.localeCompare(b.closer,'es'));
   const shown=all?rows:rows.slice(0,15);
-  return `<tr><th>#</th><th>Vendedor</th><th class="r">Referidos</th><th class="r">Preventas</th><th class="r">Entregas</th><th class="r">Entrega / referido</th></tr>`+
-    shown.map((r,i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${_h(r.closer)}</td><td class="lime r">${r.ref}</td><td class="r">${r.prev||'<span style="color:var(--muted)">—</span>'}</td><td class="r">${r.ent?`<span class="sale-dot">${r.ent}</span>`:'<span style="color:var(--muted);font-size:10px">—</span>'}</td><td class="r">${r.ref?Math.round(r.ent/r.ref*100)+'%':'—'}</td></tr>`).join('');
+  return `<tr><th>#</th><th>Vendedor</th><th>Especialidad</th><th class="r">Referidos</th><th class="r">Preventas</th><th class="r">Entregas</th><th class="r">Entrega / referido</th></tr>`+
+    shown.map((r,i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${_h(r.closer)}</td><td>${_h(r.esp)}</td><td class="lime r">${r.ref}</td><td class="r">${r.prev||'<span style="color:var(--muted)">—</span>'}</td><td class="r">${r.ent?`<span class="sale-dot">${r.ent}</span>`:'<span style="color:var(--muted);font-size:10px">—</span>'}</td><td class="r">${r.ref?Math.round(r.ent/r.ref*100)+'%':'—'}</td></tr>`).join('')
+    +(rows.length?'':`<tr><td colspan="7" style="color:var(--muted);padding:14px 10px">Sin vendedores para esta especialidad en el per&iacute;odo.</td></tr>`);
 }
 function renderClosers(k){
   const box=document.getElementById('closers-box');if(!box)return;
   window._closersData=k.closers||[];
   box.style.display=window._closersData.length?'block':'none';
   paintClosers();
+  renderPrevDet(k);
 }
 function paintClosers(){
   const l=window._closersData||[];
-  document.getElementById('tClosers').innerHTML=closersHTML(l,_clSort,_clAll);
+  const total=_clEsp==='all'?l.length:l.filter(c=>c.by&&c.by[_clEsp]).length;
+  document.getElementById('tClosers').innerHTML=closersHTML(l,_clSort,_clAll,_clEsp);
   const b=document.getElementById('clMore');
-  b.textContent=_clAll?'Ver solo top 15':`Ver todos (${l.length})`;
-  b.style.display=l.length>15?'':'none';
+  b.textContent=_clAll?'Ver solo top 15':`Ver todos (${total})`;
+  b.style.display=total>15?'':'none';
   ['ent','prev','ref'].forEach(s=>document.getElementById('clS-'+s).classList.toggle('active',s===_clSort));
+  document.querySelectorAll('#closers-box [data-esp]').forEach(x=>x.classList.toggle('active',x.dataset.esp===_clEsp));
 }
 function setClSort(s){_clSort=s;paintClosers();}
+function setClEsp(e){_clEsp=e;_clAll=false;paintClosers();}
 function toggleClAll(){_clAll=!_clAll;paintClosers();}
+
+/* Detalle de preventas */
+function _feKey(fe){if(!fe)return '';const p=fe.split('/');return p.length===3?p[2]+p[1]+p[0]:'';}
+function prevDetHTML(det,vendKey,q){
+  q=(q||'').toLowerCase().trim();
+  const rows=det.filter(r=>!q||[r.pv,r.ref,r.emb,r.closer,r.vendPV||'',r.esp,r.team,r.sis].join(' ').toLowerCase().includes(q))
+    .sort((a,b)=>(b.fe?1:0)-(a.fe?1:0)||_feKey(b.fe).localeCompare(_feKey(a.fe)));
+  const vh=vendKey?'<th>Vendedor de la preventa</th>':'';
+  return `<tr><th>Preventa</th><th>Sistema</th><th>Referido</th><th>Embajador</th><th>Vendedor que recibi&oacute; el referido</th>${vh}<th>Especialidad</th><th>Estado</th></tr>`+
+    rows.map(r=>`<tr><td class="name">${_h(r.pv)}</td><td>${_h(r.sis)}</td><td>${_h(r.ref)}</td><td>${_h(r.emb)}</td><td class="name">${_h(r.closer)}</td>${vendKey?`<td class="name">${_h(r.vendPV)}</td>`:''}<td>${_h(r.esp)}</td><td>${r.fe?`<span class="sale-dot">Entregada ${_h(r.fe)}</span>`:'<span style="color:var(--amber);font-size:11px">Sin entrega a&uacute;n</span>'}</td></tr>`).join('')
+    +(rows.length?'':`<tr><td colspan="${vendKey?8:7}" style="color:var(--muted);padding:14px 10px">Sin resultados.</td></tr>`);
+}
+function renderPrevDet(k){
+  const box=document.getElementById('prevdet-box');if(!box)return;
+  window._prevDet=k.prevDet||[];window._vendKey=k.vendKey||null;
+  box.style.display=window._prevDet.length?'block':'none';
+  document.getElementById('pdNote').innerHTML=window._vendKey
+    ?`${window._prevDet.length} preventas vinculadas a referidos.`
+    :`${window._prevDet.length} preventas vinculadas a referidos. <span style="color:var(--amber)">El reporte no trae el vendedor que hizo la preventa</span> &mdash; solo el vendedor al que le lleg&oacute; el referido (CLOSER). Si agreg&aacute;s al export una columna <strong style="color:var(--cream)">VENDEDOR PREVENTA</strong>, aparece ac&aacute; autom&aacute;ticamente junto con su ranking.`;
+  paintPrevDet();
+  // Ranking de vendedores de preventa (solo si el reporte trae la columna)
+  const vb=document.getElementById('vend-box');
+  if(window._vendKey){
+    const g={};window._prevDet.forEach(r=>{const v=r.vendPV;if(!g[v])g[v]={v,prev:0,ent:0};g[v].prev++;if(r.fe)g[v].ent++;});
+    const rows=Object.values(g).sort((a,b)=>b.ent-a.ent||b.prev-a.prev);
+    document.getElementById('tVend').innerHTML=`<tr><th>#</th><th>Vendedor</th><th class="r">Preventas</th><th class="r">Entregas</th></tr>`+
+      rows.slice(0,15).map((r,i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${_h(r.v)}</td><td class="lime r">${r.prev}</td><td class="r">${r.ent?`<span class="sale-dot">${r.ent}</span>`:'—'}</td></tr>`).join('');
+    vb.style.display='block';
+  }else vb.style.display='none';
+}
+function paintPrevDet(){
+  document.getElementById('tPrevDet').innerHTML=prevDetHTML(window._prevDet||[],window._vendKey,document.getElementById('pdQ').value);
+}
 
 /* ════ GESTIÓN PAGOS ════ */
 function renderGestion(k){
