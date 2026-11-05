@@ -76,7 +76,23 @@
 #met-dashboard{display:none;}
 #met-dashboard.vis{display:block;}
 .kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);margin-bottom:1px;}
-.kpi-float-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.kpi-float-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+@media(max-width:900px){.kpi-float-row{grid-template-columns:1fr;}}
+/* Embudo + Vendedores */
+.fn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:5px;overflow:hidden;margin-top:14px;}
+.fn-cell{background:var(--ink1);padding:16px 18px;}
+.fn-v{font-size:30px;font-weight:700;color:var(--cream);line-height:1;letter-spacing:-.02em;}
+.fn-v.lime{color:var(--lime);}.fn-v.green{color:var(--green);}.fn-v.amber{color:var(--amber);}
+.fn-l{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted);margin-top:8px;}
+.fn-s{font-size:11px;color:var(--muted);margin-top:4px;}
+.fn-rev{margin-top:12px;border:1px solid var(--a-bd);background:var(--a-bg);border-radius:5px;padding:10px 14px;font-size:11px;color:var(--muted);line-height:1.6;}
+.fn-rev summary{cursor:pointer;color:var(--amber);font-weight:700;letter-spacing:.04em;}
+.fn-rev table{margin-top:8px;}
+.cl-ctrl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.cl-btn{font-size:10px;font-weight:600;letter-spacing:.04em;padding:4px 10px;border-radius:3px;cursor:pointer;color:var(--muted);background:none;border:1px solid var(--border);font-family:var(--ff);}
+.cl-btn:hover{color:var(--cream);}
+.cl-btn.active{background:var(--lime);color:var(--ink);border-color:var(--lime);}
+@media(max-width:900px){.fn-grid{grid-template-columns:1fr 1fr;}}
 .kpi-float{
   background:linear-gradient(135deg,var(--ink1) 0%,var(--ink2) 100%);
   border:1px solid var(--border);border-radius:12px;padding:22px 24px;
@@ -350,10 +366,19 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
         <div class="kf-icon">
           <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         </div>
-        <div class="kf-label">EMBAJADORES CON PREVENTA ASIGNADA</div>
+        <div class="kf-label">EMBAJADORES CON PREVENTA</div>
         <div class="kf-v"><span id="kEmbPV">—</span> <span class="kf-total" id="kEmbPVTotal"></span></div>
         <div class="kf-bar-track"><div class="kf-bar-fill" id="kEmbPVBar" style="width:0%"></div></div>
         <div class="kf-sub" id="kEmbPVDesc"></div>
+      </div>
+      <div class="kpi-float k-green">
+        <div class="kf-icon g">
+          <svg viewBox="0 0 24 24"><path d="M5 17h14M6 17l1-6h10l1 6M8 11l1-3h6l1 3"/></svg>
+        </div>
+        <div class="kf-label">EMBAJADORES CON ENTREGA</div>
+        <div class="kf-v"><span id="kEmbEnt">—</span> <span class="kf-total" id="kEmbEntTotal"></span></div>
+        <div class="kf-bar-track"><div class="kf-bar-fill g" id="kEmbEntBar" style="width:0%"></div></div>
+        <div class="kf-sub" id="kEmbEntDesc"></div>
       </div>
       <div class="kpi-float k-green">
         <div class="kf-icon g">
@@ -366,6 +391,12 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       </div>
     </div>
 
+    <!-- Embudo referidos -> preventa -> entrega -->
+    <div class="cbox" id="embudo-box" style="margin-bottom:16px;display:none;">
+      <div class="cbox-title">EMBUDO: REFERIDOS V&Aacute;LIDOS &rarr; PREVENTA &rarr; ENTREGA</div>
+      <div class="fn-grid" id="embudo-grid"></div>
+      <div id="embudo-rev"></div>
+    </div>
     <!-- Estados por trámite -->
     <div id="estados-panel"></div>
     <!-- Charts row 1 -->
@@ -383,6 +414,23 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     <div class="cbox" id="histBox" style="display:none;margin-bottom:10px;">
       <div class="cbox-title">EVOLUCI&Oacute;N HIST&Oacute;RICA</div>
       <div class="ch hist"><canvas id="cHist"></canvas></div>
+    </div>
+    <!-- Vendedores (closers) -->
+    <div class="cbox" id="closers-box" style="margin-bottom:10px;display:none;">
+      <div class="cbox-header">
+        <div class="cbox-title">VENDEDORES (CLOSER) &mdash; REFERIDOS RECIBIDOS, PREVENTAS Y ENTREGAS</div>
+        <div class="cl-ctrl">
+          <span style="font-size:10px;color:var(--muted)">Ordenar por</span>
+          <button class="cl-btn active" id="clS-ent" onclick="setClSort('ent')">Entregas</button>
+          <button class="cl-btn" id="clS-prev" onclick="setClSort('prev')">Preventas</button>
+          <button class="cl-btn" id="clS-ref" onclick="setClSort('ref')">Referidos</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto"><table class="mt" id="tClosers"></table></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap;">
+        <button class="cl-btn" id="clMore" onclick="toggleClAll()">Ver todos</button>
+        <span style="font-size:10px;color:var(--muted)">Entregas seg&uacute;n reporte de Preventas con fecha real. Las entregas manuales no se atribuyen a un vendedor.</span>
+      </div>
     </div>
     <!-- Tables -->
     <div class="cg cg-2">
@@ -579,7 +627,7 @@ function applyFilter(raw){
 
 /* ════ CLEAN ════ */
 function cleanRef(rows){return rows.filter(r=>{const n=`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`;return !TEST.has(n)&&!EXCL.has(+r['ID']);}).map(r=>{const emb=(r['EMBAJADOR']||'').trim();const tipo=OV.has(emb)?'Empleado':(r['TIPO EMBAJADOR']?.trim()==='Cliente'?'Externo':(r['TIPO EMBAJADOR']?.trim()||'Empleado'));return {...r,_e:emb,_t:tipo,_op:OP_MAP[r['TIPO OPERACION']?.trim()]||r['TIPO OPERACION']?.trim()||'Sin definir',_tm:(r['PERFIL CRM']||'Sin asignar').trim()||'Sin asignar'};});}
-function cleanPV(rows){return rows.filter(r=>{const n=`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`;return !TEST.has(n)&&!DUP.has(+r['ID']);}).map(r=>{const pv=(r['PREVENTA']||'').trim(),sis=(r['SISTEMA']||'').trim(),fe=(r['FECHA ENTREGA']||'').trim();return {...r,_v:!!(pv||sis||fe),_fe:fe,_sis:sis,_pv:pv,_e:(r['EMBAJADOR']||'').trim()};});}
+function cleanPV(rows){const _seen=new Set();return rows.filter(r=>{const n=`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`;if(TEST.has(n)||DUP.has(+r['ID']))return false;const _id=+r['ID'];if(_seen.has(_id))return false;_seen.add(_id);return true;}).map(r=>{const pv=(r['PREVENTA']||'').trim(),sis=(r['SISTEMA']||'').trim(),fe=(r['FECHA ENTREGA']||'').trim();return {...r,_v:!!(pv||sis||fe),_fe:fe,_sis:sis,_pv:pv,_e:(r['EMBAJADOR']||'').trim()};});}
 
 /* ════ CALC KPIs ════ */
 function calcKPIs(ref,pv,reg){
@@ -619,12 +667,28 @@ function calcKPIs(ref,pv,reg){
   const embConPV = new Set(entDet.map(r=>r.emb)).size;
   // Embajadores únicos con al menos un pago realizado
   const embPagados = new Set(entDet.filter(r=>pagSet.has(r.pv)&&r.pv!=='—').map(r=>r.emb)).size;
+  // Embajadores únicos con al menos una PREVENTA vinculada (distinto de "con entrega")
+  const embConPrev = new Set(pv.filter(r=>r._v).map(r=>r._e)).size;
+  // Vendedores (closer): referidos recibidos, preventas y entregas (según el reporte de Preventas)
+  const _cl={};
+  pv.forEach(r=>{
+    const c=((r['CLOSER']||'').trim())||'(sin asignar)';
+    if(!_cl[c])_cl[c]={closer:c,ref:0,prev:0,ent:0};
+    _cl[c].ref++;
+    if(r._v)_cl[c].prev++;
+    if(r._v&&r._fe)_cl[c].ent++;
+  });
+  const closers=Object.values(_cl);
+  // Referidos con presupuesto/DNI vinculado en el CRM pero SIN número de preventa en el cruce (a revisar)
+  const revisar=pv.filter(r=>!r._v&&/vinculado|dni igual/i.test(r['Estado']||'')).map(r=>({
+    id:+r['ID'],ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`,emb:r._e,closer:((r['CLOSER']||'').trim())||'(sin asignar)',estado:(r['Estado']||'').trim()}));
 
   return{total:ref.length,totalPV:pv.length,totalEmb:emvs.length,totalReg:regLen,
     empEmb:emvs.filter(e=>e.t!=='Externo').length,extEmb:emvs.filter(e=>e.t==='Externo').length,
     refEmp:ref.filter(r=>r._t!=='Externo').length,refExt:ref.filter(r=>r._t==='Externo').length,
     totalEnt,pagados,montoPend,vincSF:vsf.length,sinVinc:pv.filter(r=>!r._v).length,
-    embConPV,embPagados,est,estDet,ops,tm,sis,topAll,topExt,entDet,pagSet};
+    embConPV,embPagados,embConPrev,closers,revisar,vinc:pv.filter(r=>r._v).length,entSis:ent.length,
+    est,estDet,ops,tm,sis,topAll,topExt,entDet,pagSet};
 }
 
 /* ════ PROCESS ════ */
@@ -958,14 +1022,19 @@ function renderDash(k){
   // KPI flotantes — SIN tocar sub-elements internos
   const pct1=n(k.totalEmb)>0?Math.round(n(k.embConPV)/n(k.totalEmb)*100):0;
   const pct2=n(k.embConPV)>0?Math.round(n(k.embPagados)/n(k.embConPV)*100):0;
-  $('kEmbPV').textContent=n(k.embConPV);
+  const pctP=n(k.totalEmb)>0?Math.round(n(k.embConPrev)/n(k.totalEmb)*100):0;
+  $('kEmbPV').textContent=n(k.embConPrev);
   $('kEmbPVTotal').textContent=`/ ${n(k.totalEmb)} activos`;
-  $('kEmbPVBar').style.width=`${pct1}%`;
-  $('kEmbPVDesc').textContent=`${pct1}% de los embajadores tiene al menos una venta`;
+  $('kEmbPVBar').style.width=`${pctP}%`;
+  $('kEmbPVDesc').textContent=`${pctP}% de los embajadores tiene al menos una preventa`;
+  $('kEmbEnt').textContent=n(k.embConPV);
+  $('kEmbEntTotal').textContent=`/ ${n(k.embConPrev)} con preventa`;
+  $('kEmbEntBar').style.width=`${pct1}%`;
+  $('kEmbEntDesc').textContent=`${n(k.totalEnt)} entregas en ${n(k.embConPV)} embajadores (un embajador puede tener varias)`;
   $('kEmbPag').textContent=n(k.embPagados);
-  $('kEmbPagTotal').textContent=`/ ${n(k.embConPV)} con PV`;
+  $('kEmbPagTotal').textContent=`/ ${n(k.embConPV)} con entrega`;
   $('kEmbPagBar').style.width=`${pct2}%`;
-  $('kEmbPagDesc').textContent=`${pct2}% de los embajadores con preventa ya cobró`;
+  $('kEmbPagDesc').textContent=`${pct2}% de los embajadores con entrega ya cobró`;
   // Donuts
   const eL=Object.keys(k.est),eD=Object.values(k.est);
   donut('cEstado',eL,eD,eL.map(l=>EC[l]||C.gray));
@@ -996,9 +1065,59 @@ function renderDash(k){
       const s=sv[n]||0;
       return `<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${n}</td><td class="lime">${v}</td><td class="r">${s>0?`<span class="sale-dot">${s}</span>`:'<span style="color:var(--muted);font-size:10px">—</span>'}</td></tr>`;
     }).join('');
+  renderEmbudo(k);
+  renderClosers(k);
   renderGestion(k);
   renderHistChart();
 }
+
+/* ════ EMBUDO + VENDEDORES ════ */
+const _h=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function embudoHTML(k){
+  const n=v=>(!isNaN(v)&&v!==undefined&&v!==null)?v:0;
+  const tot=n(k.totalPV||k.total),vinc=n(k.vinc),ent=n(k.totalEnt),vsf=n(k.vincSF);
+  const p=x=>tot>0?(x/tot*100).toFixed(1).replace('.',',')+'%':'0%';
+  return `<div class="fn-cell"><div class="fn-v">${tot}</div><div class="fn-l">REFERIDOS V&Aacute;LIDOS</div><div class="fn-s">${n(k.refEmp)} de empleados &middot; ${n(k.refExt)} de externos</div></div>
+  <div class="fn-cell"><div class="fn-v lime">${vinc}</div><div class="fn-l">VINCULADOS A PREVENTA</div><div class="fn-s">${p(vinc)} de los v&aacute;lidos</div></div>
+  <div class="fn-cell"><div class="fn-v amber">${vsf}</div><div class="fn-l">PREVENTA SIN ENTREGA A&Uacute;N</div><div class="fn-s">sin fecha de entrega en el reporte</div></div>
+  <div class="fn-cell"><div class="fn-v green">${ent}</div><div class="fn-l">ENTREGADOS</div><div class="fn-s">${p(ent)} de los v&aacute;lidos${_manuales&&_manuales.filter(m=>m.activo).length?` &middot; ${_manuales.filter(m=>m.activo).length} manuales incl.`:''}</div></div>`;
+}
+function revisarHTML(k){
+  const rv=k.revisar||[];
+  if(!rv.length)return '';
+  return `<details class="fn-rev"><summary>${rv.length} referido${rv.length>1?'s':''} con presupuesto/DNI vinculado en el CRM pero SIN n&uacute;mero de preventa &mdash; revisar</summary>
+  <table class="mt"><tr><th>ID</th><th>Referido</th><th>Embajador</th><th>Vendedor</th><th>Estado CRM</th></tr>`+
+  rv.map(r=>`<tr><td>${r.id}</td><td class="name">${_h(r.ref)}</td><td>${_h(r.emb)}</td><td>${_h(r.closer)}</td><td>${_h(r.estado)}</td></tr>`).join('')+`</table></details>`;
+}
+function renderEmbudo(k){
+  const box=document.getElementById('embudo-box');if(!box)return;
+  box.style.display='block';
+  document.getElementById('embudo-grid').innerHTML=embudoHTML(k);
+  document.getElementById('embudo-rev').innerHTML=revisarHTML(k);
+}
+let _clSort='ent',_clAll=false;
+function closersHTML(list,sort,all){
+  const rows=[...list].sort((a,b)=>(b[sort]-a[sort])||(b.ent-a.ent)||(b.prev-a.prev)||(b.ref-a.ref)||a.closer.localeCompare(b.closer,'es'));
+  const shown=all?rows:rows.slice(0,15);
+  return `<tr><th>#</th><th>Vendedor</th><th class="r">Referidos</th><th class="r">Preventas</th><th class="r">Entregas</th><th class="r">Entrega / referido</th></tr>`+
+    shown.map((r,i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${_h(r.closer)}</td><td class="lime r">${r.ref}</td><td class="r">${r.prev||'<span style="color:var(--muted)">—</span>'}</td><td class="r">${r.ent?`<span class="sale-dot">${r.ent}</span>`:'<span style="color:var(--muted);font-size:10px">—</span>'}</td><td class="r">${r.ref?Math.round(r.ent/r.ref*100)+'%':'—'}</td></tr>`).join('');
+}
+function renderClosers(k){
+  const box=document.getElementById('closers-box');if(!box)return;
+  window._closersData=k.closers||[];
+  box.style.display=window._closersData.length?'block':'none';
+  paintClosers();
+}
+function paintClosers(){
+  const l=window._closersData||[];
+  document.getElementById('tClosers').innerHTML=closersHTML(l,_clSort,_clAll);
+  const b=document.getElementById('clMore');
+  b.textContent=_clAll?'Ver solo top 15':`Ver todos (${l.length})`;
+  b.style.display=l.length>15?'':'none';
+  ['ent','prev','ref'].forEach(s=>document.getElementById('clS-'+s).classList.toggle('active',s===_clSort));
+}
+function setClSort(s){_clSort=s;paintClosers();}
+function toggleClAll(){_clAll=!_clAll;paintClosers();}
 
 /* ════ GESTIÓN PAGOS ════ */
 function renderGestion(k){
