@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Programa — Grupo Randazzo Embajadores</title>
 <link rel="stylesheet" href="../assets/common.css">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Archivo:wdth,wght@125,800..900&display=swap" rel="stylesheet">
 <style>
 .pol-btns{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:48px;}
 .pol-btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.02em;cursor:pointer;font-family:var(--ff);border:none;transition:all .2s;}
@@ -80,6 +81,34 @@
 .tyc-p{font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:14px;}
 .tyc-p strong{color:var(--cream);}
 
+
+/* ═════ HERO (estilo flyer) ═════ */
+.hero{--hl:#C6F000;position:relative;overflow:hidden;background:#0b0b0a;border-bottom:1px solid var(--border);}
+.hero::before{content:'';position:absolute;inset:0;opacity:.5;mix-blend-mode:overlay;pointer-events:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");}
+.hero-z{position:absolute;top:-6%;right:-4%;width:min(46vw,560px);opacity:.9;pointer-events:none;}
+.hero-in{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:clamp(26px,3.6vw,44px) 40px clamp(34px,5vw,60px);}
+.hero-t{font-family:'Barlow Condensed','Archivo Narrow','Arial Narrow',Impact,sans-serif;font-weight:800;text-transform:uppercase;line-height:.86;font-size:clamp(56px,10vw,144px);color:#fff;letter-spacing:-.005em;}
+.hero-tag{display:inline-block;background:var(--hl);color:#0b0b0a;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:clamp(17px,2.2vw,28px);letter-spacing:.16em;text-transform:uppercase;padding:5px 22px 4px;margin:clamp(14px,2vw,22px) 0 clamp(16px,2.4vw,28px);}
+.hero-gana{display:flex;align-items:center;gap:clamp(12px,2vw,26px);font-family:'Archivo','Arial Black',Impact,sans-serif;font-stretch:125%;font-weight:900;color:#fff;font-size:clamp(32px,5.4vw,72px);line-height:1;margin-bottom:clamp(10px,1.6vw,18px);}
+.hero-gana i{font-style:normal;color:var(--hl);font-size:.62em;}
+.hero-price{display:block;width:100%;background:var(--hl);color:#0b0b0a;font-family:'Archivo','Arial Black',Impact,sans-serif;font-stretch:125%;font-weight:900;font-size:clamp(40px,11.4vw,148px);line-height:1;letter-spacing:-.02em;padding:.08em .1em .1em;text-align:center;white-space:nowrap;overflow:hidden;}
+.hero-sub{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.14em;font-size:clamp(17px,2.4vw,32px);color:rgba(255,255,255,.85);text-align:center;margin:clamp(12px,1.6vw,20px) 0 clamp(26px,3.6vw,44px);}
+.who-h{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:800;text-transform:uppercase;font-size:clamp(28px,3.6vw,48px);color:#fff;line-height:1;margin-bottom:6px;}
+.who-h span{color:var(--hl);}
+.who-s{font-size:14px;color:rgba(255,255,255,.55);margin-bottom:18px;}
+.who-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.who-card{position:relative;display:flex;flex-direction:column;gap:14px;padding:clamp(20px,2.6vw,32px);background:rgba(255,255,255,.04);border:2px solid rgba(198,240,0,.55);color:#fff;text-decoration:none;transition:background .18s,color .18s,transform .18s;}
+.who-card:hover,.who-card:focus-visible{background:var(--hl);color:#0b0b0a;transform:translateY(-3px);outline:none;}
+.who-n{width:44px;height:44px;background:var(--hl);color:#0b0b0a;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:30px;line-height:1;transition:background .18s,color .18s;}
+.who-card:hover .who-n,.who-card:focus-visible .who-n{background:#0b0b0a;color:var(--hl);}
+.who-t{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:800;text-transform:uppercase;font-size:clamp(34px,4.4vw,56px);line-height:.95;}
+.who-d{font-size:14px;line-height:1.55;opacity:.78;max-width:38ch;}
+.who-go{margin-top:auto;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:18px;color:var(--hl);display:flex;align-items:center;gap:10px;transition:color .18s;}
+.who-card:hover .who-go,.who-card:focus-visible .who-go{color:#0b0b0a;}
+.who-go::after{content:'\2192';font-size:22px;letter-spacing:0;}
+.hero-logo{display:block;height:clamp(40px,5vw,60px);width:auto;margin-top:clamp(28px,4vw,48px);opacity:.95;}
+@media(max-width:700px){.who-grid{grid-template-columns:1fr;}.hero-in{padding-left:20px;padding-right:20px;}.hero-gana{justify-content:center;}}
 /* Selector perfil (Reglamento) */
 .pf-tabs{display:flex;gap:2px;background:var(--faint);border:1px solid var(--border);border-radius:4px;padding:3px;width:fit-content;margin-bottom:8px;}
 .pf-tab{font-size:11px;font-weight:600;letter-spacing:.06em;padding:9px 26px;border-radius:2px;cursor:pointer;color:var(--muted);background:none;border:none;font-family:var(--ff);transition:color .2s,background .2s;}
@@ -112,16 +141,37 @@
   </div>
 </header>
 
-<main class="page-content">
-  <div class="s-kicker">Programa de Embajadores de Marca</div>
-  <h1 class="s-h">Refer&iacute;. Gan&aacute;. <em>$500.000.</em></h1>
-  <p class="s-sub">Recomend&aacute; a alguien que quiera un auto en Grupo Randazzo. Cuando se concreta la operaci&oacute;n elegible, el beneficio es tuyo.</p>
+<!-- HERO -->
+<section class="hero" id="inicio">
+  <svg class="hero-z" viewBox="0 0 400 400" aria-hidden="true"><polygon points="140,0 400,0 400,120 20,400 20,300 250,120 140,120" fill="#5b7a12" opacity=".75"/><polygon points="230,0 400,0 400,60" fill="#8fb51a" opacity=".5"/></svg>
+  <div class="hero-in">
+    <h1 class="hero-t">Embajadores<br>de Marca</h1>
+    <div class="hero-tag">Programa de referidos</div>
+    <div class="hero-gana"><i>+</i> GAN&Aacute; <i>+</i></div>
+    <span class="hero-price">$500.000</span>
+    <div class="hero-sub">Por cada operaci&oacute;n entregada.</div>
 
-  <div class="notice">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    <p><strong>Registro para personas externas al Grupo:</strong> complet&aacute; el formulario y recib&iacute;s tu link de inmediato. <strong>Empleados:</strong> participan por un canal interno &mdash; reciben su link en el correo corporativo.</p>
+    <div class="who-h">&iquest;Sos empleado o sos <span>cliente?</span></div>
+    <div class="who-s">Eleg&iacute; tu perfil y entr&aacute; directo.</div>
+    <div class="who-grid">
+      <a class="who-card" href="https://embajadoresgr.gruporandazzo.com/Referidos">
+        <div class="who-n">1</div>
+        <div class="who-t">Soy<br>empleado</div>
+        <div class="who-d">Ingres&aacute; con tu link de embajador para cargar tus referidos y seguir su estado.</div>
+        <div class="who-go">Ingresar</div>
+      </a>
+      <a class="who-card" href="https://embajadoresgr.gruporandazzo.com/Registro">
+        <div class="who-n">2</div>
+        <div class="who-t">Soy<br>cliente</div>
+        <div class="who-d">Registrate gratis, recib&iacute; tu link de inmediato y empez&aacute; a referir.</div>
+        <div class="who-go">Quiero ser embajador</div>
+      </a>
+    </div>
+    <img class="hero-logo" src="../logo.png" alt="Grupo Randazzo &middot; Viv&iacute; la experiencia" onerror="this.style.display='none'">
   </div>
+</section>
 
+<main class="page-content">
   <div class="pol-btns">
     <button class="pol-btn pol-btn-tyc" onclick="openOverlay('tyc')">
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
