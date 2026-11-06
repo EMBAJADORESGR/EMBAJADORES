@@ -89,6 +89,8 @@
 .hero-z{position:absolute;top:-6%;right:-4%;width:min(46vw,560px);opacity:.9;pointer-events:none;}
 .hero-in{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:clamp(26px,3.6vw,44px) 40px clamp(34px,5vw,60px);}
 .hero-t{font-family:'Barlow Condensed','Archivo Narrow','Arial Narrow',Impact,sans-serif;font-weight:800;text-transform:uppercase;line-height:.86;font-size:clamp(56px,10vw,144px);color:#fff;letter-spacing:-.005em;}
+.hero-t1{display:block;}
+.hero-t2{display:block;font-size:clamp(24px,3.6vw,50px);letter-spacing:.2em;line-height:1;margin-top:clamp(10px,1.4vw,18px);}
 .hero-tag{display:inline-block;background:var(--hl);color:#0b0b0a;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:clamp(17px,2.2vw,28px);letter-spacing:.16em;text-transform:uppercase;padding:5px 22px 4px;margin:clamp(14px,2vw,22px) 0 clamp(16px,2.4vw,28px);}
 .hero-gana{display:flex;align-items:center;gap:clamp(12px,2vw,26px);font-family:'Archivo','Arial Black',Impact,sans-serif;font-stretch:125%;font-weight:900;color:#fff;font-size:clamp(32px,5.4vw,72px);line-height:1;margin-bottom:clamp(10px,1.6vw,18px);}
 .hero-gana i{font-style:normal;color:var(--hl);font-size:.62em;}
@@ -145,7 +147,7 @@
 <section class="hero" id="inicio">
   <svg class="hero-z" viewBox="0 0 400 400" aria-hidden="true"><polygon points="140,0 400,0 400,120 20,400 20,300 250,120 140,120" fill="#5b7a12" opacity=".75"/><polygon points="230,0 400,0 400,60" fill="#8fb51a" opacity=".5"/></svg>
   <div class="hero-in">
-    <h1 class="hero-t">Embajadores<br>de Marca</h1>
+    <h1 class="hero-t"><span class="hero-t1">Embajadores</span><span class="hero-t2">de Marca</span></h1>
     <div class="hero-tag">Programa de referidos</div>
     <div class="hero-gana"><i>+</i> GAN&Aacute; <i>+</i></div>
     <span class="hero-price">$500.000</span>
@@ -192,20 +194,6 @@
   </div>
 
   <div class="divider"></div>
-  <div class="s-kicker">Estados del referido</div>
-  <p style="font-size:14px;color:var(--muted);margin-bottom:20px;">Cada referido avanza por estos estados. El estado <strong style="color:var(--lime)">ENTREGADO</strong> (compra directa) o el pago de la <strong style="color:var(--lime)">TERCERA CUOTA</strong> (Plan de Ahorro) activan el pago del beneficio.</p>
-
-  <div class="states-grid">
-    <div class="state-row"><span class="s-badge sb-ref">REFERIDO</span><span class="state-desc">El referido se carg&oacute; con &eacute;xito. El equipo comercial toma contacto pr&oacute;ximamente.</span></div>
-    <div class="state-row"><span class="s-badge sb-asi">ASIGNADO</span><span class="state-desc">Est&aacute; siendo atendido por un asesor comercial del Grupo.</span></div>
-    <div class="state-row"><span class="s-badge sb-pre">PRESUPUESTO</span><span class="state-desc">Recibi&oacute; un presupuesto por el veh&iacute;culo de inter&eacute;s. Negociaci&oacute;n activa.</span></div>
-    <div class="state-row"><span class="s-badge sb-fin">FINALIZADO</span><span class="state-desc">No realiz&oacute; una operaci&oacute;n. No genera beneficio. Puede recargarse pasados 90 d&iacute;as.</span></div>
-    <div class="state-row pago"><span class="s-badge sb-pv">PREVENTA</span><span class="state-desc">Operaci&oacute;n confirmada con n&uacute;mero de preventa. Compra directa: cerca del cobro.</span></div>
-    <div class="state-row pago"><span class="s-badge sb-sus">SUSCRIPCION</span><span class="state-desc">Suscripci&oacute;n al Plan de Ahorro perfeccionada. Beneficio activo al pago de la 3&ordf; cuota.</span></div>
-    <div class="state-row pago" style="grid-column:1/-1"><span class="s-badge sb-ent">ENTREGADO</span><span class="state-desc" style="color:var(--cream)"><strong>El veh&iacute;culo fue entregado</strong> (compra directa) o el referido <strong>abona la 3&ordf; cuota</strong> (Plan de Ahorro). El beneficio queda devengado e inicia el plazo de pago.</span></div>
-  </div>
-
-  <div class="divider"></div>
   <div class="s-kicker">Preguntas frecuentes</div>
 
   <div class="faq-section-title">EL PROGRAMA</div>
@@ -214,7 +202,7 @@
 
   <div class="faq-section-title">REGISTRO Y ALTA</div>
   <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Este formulario es para empleados del Grupo?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
-  <div class="faq-body"><div class="faq-body-inner"><p><strong>No.</strong> El formulario es exclusivamente para <strong>personas externas</strong>. Los empleados participan por un canal interno gestionado por RRHH y reciben su link en el correo corporativo.</p></div></div></div>
+  <div class="faq-body"><div class="faq-body-inner"><p><strong>No.</strong> El formulario es exclusivamente para <strong>personas externas</strong>. Si sos empleado, ingres&aacute; desde la opci&oacute;n <strong>Soy empleado</strong> al inicio de la p&aacute;gina.</p></div></div></div>
   <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Cu&aacute;ndo puedo empezar a referir?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
   <div class="faq-body"><div class="faq-body-inner"><p>Al completar el formulario recib&iacute;s tu link <strong class="lime">de inmediato</strong> y pod&eacute;s empezar a referir desde ese momento, incluso en fin de semana. El &aacute;rea Contable verifica los datos bancarios de forma asincr&oacute;nica, sin bloquear tu operatoria.</p></div></div></div>
   <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Qu&eacute; pasa si Contable pide corregir mi CBU?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
@@ -242,15 +230,12 @@
       <tr><td><strong>Externo Cons. Final</strong></td><td>Transferencia CBU</td><td>7 d&iacute;as h&aacute;biles desde entrega</td><td>7 d&iacute;as h&aacute;biles desde 3&ordf; cuota</td><td>CBU (no CVU)</td></tr>
       <tr><td><strong>Monotributista</strong></td><td>Transferencia CBU</td><td>7 d&iacute;as h&aacute;biles*</td><td>7 d&iacute;as h&aacute;biles**</td><td>Factura C + CBU</td></tr>
       <tr><td><strong>Resp. Inscripto</strong></td><td>Transferencia CBU</td><td>7 d&iacute;as h&aacute;biles*</td><td>7 d&iacute;as h&aacute;biles**</td><td>Factura A + CBU</td></tr>
-      <tr><td><strong>Empleado</strong></td><td>Pr&oacute;ximo sueldo</td><td>Pr&oacute;x. liquidaci&oacute;n</td><td>Tras confirmar 3&ordf; cuota</td><td>Gesti&oacute;n RRHH</td></tr>
     </table>
     <div class="faq-note warn">*Desde entrega o factura v&aacute;lida, lo &uacute;ltimo. **Desde que se cumplen ambas: 3&ordf; cuota pagada y factura v&aacute;lida recibida.</div>
   </div></div></div>
 
   <div class="faq-section-title">CASOS ESPECIALES</div>
-  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;Qu&eacute; pasa si el auto queda a nombre de otra persona?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
-  <div class="faq-body"><div class="faq-body-inner"><p>Cuando el cr&eacute;dito o la titularidad queda a nombre de una persona distinta al referido, el sistema pierde la trazabilidad porque los DNI no coinciden. El vendedor debe <strong>vincular manualmente el c&oacute;digo del Embajador a la preventa antes del cierre</strong>. Sin esa vinculaci&oacute;n el beneficio no puede procesarse. Avis&aacute; a embajadores@gruporandazzo.com.ar.</p></div></div></div>
-  <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;El Plan de Ahorro genera beneficio?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
+    <div class="faq-item"><button class="faq-q" aria-expanded="false"><span class="faq-q-text">&iquest;El Plan de Ahorro genera beneficio?</span><span class="faq-icon"><svg viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke-width="1.5"/></svg></span></button>
   <div class="faq-body"><div class="faq-body-inner"><p>S&iacute;. El beneficio se devenga cuando el referido abona efectivamente la <strong class="lime">tercera cuota</strong> de su suscripci&oacute;n. La sola suscripci&oacute;n o el pago de las cuotas 1 y 2 no generan derecho al cobro. El &aacute;rea de Plan de Ahorro confirma el pago de la tercera cuota antes de habilitar la gesti&oacute;n del pago.</p></div></div></div>
 </main>
 
@@ -265,12 +250,12 @@
       <div class="tyc-section-title">2. DEFINICIONES CLAVE</div>
       <p class="tyc-p"><strong>Embajador:</strong> &ge;18 a&ntilde;os, registrado y con enlace &uacute;nico.<br><strong>Referencia V&aacute;lida:</strong> registrada antes del primer contacto comercial del Referido (sin antecedente en los &uacute;ltimos 90 d&iacute;as).<br><strong>Operaci&oacute;n Elegible:</strong> compraventa con entrega realizada, o suscripci&oacute;n a Plan de Ahorro con pago efectivo de la tercera cuota.<br><strong>Pago &Uacute;nico:</strong> <strong style="color:var(--lime)">$500.000 brutos</strong> por Operaci&oacute;n Elegible.</p>
       <div class="tyc-section-title">3. ALTA Y PARTICIPACI&Oacute;N</div>
-      <p class="tyc-p"><strong>Personas externas:</strong> se registran por formulario web, link inmediato. <strong>Empleados:</strong> todos pueden participar sin excepci&oacute;n &mdash; reciben link en correo corporativo. La &uacute;nica restricci&oacute;n para empleados es que no pueden referir contactos de su propia cartera o especializaci&oacute;n comercial activa. La verificaci&oacute;n del CBU es asincr&oacute;nica; si no coincide con el titular, Contable notifica para corregir. Los referidos ya cargados son siempre v&aacute;lidos; el pago queda en pausa hasta confirmar el CBU.</p>
+      <p class="tyc-p"><strong>Personas externas:</strong> se registran por formulario web, link inmediato. La verificaci&oacute;n del CBU es asincr&oacute;nica; si no coincide con el titular, Contable notifica para corregir. Los referidos ya cargados son siempre v&aacute;lidos; el pago queda en pausa hasta confirmar el CBU.</p>
       <p class="tyc-p">La referencia no es v&aacute;lida si el Referido tuvo contacto en los 90 d&iacute;as anteriores. Una vez cargado, el Referido tiene 90 d&iacute;as para concretar la operaci&oacute;n.</p>
       <div class="tyc-section-title">4. DEVENGAMIENTO DEL BENEFICIO</div>
       <p class="tyc-p"><strong>Compra directa:</strong> entrega efectiva del veh&iacute;culo.<br><strong>Plan de Ahorro:</strong> pago efectivo de la tercera cuota. La suscripci&oacute;n o las cuotas 1 y 2 no devengan el beneficio.</p>
       <div class="tyc-section-title">5. PAGO — $500.000 BRUTOS</div>
-      <p class="tyc-p"><strong>Consumidor Final:</strong> transferencia al CBU en 7 d&iacute;as h&aacute;biles desde el devengamiento. No se aceptan CVU.<br><strong>Mono/RI:</strong> idem + Factura C o Factura A (RI). Plazo: 7 d&iacute;as h&aacute;biles desde el devengamiento o la factura, lo &uacute;ltimo. Se practican retenciones AFIP.<br><strong>Empleados:</strong> pr&oacute;ximo sueldo una vez devengado el beneficio. Gestiona RRHH.</p>
+      <p class="tyc-p"><strong>Consumidor Final:</strong> transferencia al CBU en 7 d&iacute;as h&aacute;biles desde el devengamiento. No se aceptan CVU.<br><strong>Mono/RI:</strong> idem + Factura C o Factura A (RI). Plazo: 7 d&iacute;as h&aacute;biles desde el devengamiento o la factura, lo &uacute;ltimo. Se practican retenciones AFIP.</p>
       <div class="tyc-section-title">6. EXCLUSIONES</div>
       <p class="tyc-p">Auto-referencias &middot; Carga retroactiva &middot; Datos falsos &middot; Manipulaci&oacute;n del sistema. El incumplimiento puede dar lugar a exclusi&oacute;n y acciones legales.</p>
       <div class="tyc-section-title">7. CONTACTO</div>
@@ -284,72 +269,41 @@
   <div class="overlay-panel">
     <div class="overlay-header"><span class="overlay-title">REGLAMENTO Y CONDICIONES DE PARTICIPACI&Oacute;N</span><button class="overlay-close" onclick="closeOverlay('reg')"><svg viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="overlay-body">
-      <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px;">Reglamento oficial. Vigente hasta el <strong style="color:var(--lime)">31 de diciembre de 2026</strong>.</p>
-      <div class="pf-hint">Eleg&iacute; tu perfil para ver las condiciones que te aplican:</div>
-      <div class="pf-tabs">
-        <button class="pf-tab active" id="pft-emp" onclick="setPerfil('emp')">EMPLEADOS</button>
-        <button class="pf-tab" id="pft-ext" onclick="setPerfil('ext')">EXTERNOS</button>
-      </div>
+      <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:28px;">Reglamento oficial. Vigente hasta el <strong style="color:var(--lime)">31 de diciembre de 2026</strong>.</p>
 
-      <div class="pf-panel active" id="pf-emp">
-      <div class="pol-section-h">QUI&Eacute;N PUEDE PARTICIPAR<span class="pf-tag">SOLO EMPLEADOS</span></div>
-      <div class="pol-qa-list">
-        <div class="pol-qa"><div class="pol-q">Elegibilidad</div><div class="pol-a"><p>Todo empleado del Grupo puede ser Embajador. Recibe su link personalizado en el correo corporativo.</p></div></div>
-        <div class="pol-qa"><div class="pol-q">Restricci&oacute;n operativa</div><div class="pol-a"><p>El Embajador <strong>no puede cargar como referido a un contacto que ya forme parte de su propia cartera comercial activa o de su especializaci&oacute;n directa</strong>. Por ejemplo: un Closer de 0KM no puede cargar prospectos que &eacute;l mismo gestiona; s&iacute; puede referir clientes de otras &aacute;reas o de otra especializaci&oacute;n.</p></div></div>
-      </div>
-
-      <div class="pol-section-h">COMISIONES<span class="pf-tag">SOLO EMPLEADOS</span></div>
-      <div class="pol-qa-list">
-        <div class="pol-qa"><div class="pol-q">Particular</div><div class="pol-a"><p><strong>$500.000 brutos</strong> por veh&iacute;culo entregado (0KM, usado, plan de ahorro, venta especial).</p></div></div>
-        <div class="pol-qa"><div class="pol-q">Revendedor de subastas</div><div class="pol-a"><p>M&aacute;ximo hasta <strong style="color:var(--lime)">$1.000.000</strong> por transacci&oacute;n.</p></div></div>
-      </div>
-
-      <div class="pol-section-h">LIQUIDACI&Oacute;N<span class="pf-tag">SOLO EMPLEADOS</span></div>
-      <div class="pol-qa-list">
-        <div class="pol-qa"><div class="pol-q">Empleado del Grupo</div><div class="pol-a"><p>Gestionado por RRHH. El beneficio se liquidar&aacute; junto con el pr&oacute;ximo sueldo que corresponda, una vez devengado. Para Plan de Ahorro: una vez confirmado el pago efectivo de la tercera cuota.</p></div></div>
-      </div>
-
-      <div class="pol-section-h">CASOS ESPECIALES<span class="pf-tag">SOLO EMPLEADOS</span></div>
-      <div class="pol-qa-list">
-        <div class="pol-qa"><div class="pol-q">Venta a otro nombre</div><div class="pol-a"><p>El vendedor debe vincular manualmente el c&oacute;digo del Embajador a la preventa antes del cierre. Sin esa vinculaci&oacute;n el beneficio no puede procesarse. Avisar a <strong style="color:var(--cream)">embajadores@gruporandazzo.com.ar</strong>.</p></div></div>
-      </div>
-
-      </div>
-      <div class="pf-panel" id="pf-ext">
-      <div class="pol-section-h">QUI&Eacute;N PUEDE PARTICIPAR<span class="pf-tag">SOLO EXTERNOS</span></div>
+      <div class="pol-section-h">QUI&Eacute;N PUEDE PARTICIPAR</div>
       <div class="pol-qa-list">
         <div class="pol-qa"><div class="pol-q">Elegibilidad</div><div class="pol-a"><p>Cualquier persona f&iacute;sica mayor de 18 a&ntilde;os. Se registra mediante el formulario habilitado en el sitio oficial y recibe su link de forma inmediata.</p></div></div>
       </div>
 
-      <div class="pol-section-h">MODALIDADES DE PAGO<span class="pf-tag">SOLO EXTERNOS</span></div>
+      <div class="pol-section-h">MODALIDADES DE PAGO</div>
       <div class="pol-qa-list">
         <div class="pol-qa"><div class="pol-q">Externo &mdash; Consumidor Final</div><div class="pol-a"><p><strong>Plazo compra directa:</strong> 7 d&iacute;as h&aacute;biles desde la entrega efectiva.<br><strong>Plazo Plan de Ahorro:</strong> 7 d&iacute;as h&aacute;biles desde el pago efectivo de la tercera cuota.<br><strong>Documentaci&oacute;n:</strong> CBU de cuenta bancaria cuyo titular sea el Embajador. No se aceptan CVU.</p></div></div>
         <div class="pol-qa"><div class="pol-q">Externo &mdash; Monotributista / Resp. Inscripto</div><div class="pol-a"><p><strong>Plazo compra directa:</strong> 7 d&iacute;as h&aacute;biles desde la entrega o desde la factura v&aacute;lida, lo que ocurra &uacute;ltimo.<br><strong>Plazo Plan de Ahorro:</strong> 7 d&iacute;as h&aacute;biles desde que se cumplan ambas: pago de la tercera cuota y factura v&aacute;lida recibida.<br><strong>Documentaci&oacute;n:</strong> Factura C (Monotributista) o Factura A con IVA discriminado (RI) a nombre de la Empresa Participante. Se practicar&aacute;n las retenciones impositivas que correspondan.</p></div></div>
         <div class="pol-qa"><div class="pol-q">Alta y verificaci&oacute;n bancaria</div><div class="pol-a"><p>Al completar el formulario, el Embajador recibe su link de forma <strong>inmediata</strong> y puede comenzar a referir sin demoras. La verificaci&oacute;n del CBU es asincr&oacute;nica. Si el CBU no corresponde al titular, Contable notifica al Embajador para que corrija los datos. Los Referidos ya cargados <strong>permanecen v&aacute;lidos</strong>; el pago queda en pausa hasta confirmar el CBU.</p></div></div>
       </div>
 
-      </div>
 
-      <div class="pol-section-h">EL PROGRAMA<span class="pf-tag common">EMPLEADOS Y EXTERNOS</span></div>
+      <div class="pol-section-h">EL PROGRAMA</div>
       <div class="pol-qa-list">
         <div class="pol-qa"><div class="pol-q">&iquest;Qu&eacute; es el Programa?</div><div class="pol-a"><p>Programa organizado por el Grupo Randazzo (KIARA AUTOMOTORA S.A., PEARA S.A., AUTOS CIARA S.A. y MOVILIS RENT A CAR). Los Embajadores recomiendan a terceros la compra de veh&iacute;culos. Cuando esa recomendaci&oacute;n deriva en una operaci&oacute;n elegible y se cumple la condici&oacute;n de devengamiento, el Embajador recibe el beneficio correspondiente.</p></div></div>
         <div class="pol-qa"><div class="pol-q">Vigencia</div><div class="pol-a"><p>Tres (3) meses desde su publicaci&oacute;n y, en todos los casos, hasta el <strong>31 de diciembre de 2026</strong>. El Grupo podr&aacute; extenderlo, suspenderlo o finalizarlo. La finalizaci&oacute;n no afectar&aacute; los beneficios ya devengados.</p></div></div>
       </div>
 
-      <div class="pol-section-h">BENEFICIO Y DEVENGAMIENTO<span class="pf-tag common">EMPLEADOS Y EXTERNOS</span></div>
+      <div class="pol-section-h">BENEFICIO Y DEVENGAMIENTO</div>
       <div class="pol-qa-list">
         <div class="pol-qa"><div class="pol-q">Monto est&aacute;ndar</div><div class="pol-a"><p><strong>$500.000 brutos</strong> por cada veh&iacute;culo entregado (particular: 0KM, usado, plan de ahorro, venta especial). El importe neto puede ser inferior por retenciones impositivas. Sin l&iacute;mite de referidos ni tope de comisiones acumuladas.</p></div></div>
         <div class="pol-qa"><div class="pol-q">&iquest;Cu&aacute;ndo se devenga?</div><div class="pol-a"><p><strong>Compra directa:</strong> cuando se produce la entrega efectiva del veh&iacute;culo al Referido.<br><strong>Plan de Ahorro:</strong> &uacute;nicamente cuando el Referido haya abonado efectivamente la <strong>tercera cuota</strong> de su suscripci&oacute;n. La sola suscripci&oacute;n o el pago de las cuotas 1 y 2 no generan derecho al beneficio. El &aacute;rea responsable verifica y confirma el pago antes de habilitar la liquidaci&oacute;n.</p></div></div>
       </div>
 
-      <div class="pol-section-h">VALIDEZ &mdash; REGLA DE 90 D&Iacute;AS<span class="pf-tag common">EMPLEADOS Y EXTERNOS</span></div>
+      <div class="pol-section-h">VALIDEZ &mdash; REGLA DE 90 D&Iacute;AS</div>
       <div class="pol-qa-list">
         <div class="pol-qa"><div class="pol-q">Registro previo</div><div class="pol-a"><p>El Embajador debe estar registrado en el Programa antes de presentar al Referido.</p></div></div>
         <div class="pol-qa"><div class="pol-q">Ventana previa (90 d&iacute;as antes)</div><div class="pol-a"><p>Si el Referido registra cualquier contacto con el Grupo durante los 90 d&iacute;as anteriores a la fecha de carga, la referencia no ser&aacute; v&aacute;lida. Si el Referido ya est&aacute; siendo atendido activamente por un asesor, tampoco ser&aacute; v&aacute;lida, aunque no hayan transcurrido 90 d&iacute;as.</p></div></div>
         <div class="pol-qa"><div class="pol-q">Ventana activa (90 d&iacute;as para concretar)</div><div class="pol-a"><p>Una vez cargado el Referido, la operaci&oacute;n tendr&aacute; 90 d&iacute;as para concretarse. Durante ese per&iacute;odo, el mismo Referido no podr&aacute; ser cargado por otro Embajador. Transcurridos los 90 d&iacute;as sin operaci&oacute;n elegible, el Referido podr&aacute; volver a ser presentado.</p></div></div>
       </div>
 
-      <div class="pol-section-h">EXCLUSIONES Y DISPUTAS<span class="pf-tag common">EMPLEADOS Y EXTERNOS</span></div>
+      <div class="pol-section-h">EXCLUSIONES Y DISPUTAS</div>
       <div class="pol-qa-list">
         <div class="pol-qa"><div class="pol-q">Pr&aacute;cticas prohibidas</div><div class="pol-a"><table class="pol-table">
             <tr><th>Pr&aacute;ctica</th><th>Consecuencia</th></tr>
@@ -363,7 +317,7 @@
         <div class="pol-qa"><div class="pol-q">Disputas de autor&iacute;a</div><div class="pol-a"><p>En caso de disputa sobre la autor&iacute;a de un referido, decide el equipo Comercial junto con RRHH.</p></div></div>
       </div>
 
-      <div class="pol-section-h">CONTACTO<span class="pf-tag common">EMPLEADOS Y EXTERNOS</span></div>
+      <div class="pol-section-h">CONTACTO</div>
       <div class="pol-qa-list">
         <div class="pol-qa"><div class="pol-q">Canales oficiales</div><div class="pol-a"><p>Consultas: <strong style="color:var(--cream)">embajadores@gruporandazzo.com.ar</strong><br>Datos personales (Ley 25.326): legales@gruporandazzo.com.ar<br>Domicilio: Av. 44 N&ordm;1463, La Plata, Provincia de Buenos Aires. &middot; www.gruporandazzo.com</p></div></div>
       </div>
