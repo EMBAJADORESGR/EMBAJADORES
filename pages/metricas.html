@@ -226,6 +226,28 @@
 .gestion-panel{background:var(--ink2);border:1px solid var(--border);border-radius:5px;padding:18px;margin-bottom:10px;display:none;}
 .gestion-panel.vis{display:block;}
 @media(max-width:900px){.kpi-strip{grid-template-columns:1fr 1fr;}.cg-3,.cg-2{grid-template-columns:1fr;}.upload-grid{grid-template-columns:1fr;}.form-grid{grid-template-columns:1fr;}}
+
+.tip{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;margin-left:6px;border:1px solid var(--muted);border-radius:50%;font-size:9px;font-weight:700;font-style:normal;letter-spacing:0;text-transform:none;color:var(--muted);cursor:help;vertical-align:middle;}
+.tip:hover,.tip.on{color:var(--lime);border-color:var(--lime);}
+#tipBox{position:fixed;display:none;z-index:300;max-width:280px;background:#000;border:1px solid var(--lime);color:var(--cream);padding:10px 12px;border-radius:6px;font-size:11px;font-weight:400;line-height:1.55;letter-spacing:0;text-transform:none;box-shadow:0 6px 24px rgba(0,0,0,.6);pointer-events:none;}
+#glossBtn{position:fixed;right:18px;bottom:18px;z-index:120;background:var(--lime);color:#060705;border:none;border-radius:20px;padding:9px 15px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.5);}
+.gl-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:250;align-items:center;justify-content:center;padding:16px;}
+.gl-card{background:var(--ink1);border:1px solid var(--border);border-radius:8px;width:100%;max-width:720px;max-height:86vh;display:flex;flex-direction:column;}
+.gl-h{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--cream);}
+.gl-h button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;}
+.gl-b{padding:14px 18px;overflow:auto;}
+.gl-i{padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.gl-t{font-size:12px;font-weight:700;color:var(--lime);}
+.gl-d{font-size:12px;color:var(--cream);line-height:1.55;margin-top:3px;opacity:.9;}
+.pv-l{display:block;font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--muted);margin:10px 0 4px;}
+.pv-in{width:100%;box-sizing:border-box;background:var(--card);border:1px solid var(--border);border-radius:5px;color:var(--cream);font-size:12px;padding:8px 10px;outline:none;color-scheme:dark;}
+.pv-in:focus{border-color:var(--lime);}
+.pv-b{background:var(--card);border:1px solid var(--border);color:var(--cream);border-radius:5px;padding:8px 14px;font-size:12px;cursor:pointer;}
+.pv-b.ok{background:var(--lime);color:#060705;border-color:var(--lime);font-weight:700;}
+.pv-b.del{color:#F87171;border-color:rgba(248,113,113,.4);}
+.pv-edit{background:none;border:1px solid var(--border);border-radius:4px;color:var(--lime);cursor:pointer;padding:2px 6px;line-height:0;}
+.pv-edit:hover{background:rgba(180,208,0,.12);}
+.ep-dt td.pv .man{color:#F59E0B;font-family:sans-serif;margin-left:4px;}
 </style>
 </head>
 <body>
@@ -566,6 +588,7 @@ async function loadSupabaseData() {
     _manuales = r2.data||[];
     _tramites = r4.data||[];
     _sbOk     = true;
+    await loadExtras();
     // Intentar cargar dataset guardado
     if(r3.data&&r3.data.length>0){
       const ds = r3.data[0];
@@ -635,8 +658,8 @@ function loadMet(inp,k){
 
 /* ════ FILTER ════ */
 let _af='all',_df=null,_dt=null;
-function setFilter(p,btn){_af=p;_df=null;_dt=null;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');document.getElementById('dateFrom').value='';document.getElementById('dateTo').value='';if(window._rawKPI)renderDash(applyFilter(window._rawKPI));}
-function setFilterCustom(){const from=document.getElementById('dateFrom').value,to=document.getElementById('dateTo').value;if(!from&&!to)return;_af='custom';_df=from||null;_dt=to||null;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));if(window._rawKPI)renderDash(applyFilter(window._rawKPI));}
+function setFilter(p,btn){_af=p;_df=null;_dt=null;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');document.getElementById('dateFrom').value='';document.getElementById('dateTo').value='';if(window._rawKPI)refreshDash();}
+function setFilterCustom(){const from=document.getElementById('dateFrom').value,to=document.getElementById('dateTo').value;if(!from&&!to)return;_af='custom';_df=from||null;_dt=to||null;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));if(window._rawKPI)refreshDash();}
 function parseDate(str){if(!str)return null;const p=str.split(' ')[0].split('/');return p.length===3?new Date(p[2],p[1]-1,p[0]):null;}
 function applyFilter(raw){
   if(_af==='all'&&!_df&&!_dt)return raw;
@@ -659,6 +682,7 @@ function cleanPV(rows){const _seen=new Set();return rows.filter(r=>{const n=`${(
 
 /* ════ CALC KPIs ════ */
 function calcKPIs(ref,pv,reg){
+  pv=applyPvOv(pv);
   const em={};ref.forEach(r=>{if(!em[r._e])em[r._e]={t:r._t,n:0};em[r._e].n++;});
   const emvs=Object.values(em);
   const ent=pv.filter(r=>r._v&&r._fe),vsf=pv.filter(r=>r._v&&!r._fe);
@@ -674,7 +698,7 @@ function calcKPIs(ref,pv,reg){
     const s=normEst(r['Estado']);
     est[s]=(est[s]||0)+1;
     if(!estDet[s])estDet[s]=[];
-    estDet[s].push({nombre:(r['NOMBRE']||'').trim(),apellido:(r['APELLIDO']||'').trim(),emb:r._e||'',tipo:embTipoMap[r._e]||'Empleado',pv:r._pv||'',fc:r['FECHA CONSULTA']||''});
+    estDet[s].push({id:+r['ID'],man:!!r._man,sis:r._sis||'',nombre:(r['NOMBRE']||'').trim(),apellido:(r['APELLIDO']||'').trim(),emb:r._e||'',tipo:embTipoMap[r._e]||'Empleado',pv:r._pv||'',fc:r['FECHA CONSULTA']||''});
   });
   const ops={};ref.forEach(r=>{ops[r._op]=(ops[r._op]||0)+1;});
   const tm={};ref.forEach(r=>{tm[r._tm]=(tm[r._tm]||0)+1;});
@@ -734,31 +758,33 @@ function calcKPIs(ref,pv,reg){
 }
 
 
-/* ════ PADRÓN DE REGISTRADOS — nuevos y repetidos ════ */
-let _regRows=[],_regPer='7',_regHist=false;
+/* ════ PADRÓN DE REGISTRADOS — nuevos (semana lun→dom) y repetidos ════ */
+let _regDb=[],_regPer='week',_pvMan={};
 const dniNorm=v=>{const d=String(v||'').replace(/\D/g,'');return d.length===11?d.slice(2,10):d;};
 const regTipo=t=>/^\s*cliente\s*$/i.test(t||'')?'Externo':'Empleado';
-const regNom=r=>`${(r['Nombre']||'').trim()} ${(r['Apellido']||'').trim()}`.trim();
-function regStats(rows){
-  const g={};rows.forEach(r=>{const k=dniNorm(r['DNI'])||('pk:'+r['Pkey']);(g[k]=g[k]||[]).push(r);});
-  const dups=Object.values(g).filter(a=>a.length>1);
-  return {total:rows.length,unicos:Object.keys(g).length,dups,
-    emp:rows.filter(r=>regTipo(r['Tipo'])==='Empleado').length,
-    ext:rows.filter(r=>regTipo(r['Tipo'])==='Externo').length};
+const regNom=r=>`${(r.nombre||'').trim()} ${(r.apellido||'').trim()}`.trim();
+function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
+const fmtD=d=>d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
+async function fetchRegistrados(){
+  const all=[];let from=0;
+  while(true){
+    const {data,error}=await _sb.from('emb_registrados').select('*').range(from,from+999);
+    if(error)throw error;
+    all.push(...(data||[]));
+    if(!data||data.length<1000)break;from+=1000;
+  }
+  _regDb=all;
+}
+async function loadExtras(){
+  try{const {data,error}=await _sb.from('emb_pv_manual').select('*');if(!error){_pvMan={};(data||[]).forEach(x=>_pvMan[x.referido_id]=x);}}catch(e){}
+  try{await fetchRegistrados();}catch(e){_regDb=[];}
 }
 async function syncRegistrados(rows){
-  _regRows=(rows||[]).map(r=>({...r,_pv:null,_base:false}));
   if(!rows||!rows.length||!_sbOk)return;
   try{
-    // Lo que ya está guardado
-    const ex={};let from=0;
-    while(true){
-      const {data,error}=await _sb.from('emb_registrados').select('pkey,primera_vez,es_base').range(from,from+999);
-      if(error)throw error;
-      (data||[]).forEach(x=>ex[x.pkey]=x);
-      if(!data||data.length<1000)break;from+=1000;
-    }
-    const primera=Object.keys(ex).length===0;   // primera carga: todo es base, no hay "nuevos"
+    await fetchRegistrados();
+    const ex={};_regDb.forEach(x=>ex[x.pkey]=1);
+    const primera=_regDb.length===0;           // primera carga: todo es base, no hay "nuevos"
     const nuevos=rows.filter(r=>r['Pkey']&&!ex[r['Pkey']]).map(r=>({
       pkey:r['Pkey'],nombre:(r['Nombre']||'').trim(),apellido:(r['Apellido']||'').trim(),
       dni:(r['DNI']||'').trim(),tipo:regTipo(r['Tipo']),unidad:(r['unidad']||'').trim(),
@@ -767,55 +793,161 @@ async function syncRegistrados(rows){
       const {error}=await _sb.from('emb_registrados').upsert(nuevos.slice(i,i+200),{onConflict:'pkey',ignoreDuplicates:true});
       if(error)throw error;
     }
-    // Releer fechas (las que acaba de poner la base)
-    const all={};from=0;
-    while(true){
-      const {data,error}=await _sb.from('emb_registrados').select('pkey,primera_vez,es_base').range(from,from+999);
-      if(error)throw error;
-      (data||[]).forEach(x=>all[x.pkey]=x);
-      if(!data||data.length<1000)break;from+=1000;
-    }
-    _regRows.forEach(r=>{const x=all[r['Pkey']];if(x){r._pv=x.primera_vez;r._base=!!x.es_base;}});
-    _regHist=true;
+    await fetchRegistrados();
   }catch(e){console.warn('padron',e);}
 }
-function regNuevos(){
-  const days=_regPer==='all'?null:parseInt(_regPer,10);
-  const lim=days?Date.now()-days*864e5:0;
-  return _regRows.filter(r=>r._pv&&!r._base&&new Date(r._pv).getTime()>=lim)
-    .sort((a,b)=>new Date(b._pv)-new Date(a._pv));
+function regRange(per){
+  const now=new Date(),mon=mondayOf(now),next=new Date(mon);next.setDate(mon.getDate()+7);
+  if(per==='week')return [mon,next];
+  if(per==='prev'){const pm=new Date(mon);pm.setDate(mon.getDate()-7);return [pm,mon];}
+  if(per==='30'){const f=new Date(now);f.setDate(now.getDate()-30);return [f,next];}
+  return [new Date(0),next];
+}
+function regNuevos(per){
+  const [f,t]=regRange(per);
+  return _regDb.filter(r=>!r.es_base&&r.primera_vez&&new Date(r.primera_vez)>=f&&new Date(r.primera_vez)<t)
+    .sort((a,b)=>new Date(b.primera_vez)-new Date(a.primera_vez));
+}
+function regStats(rows){
+  const g={};rows.forEach(r=>{const k=dniNorm(r.dni)||('pk:'+r.pkey);(g[k]=g[k]||[]).push(r);});
+  return {total:rows.length,unicos:Object.keys(g).length,dups:Object.values(g).filter(a=>a.length>1),
+    emp:rows.filter(r=>r.tipo!=='Externo').length,ext:rows.filter(r=>r.tipo==='Externo').length};
 }
 function setRegPer(v){_regPer=v;renderRegistro();const d=document.getElementById('regNewDet');if(d)d.open=true;}
 function renderRegistro(){
-  const box=document.getElementById('reg-box');
-  if(!box||!_regRows.length)return;
+  const box=document.getElementById('reg-box');if(!box)return;
   box.style.display='block';
-  const st=regStats(_regRows),nu=regNuevos();
-  const nuTxt=_regHist?nu.length:'—';
-  const nuSub=!_regHist?'se activa al conectar la tabla emb_registrados'
-    :(_regRows.some(r=>r._base)&&!_regRows.some(r=>r._pv&&!r._base)?'esta fue la carga inicial: desde la pr&oacute;xima se cuentan altas':'seg&uacute;n el per&iacute;odo elegido abajo');
-  document.getElementById('reg-grid').innerHTML=
+  const grid=document.getElementById('reg-grid');
+  if(!_regDb.length){
+    grid.innerHTML=`<div class="fn-cell" style="grid-column:1/-1"><div class="fn-v" style="font-size:15px;line-height:1.5">Falta activar el seguimiento de registros</div><div class="fn-s" style="margin-top:8px;line-height:1.6">1) Corr&eacute; <b>supabase_registrados.sql</b> en Supabase (SQL Editor). &nbsp; 2) Sub&iacute; el <b>Embajadores.xls</b> en la carga de archivos y toc&aacute; <b>Procesar</b>. Desde ah&iacute; este panel muestra cu&aacute;ntos embajadores nuevos se registraron cada semana (lunes a domingo) y qui&eacute;nes son.</div></div>`;
+    document.getElementById('reg-new').innerHTML='';document.getElementById('reg-dup').innerHTML='';return;
+  }
+  const st=regStats(_regDb);
+  const [mon,next]=regRange('week');const dom=new Date(next);dom.setDate(next.getDate()-1);
+  const wk=regNuevos('week').length,pw=regNuevos('prev').length;
+  grid.innerHTML=
    `<div class="fn-cell"><div class="fn-v lime">${st.total}</div><div class="fn-l">FILAS EN EL PADR&Oacute;N</div><div class="fn-s">${st.emp} empleados &middot; ${st.ext} externos</div></div>
     <div class="fn-cell"><div class="fn-v">${st.unicos}</div><div class="fn-l">PERSONAS &Uacute;NICAS</div><div class="fn-s">por DNI (el CUIL se reduce a su DNI)</div></div>
-    <div class="fn-cell"><div class="fn-v green">${nuTxt}</div><div class="fn-l">NUEVOS REGISTROS</div><div class="fn-s">${nuSub}</div></div>
+    <div class="fn-cell" style="background:rgba(180,208,0,.07)"><div class="fn-v green">+${wk}</div><div class="fn-l">NUEVOS REGISTROS DE LA SEMANA</div><div class="fn-s">lun ${fmtD(mon)} &rarr; dom ${fmtD(dom)} &middot; semana pasada: ${pw}</div></div>
     <div class="fn-cell"><div class="fn-v amber">${st.dups.length}</div><div class="fn-l">REGISTRADOS M&Aacute;S DE UNA VEZ</div><div class="fn-s">${st.total-st.unicos} fila${st.total-st.unicos===1?'':'s'} de m&aacute;s</div></div>`;
   // Nuevos
-  let h='';
-  if(_regHist){
-    const opt=(v,l)=>`<option value="${v}"${_regPer===v?' selected':''}>${l}</option>`;
-    h=`<details class="fn-rev" id="regNewDet" style="border-color:var(--border);background:transparent;"><summary style="color:var(--green);">${nu.length} nuevo${nu.length===1?'':'s'} registro${nu.length===1?'':'s'} &mdash; ver qui&eacute;nes son</summary>
-    <div style="margin:8px 0;"><select onchange="setRegPer(this.value)" style="background:var(--ink1);color:var(--cream);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:11px;">${opt('7','&Uacute;ltimos 7 d&iacute;as')}${opt('30','&Uacute;ltimos 30 d&iacute;as')}${opt('all','Todos desde que se empez&oacute; a registrar')}</select></div>
+  const nu=regNuevos(_regPer);
+  const opt=(v,l)=>`<option value="${v}"${_regPer===v?' selected':''}>${l}</option>`;
+  // historial por semana
+  const wks={};_regDb.filter(r=>!r.es_base&&r.primera_vez).forEach(r=>{const m=mondayOf(new Date(r.primera_vez));const k=m.getTime();wks[k]=(wks[k]||0)+1;});
+  const wkRows=Object.keys(wks).sort((a,b)=>b-a).slice(0,8).map(k=>{const m=new Date(+k),d=new Date(m);d.setDate(m.getDate()+6);return `<span style="display:inline-block;margin:2px 10px 2px 0;">${fmtD(m)}&ndash;${fmtD(d)}: <b style="color:var(--cream)">${wks[k]}</b></span>`;}).join('');
+  document.getElementById('reg-new').innerHTML=
+   `<details class="fn-rev" id="regNewDet" style="border-color:var(--border);background:transparent;"><summary style="color:var(--green);">Ver qui&eacute;nes son los nuevos registrados</summary>
+    <div style="margin:8px 0;"><select onchange="setRegPer(this.value)" style="background:var(--ink1);color:var(--cream);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:11px;">${opt('week','Esta semana (lun&ndash;dom)')}${opt('prev','Semana pasada')}${opt('30','&Uacute;ltimos 30 d&iacute;as')}${opt('all','Todos desde que se empez&oacute; a medir')}</select>
+    <span style="margin-left:10px;">${nu.length} registro${nu.length===1?'':'s'}</span></div>
+    <div style="margin:4px 0 8px;">Por semana: ${wkRows||'&mdash;'}</div>
     <table class="mt"><tr><th>Detectado</th><th>Nombre</th><th>Tipo</th><th>Unidad</th><th>Puesto</th></tr>`+
-    nu.map(r=>`<tr><td>${new Date(r._pv).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})}</td><td class="name">${_h(regNom(r))}</td><td>${_h(regTipo(r['Tipo']))}</td><td>${_h(r['unidad']||'—')}</td><td>${_h(r['puesto']||'—')}</td></tr>`).join('')+`</table></details>`;
-  }
-  document.getElementById('reg-new').innerHTML=h;
+    nu.map(r=>`<tr><td>${fmtD(new Date(r.primera_vez))}</td><td class="name">${_h(regNom(r))}</td><td>${_h(r.tipo||'')}</td><td>${_h(r.unidad||'—')}</td><td>${_h(r.puesto||'—')}</td></tr>`).join('')+`</table></details>`;
   // Repetidos
   document.getElementById('reg-dup').innerHTML=st.dups.length?
    `<details class="fn-rev"><summary>${st.dups.length} persona${st.dups.length>1?'s':''} registrada${st.dups.length>1?'s':''} m&aacute;s de una vez &mdash; revisar</summary>
-    <div style="margin:6px 0;">Mismo DNI cargado una vez con DNI y otra con CUIL (o con el nombre escrito distinto). Conviene que sistemas deje una sola ficha y que el embajador use un solo link.</div>
-    <table class="mt"><tr><th>Persona</th><th>DNI</th><th>DNI / CUIL cargados</th><th>Mails</th></tr>`+
-    st.dups.map(a=>`<tr><td class="name">${_h(a.map(regNom).filter((v,i,x)=>x.indexOf(v)===i).join(' / '))}</td><td>${_h(dniNorm(a[0]['DNI']))}</td><td>${_h(a.map(r=>r['DNI']).join(' · '))}</td><td>${_h(a.map(r=>r['Mail']||'—').join(' · '))}</td></tr>`).join('')+`</table></details>`:'';
+    <div style="margin:6px 0;">Mismo DNI cargado una vez como DNI y otra como CUIL (a veces con el nombre escrito distinto). Conviene dejar una sola ficha y un solo link por persona.</div>
+    <table class="mt"><tr><th>Persona</th><th>DNI</th><th>DNI / CUIL cargados</th></tr>`+
+    st.dups.map(a=>`<tr><td class="name">${_h(a.map(regNom).filter((v,i,x)=>x.indexOf(v)===i).join(' / '))}</td><td>${_h(dniNorm(a[0].dni))}</td><td>${_h(a.map(r=>r.dni).join(' · '))}</td></tr>`).join('')+`</table></details>`:'';
 }
+
+/* ════ PV A MANO (lápiz) ════ */
+function applyPvOv(pv){
+  if(!Object.keys(_pvMan).length)return pv;
+  return pv.map(r=>{const o=_pvMan[+r['ID']];
+    if(!o||!String(o.preventa||'').trim())return r;
+    return {...r,_pv:String(o.preventa).trim(),_v:true,_sis:String(o.sistema||r._sis||'').trim(),_fe:String(o.fecha_entrega||r._fe||'').trim(),_man:true};});
+}
+function refreshDash(){
+  const raw=window._rawKPI;if(!raw)return;
+  const f=applyFilter(raw);
+  renderDash(calcKPIs(f._ref,f._pv,f._reg));
+}
+function openPvEdit(id){
+  let row=null;Object.values(window._estDetFull||{}).forEach(rs=>rs.forEach(r=>{if(r.id===id&&!row)row=r;}));
+  if(!row)return;
+  const o=_pvMan[id]||{};
+  document.getElementById('pvId').value=id;
+  document.getElementById('pvWho').textContent=`${row.apellido}${row.nombre?' '+row.nombre:''}  ·  embajador: ${row.emb||'—'}`;
+  document.getElementById('pvNum').value=o.preventa||(row.man?'':row.pv)||'';
+  document.getElementById('pvSis').value=o.sistema||row.sis||'';
+  let fe='';const m=String(o.fecha_entrega||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)fe=`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  document.getElementById('pvFe').value=fe;
+  document.getElementById('pvNota').value=o.nota||'';
+  document.getElementById('pvDel').style.display=_pvMan[id]?'inline-block':'none';
+  document.getElementById('pvModal').style.display='flex';
+  setTimeout(()=>document.getElementById('pvNum').focus(),50);
+}
+function closePvEdit(){document.getElementById('pvModal').style.display='none';}
+async function savePvEdit(){
+  if(!_sbOk){alert('No hay conexión con Supabase.');return;}
+  const id=+document.getElementById('pvId').value,pv=document.getElementById('pvNum').value.trim();
+  if(!pv){alert('Ingresá el número de preventa (ej: PV 32887/0). Si querés sacar una carga manual usá "Quitar".');return;}
+  const fi=document.getElementById('pvFe').value;let fe='';
+  if(fi){const[y,m,d]=fi.split('-');fe=`${+d}/${m}/${y}`;}
+  const row={referido_id:id,preventa:pv,sistema:document.getElementById('pvSis').value.trim(),fecha_entrega:fe,nota:document.getElementById('pvNota').value.trim(),updated_at:new Date().toISOString()};
+  const {error}=await _sb.from('emb_pv_manual').upsert(row,{onConflict:'referido_id'});
+  if(error){alert('No se pudo guardar: '+error.message+'\n¿Corriste supabase_pv_manual.sql?');return;}
+  _pvMan[id]=row;closePvEdit();refreshDash();
+}
+async function delPvEdit(){
+  const id=+document.getElementById('pvId').value;
+  if(!confirm('¿Quitar la preventa cargada a mano? Vuelve a lo que dice el reporte.'))return;
+  const {error}=await _sb.from('emb_pv_manual').delete().eq('referido_id',id);
+  if(error){alert('No se pudo quitar: '+error.message);return;}
+  delete _pvMan[id];closePvEdit();refreshDash();
+}
+
+/* ════ AYUDA: qué mide cada KPI ════ */
+const GLOSS=[
+ ['Embajadores registrados',['EMBAJADORES REGISTRADOS'],'Filas del padrón de la web (Embajadores.xls): todos los que se dieron de alta, hayan referido o no. Si una persona quedó cargada dos veces (una con DNI y otra con CUIL) cuenta dos. Abajo se ve cuántos empleados y externos ya refirieron al menos una vez.'],
+ ['Filas en el padrón',['FILAS EN EL PADRON'],'Cantidad de registros del padrón guardados en el sistema. Es el mismo número que "Embajadores registrados".'],
+ ['Personas únicas',['PERSONAS UNICAS'],'Registrados sin contar repetidos. Se considera la misma persona si coincide el DNI (cuando viene el CUIL de 11 dígitos se usa solo el DNI que lleva adentro).'],
+ ['Nuevos registros de la semana',['NUEVOS REGISTROS DE LA SEMANA'],'Embajadores que se registraron de lunes a domingo de la semana actual. Se suma con cada carga: cada vez que subís el Embajadores.xls, los que no estaban se guardan con la fecha de ese día. La fecha es la del día en que aparecieron en tu planilla.'],
+ ['Registrados más de una vez',['REGISTRADOS MAS DE UNA VEZ'],'Personas con dos fichas en el padrón (mismo DNI). Hay que dejar una sola para que sus referidos no queden partidos entre dos links.'],
+ ['Referidos válidos',['REFERIDOS VALIDOS'],'Referidos cargados en el CRM (reporte de Preventas) sin contar las pruebas ni los casos excluidos a mano. Es el 100% base del embudo: de acá se calcula cuántos se vinculan a una preventa y cuántos se entregan.'],
+ ['Vinculados a preventa',['VINCULADOS A PREVENTA'],'Referidos que en el reporte tienen número de PREVENTA, sistema o fecha de entrega, o a los que les cargaste el PV a mano con el lápiz. Un referido que solo tiene un presupuesto en el CRM NO cuenta.'],
+ ['Preventa sin entrega aún',['PREVENTA SIN ENTREGA AUN'],'Tienen preventa pero todavía no hay fecha de entrega en el reporte. Son los que se pagan cuando se entreguen.'],
+ ['Entregados',['ENTREGADOS','ENTREGADOS TOTALES'],'Referidos con preventa y fecha de entrega, más las entregas cargadas como manuales (ej. cónyuge). Cada una devenga $500.000 para el embajador.'],
+ ['Beneficios pagados',['BENEFICIOS PAGADOS'],'Entregas cuya preventa figura en la tabla de pagos que cargaste.'],
+ ['Pendiente de pago',['PENDIENTE DE PAGO'],'(Entregados − Pagados) × $500.000: lo que falta abonar a los embajadores.'],
+ ['Embajadores con preventa',['EMBAJADORES CON PREVENTA'],'Embajadores distintos que tienen al menos un referido vinculado a una preventa, sobre los embajadores activos (los que ya refirieron).'],
+ ['Embajadores con entrega',['EMBAJADORES CON ENTREGA'],'Embajadores distintos con al menos una entrega.'],
+ ['Embajadores con beneficio pagado',['EMBAJADORES CON BENEFICIO PAGADO'],'Embajadores distintos a los que ya se les pagó al menos una entrega.'],
+ ['Presupuesto vinculado',['PRESUPUESTO VINCULADO (AUN SIN PREVENTA)'],'El CRM asoció un seguimiento y un presupuesto al referido (en el Estado dice "Seguimiento… Presupuesto… Vinculado"). Significa que se está cotizando: todavía NO hay preventa, por eso la columna Preventa muestra "–". No suma a vinculados. Si ya existe la preventa, cargala con el lápiz.'],
+ ['Vinculado por DNI',['VINCULADO POR DNI'],'El DNI del referido coincide con el de una preventa existente (Estado: "DNI igual al DNI preventa…"). Es una venta probable. Si el número de preventa no vino en el reporte, cargalo con el lápiz.'],
+ ['Asignado',['ASIGNADO'],'Un vendedor ya tiene el referido asignado en el CRM, sin presupuesto ni venta todavía.'],
+ ['Referido',['REFERIDO'],'Cargado por el embajador, todavía sin gestión ni vendedor asignado.'],
+ ['Finalizado',['FINALIZADO'],'Trámite cerrado en el CRM (con venta o sin ella).']
+];
+const normK=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim().toUpperCase();
+const TIPS={};GLOSS.forEach(g=>g[1].forEach(k=>TIPS[k]=g[2]));
+function addTips(){
+  document.querySelectorAll('.kpi-l,.fn-l,.kf-label,.ep-name').forEach(el=>{
+    if(el.querySelector('.tip'))return;
+    const t=TIPS[normK(el.textContent)];if(!t)return;
+    const s=document.createElement('span');s.className='tip';s.textContent='i';s.setAttribute('data-tip',t);el.appendChild(s);
+  });
+}
+function openGloss(){
+  document.getElementById('glossBody').innerHTML=GLOSS.map(g=>`<div class="gl-i"><div class="gl-t">${_h(g[0])}</div><div class="gl-d">${_h(g[2])}</div></div>`).join('');
+  document.getElementById('glossModal').style.display='flex';
+}
+function closeGloss(){document.getElementById('glossModal').style.display='none';}
+(function(){
+  function init(){
+    const box=document.createElement('div');box.id='tipBox';document.body.appendChild(box);
+    const show=t=>{box.textContent=t.getAttribute('data-tip');box.style.display='block';const r=t.getBoundingClientRect(),w=box.offsetWidth;
+      box.style.left=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8)+'px';
+      let y=r.top-box.offsetHeight-8;if(y<8)y=r.bottom+8;box.style.top=y+'px';};
+    document.addEventListener('mouseover',e=>{const t=e.target.closest&&e.target.closest('.tip');if(t)show(t);});
+    document.addEventListener('mouseout',e=>{const t=e.target.closest&&e.target.closest('.tip');if(t&&!t.classList.contains('on'))box.style.display='none';});
+    document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('.tip');
+      document.querySelectorAll('.tip.on').forEach(x=>{if(x!==t)x.classList.remove('on');});
+      if(t){e.stopPropagation();t.classList.toggle('on');t.classList.contains('on')?show(t):box.style.display='none';}else box.style.display='none';},true);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
 
 /* ════ PROCESS ════ */
 async function metProcess(){
@@ -974,6 +1106,7 @@ function renderNovedades({nuevas=[], cambios=[], fecha=''}){
 }
 
 /* ════ ESTADOS PANEL ════ */
+const EST_LABEL={'Pres. vinculado':'Presupuesto vinculado (aún sin preventa)','Vinculado (DNI)':'Vinculado por DNI'};
 const EST_ORDER=['Vinculado (DNI)','Pres. vinculado','Asignado','Referido','Finalizado','Sin estado'];
 const EST_COLOR={'Vinculado (DNI)':'#4ADE80','Pres. vinculado':'#F59E0B','Asignado':'#38BDF8','Referido':'#94A3B8','Finalizado':'#64748B','Sin estado':'#475569'};
 
@@ -1026,7 +1159,7 @@ function renderEstBody(est, estDet, total){
     const key=s.replace(/[^a-zA-Z0-9]/g,'_');
     html+=`<div class="ep-row" onclick="toggleEst('${key}')">
       <span class="ep-dot" style="background:${col}"></span>
-      <span class="ep-name">${s}</span>
+      <span class="ep-name">${EST_LABEL[s]||s}</span>
       <div class="ep-bar-wrap"><div class="ep-bar-track"><div class="ep-bar-fill" style="width:${pct}%;background:${col}"></div></div></div>
       <span class="ep-count">${cnt}</span>
       <span class="ep-pct">${pct}%</span>
@@ -1035,6 +1168,7 @@ function renderEstBody(est, estDet, total){
     <div class="ep-detail" id="epdet_${key}">${buildEstDetTable(estDet[s]||[])}</div>`;
   });
   bodyEl.innerHTML=html;
+  addTips();
 }
 
 function filterEstados(){
@@ -1089,10 +1223,10 @@ function buildEstDetTable(rows){
   // Ordenar por fecha más reciente
   const parseFC=s=>{if(!s)return 0;const ds=s.split(' ')[0];const p=ds.split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]).getTime():0;};
   rows=rows.slice().sort((a,b)=>parseFC(b.fc)-parseFC(a.fc));
-  let t=`<table class="ep-dt"><thead><tr><th>Apellido y nombre</th><th>Embajador</th><th>Preventa</th><th>Fecha consulta</th></tr></thead><tbody>`;
+  let t=`<table class="ep-dt"><thead><tr><th>Apellido y nombre</th><th>Embajador</th><th>Preventa</th><th>Fecha consulta</th><th></th></tr></thead><tbody>`;
   rows.forEach(r=>{
     const ec=r.tipo==='Externo'?'color:#ffffff':r.tipo==='Manual'?'color:var(--muted)':'color:var(--lime)';
-    t+=`<tr><td class="name">${r.apellido}${r.nombre?' '+r.nombre:''}</td><td style="${ec}">${r.emb||'—'}</td><td class="pv">${r.pv||'—'}</td><td>${r.fc||'—'}</td></tr>`;
+    t+=`<tr><td class="name">${r.apellido}${r.nombre?' '+r.nombre:''}</td><td style="${ec}">${r.emb||'—'}</td><td class="pv">${r.pv||'—'}${r.man?'<span class="man" title="Cargada a mano">✎ manual</span>':''}</td><td>${r.fc||'—'}</td><td><button class="pv-edit" title="Cargar o corregir la preventa a mano" onclick="event.stopPropagation();openPvEdit(${r.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button></td></tr>`;
   });
   return t+'</tbody></table>';
 }
@@ -1194,6 +1328,7 @@ function renderDash(k){
       return `<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${n}</td><td class="lime">${v}</td><td class="r">${s>0?`<span class="sale-dot">${s}</span>`:'<span style="color:var(--muted);font-size:10px">—</span>'}</td></tr>`;
     }).join('');
   renderEmbudo(k);
+  renderRegistro();addTips();
   renderClosers(k);
   renderGestion(k);
   renderHistChart();
@@ -1443,5 +1578,23 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 renderSnapBar();
 document.addEventListener('DOMContentLoaded',()=>setTimeout(loadSupabaseData,500));
 </script>
+
+<button id="glossBtn" onclick="openGloss()" title="Qué mide cada KPI">? &iquest;Qu&eacute; mide cada KPI?</button>
+<div id="glossModal" class="gl-ov" onclick="if(event.target===this)closeGloss()"><div class="gl-card"><div class="gl-h"><span>&iquest;QU&Eacute; MIDE CADA KPI?</span><button onclick="closeGloss()">&#10005;</button></div><div id="glossBody" class="gl-b"></div></div></div>
+<div id="pvModal" class="gl-ov" onclick="if(event.target===this)closePvEdit()"><div class="gl-card" style="max-width:440px">
+  <div class="gl-h"><span>PREVENTA A MANO</span><button onclick="closePvEdit()">&#10005;</button></div>
+  <div class="gl-b">
+    <div id="pvWho" style="font-size:12px;color:var(--cream);margin-bottom:12px"></div>
+    <input type="hidden" id="pvId">
+    <label class="pv-l">N&deg; de preventa</label><input class="pv-in" id="pvNum" placeholder="Ej: PV 32887/0  o  US 00052/55">
+    <label class="pv-l">Sistema</label><input class="pv-in" id="pvSis" list="pvSisList" placeholder="KIARA / CIARA / MOVILIS / PEARA"><datalist id="pvSisList"><option value="KIARA"><option value="CIARA"><option value="MOVILIS"><option value="PEARA"></datalist>
+    <label class="pv-l">Fecha de entrega (opcional &mdash; si la ponés cuenta como entregado)</label><input class="pv-in" type="date" id="pvFe">
+    <label class="pv-l">Nota (opcional)</label><input class="pv-in" id="pvNota" placeholder="Ej: preventa a nombre del c&oacute;nyuge">
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button class="pv-b del" id="pvDel" onclick="delPvEdit()" style="display:none;margin-right:auto">Quitar carga manual</button>
+      <button class="pv-b" onclick="closePvEdit()">Cancelar</button>
+      <button class="pv-b ok" onclick="savePvEdit()">Guardar</button>
+    </div>
+  </div></div></div>
 </body>
 </html>
