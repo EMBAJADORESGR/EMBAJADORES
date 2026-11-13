@@ -391,6 +391,13 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       </div>
     </div>
 
+    <!-- Padrón de registrados -->
+    <div class="cbox" id="reg-box" style="margin-bottom:16px;display:none;">
+      <div class="cbox-title">EMBAJADORES REGISTRADOS (PADR&Oacute;N DE LA WEB)</div>
+      <div class="fn-grid" id="reg-grid"></div>
+      <div id="reg-new"></div>
+      <div id="reg-dup"></div>
+    </div>
     <!-- Embudo referidos -> preventa -> entrega -->
     <div class="cbox" id="embudo-box" style="margin-bottom:16px;display:none;">
       <div class="cbox-title">EMBUDO: REFERIDOS V&Aacute;LIDOS &rarr; PREVENTA &rarr; ENTREGA</div>
@@ -726,6 +733,90 @@ function calcKPIs(ref,pv,reg){
     est,estDet,ops,tm,sis,topAll,topExt,entDet,pagSet};
 }
 
+
+/* ════ PADRÓN DE REGISTRADOS — nuevos y repetidos ════ */
+let _regRows=[],_regPer='7',_regHist=false;
+const dniNorm=v=>{const d=String(v||'').replace(/\D/g,'');return d.length===11?d.slice(2,10):d;};
+const regTipo=t=>/^\s*cliente\s*$/i.test(t||'')?'Externo':'Empleado';
+const regNom=r=>`${(r['Nombre']||'').trim()} ${(r['Apellido']||'').trim()}`.trim();
+function regStats(rows){
+  const g={};rows.forEach(r=>{const k=dniNorm(r['DNI'])||('pk:'+r['Pkey']);(g[k]=g[k]||[]).push(r);});
+  const dups=Object.values(g).filter(a=>a.length>1);
+  return {total:rows.length,unicos:Object.keys(g).length,dups,
+    emp:rows.filter(r=>regTipo(r['Tipo'])==='Empleado').length,
+    ext:rows.filter(r=>regTipo(r['Tipo'])==='Externo').length};
+}
+async function syncRegistrados(rows){
+  _regRows=(rows||[]).map(r=>({...r,_pv:null,_base:false}));
+  if(!rows||!rows.length||!_sbOk)return;
+  try{
+    // Lo que ya está guardado
+    const ex={};let from=0;
+    while(true){
+      const {data,error}=await _sb.from('emb_registrados').select('pkey,primera_vez,es_base').range(from,from+999);
+      if(error)throw error;
+      (data||[]).forEach(x=>ex[x.pkey]=x);
+      if(!data||data.length<1000)break;from+=1000;
+    }
+    const primera=Object.keys(ex).length===0;   // primera carga: todo es base, no hay "nuevos"
+    const nuevos=rows.filter(r=>r['Pkey']&&!ex[r['Pkey']]).map(r=>({
+      pkey:r['Pkey'],nombre:(r['Nombre']||'').trim(),apellido:(r['Apellido']||'').trim(),
+      dni:(r['DNI']||'').trim(),tipo:regTipo(r['Tipo']),unidad:(r['unidad']||'').trim(),
+      puesto:(r['puesto']||'').trim(),es_base:primera}));
+    for(let i=0;i<nuevos.length;i+=200){
+      const {error}=await _sb.from('emb_registrados').upsert(nuevos.slice(i,i+200),{onConflict:'pkey',ignoreDuplicates:true});
+      if(error)throw error;
+    }
+    // Releer fechas (las que acaba de poner la base)
+    const all={};from=0;
+    while(true){
+      const {data,error}=await _sb.from('emb_registrados').select('pkey,primera_vez,es_base').range(from,from+999);
+      if(error)throw error;
+      (data||[]).forEach(x=>all[x.pkey]=x);
+      if(!data||data.length<1000)break;from+=1000;
+    }
+    _regRows.forEach(r=>{const x=all[r['Pkey']];if(x){r._pv=x.primera_vez;r._base=!!x.es_base;}});
+    _regHist=true;
+  }catch(e){console.warn('padron',e);}
+}
+function regNuevos(){
+  const days=_regPer==='all'?null:parseInt(_regPer,10);
+  const lim=days?Date.now()-days*864e5:0;
+  return _regRows.filter(r=>r._pv&&!r._base&&new Date(r._pv).getTime()>=lim)
+    .sort((a,b)=>new Date(b._pv)-new Date(a._pv));
+}
+function setRegPer(v){_regPer=v;renderRegistro();const d=document.getElementById('regNewDet');if(d)d.open=true;}
+function renderRegistro(){
+  const box=document.getElementById('reg-box');
+  if(!box||!_regRows.length)return;
+  box.style.display='block';
+  const st=regStats(_regRows),nu=regNuevos();
+  const nuTxt=_regHist?nu.length:'—';
+  const nuSub=!_regHist?'se activa al conectar la tabla emb_registrados'
+    :(_regRows.some(r=>r._base)&&!_regRows.some(r=>r._pv&&!r._base)?'esta fue la carga inicial: desde la pr&oacute;xima se cuentan altas':'seg&uacute;n el per&iacute;odo elegido abajo');
+  document.getElementById('reg-grid').innerHTML=
+   `<div class="fn-cell"><div class="fn-v lime">${st.total}</div><div class="fn-l">FILAS EN EL PADR&Oacute;N</div><div class="fn-s">${st.emp} empleados &middot; ${st.ext} externos</div></div>
+    <div class="fn-cell"><div class="fn-v">${st.unicos}</div><div class="fn-l">PERSONAS &Uacute;NICAS</div><div class="fn-s">por DNI (el CUIL se reduce a su DNI)</div></div>
+    <div class="fn-cell"><div class="fn-v green">${nuTxt}</div><div class="fn-l">NUEVOS REGISTROS</div><div class="fn-s">${nuSub}</div></div>
+    <div class="fn-cell"><div class="fn-v amber">${st.dups.length}</div><div class="fn-l">REGISTRADOS M&Aacute;S DE UNA VEZ</div><div class="fn-s">${st.total-st.unicos} fila${st.total-st.unicos===1?'':'s'} de m&aacute;s</div></div>`;
+  // Nuevos
+  let h='';
+  if(_regHist){
+    const opt=(v,l)=>`<option value="${v}"${_regPer===v?' selected':''}>${l}</option>`;
+    h=`<details class="fn-rev" id="regNewDet" style="border-color:var(--border);background:transparent;"><summary style="color:var(--green);">${nu.length} nuevo${nu.length===1?'':'s'} registro${nu.length===1?'':'s'} &mdash; ver qui&eacute;nes son</summary>
+    <div style="margin:8px 0;"><select onchange="setRegPer(this.value)" style="background:var(--ink1);color:var(--cream);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:11px;">${opt('7','&Uacute;ltimos 7 d&iacute;as')}${opt('30','&Uacute;ltimos 30 d&iacute;as')}${opt('all','Todos desde que se empez&oacute; a registrar')}</select></div>
+    <table class="mt"><tr><th>Detectado</th><th>Nombre</th><th>Tipo</th><th>Unidad</th><th>Puesto</th></tr>`+
+    nu.map(r=>`<tr><td>${new Date(r._pv).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})}</td><td class="name">${_h(regNom(r))}</td><td>${_h(regTipo(r['Tipo']))}</td><td>${_h(r['unidad']||'—')}</td><td>${_h(r['puesto']||'—')}</td></tr>`).join('')+`</table></details>`;
+  }
+  document.getElementById('reg-new').innerHTML=h;
+  // Repetidos
+  document.getElementById('reg-dup').innerHTML=st.dups.length?
+   `<details class="fn-rev"><summary>${st.dups.length} persona${st.dups.length>1?'s':''} registrada${st.dups.length>1?'s':''} m&aacute;s de una vez &mdash; revisar</summary>
+    <div style="margin:6px 0;">Mismo DNI cargado una vez con DNI y otra con CUIL (o con el nombre escrito distinto). Conviene que sistemas deje una sola ficha y que el embajador use un solo link.</div>
+    <table class="mt"><tr><th>Persona</th><th>DNI</th><th>DNI / CUIL cargados</th><th>Mails</th></tr>`+
+    st.dups.map(a=>`<tr><td class="name">${_h(a.map(regNom).filter((v,i,x)=>x.indexOf(v)===i).join(' / '))}</td><td>${_h(dniNorm(a[0]['DNI']))}</td><td>${_h(a.map(r=>r['DNI']).join(' · '))}</td><td>${_h(a.map(r=>r['Mail']||'—').join(' · '))}</td></tr>`).join('')+`</table></details>`:'';
+}
+
 /* ════ PROCESS ════ */
 async function metProcess(){
   const reg=MF.reg||[];
@@ -756,8 +847,10 @@ async function metProcess(){
   // Detectar novedades vs estado guardado en Supabase
   const novedades = await syncTramites(mergedPV);
 
+  await syncRegistrados(MF.reg);
   const k=calcKPIs(mergedRef,mergedPV,{length:mergedRegCount});
   renderDash(k);
+  renderRegistro();
   renderNovedades(novedades);
   document.getElementById('met-dashboard').classList.add('vis');
   ['btnSaveCloud','btnSnap'].forEach(id=>document.getElementById(id).classList.add('vis'));
