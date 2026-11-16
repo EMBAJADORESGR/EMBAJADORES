@@ -80,6 +80,9 @@
 @media(max-width:900px){.kpi-float-row{grid-template-columns:1fr;}}
 /* Embudo + Vendedores */
 .fn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:5px;overflow:hidden;margin-top:14px;}
+.fn-grid3{grid-template-columns:repeat(3,1fr);}
+.fn-grid3 .fn-v{font-size:44px;}
+.fn-grid3 .fn-cell{padding:22px 24px;}
 .fn-cell{background:var(--ink1);padding:16px 18px;}
 .fn-v{font-size:30px;font-weight:700;color:var(--cream);line-height:1;letter-spacing:-.02em;}
 .fn-v.lime{color:var(--lime);}.fn-v.green{color:var(--green);}.fn-v.amber{color:var(--amber);}
@@ -92,7 +95,7 @@
 .cl-btn{font-size:10px;font-weight:600;letter-spacing:.04em;padding:4px 10px;border-radius:3px;cursor:pointer;color:var(--muted);background:none;border:1px solid var(--border);font-family:var(--ff);}
 .cl-btn:hover{color:var(--cream);}
 .cl-btn.active{background:var(--lime);color:var(--ink);border-color:var(--lime);}
-@media(max-width:900px){.fn-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:900px){.fn-grid{grid-template-columns:1fr 1fr;}.fn-grid3{grid-template-columns:1fr;}}
 .kpi-float{
   background:linear-gradient(135deg,var(--ink1) 0%,var(--ink2) 100%);
   border:1px solid var(--border);border-radius:12px;padding:22px 24px;
@@ -382,18 +385,19 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div class="kpi-cell k-amber"><div class="kpi-v amber" id="kPag">—</div><div class="kpi-l">Beneficios pagados</div><div class="kpi-sub" id="kPagS"></div></div>
       <div class="kpi-cell k-gray"><div class="kpi-v" id="kMonto" style="font-size:20px;margin-top:10px">—</div><div class="kpi-l">Pendiente de pago</div><div class="kpi-sub" id="kMontoS"></div></div>
     </div>
+    <!-- Embudo referidos -> preventa -> entrega -->
+    <div class="cbox" id="embudo-box" style="margin-bottom:16px;display:none;">
+      <div class="cbox-title">DEL REFERIDO A LA ENTREGA</div>
+      <div class="fn-grid fn-grid3" id="embudo-grid"></div>
+      <div id="embudo-note" class="fn-s" style="margin-top:12px;line-height:1.6"></div>
+      <div id="embudo-rev"></div>
+    </div>
     <!-- Padrón de registrados -->
     <div class="cbox" id="reg-box" style="margin-bottom:16px;display:none;">
       <div class="cbox-title">EMBAJADORES REGISTRADOS (PADR&Oacute;N DE LA WEB)</div>
       <div class="fn-grid" id="reg-grid"></div>
       <div id="reg-new"></div>
       <div id="reg-dup"></div>
-    </div>
-    <!-- Embudo referidos -> preventa -> entrega -->
-    <div class="cbox" id="embudo-box" style="margin-bottom:16px;display:none;">
-      <div class="cbox-title">EMBUDO: REFERIDOS V&Aacute;LIDOS &rarr; PREVENTA &rarr; ENTREGA</div>
-      <div class="fn-grid" id="embudo-grid"></div>
-      <div id="embudo-rev"></div>
     </div>
     <!-- Estados por trámite -->
     <div id="estados-panel"></div>
@@ -874,10 +878,10 @@ const GLOSS=[
  ['Personas únicas',['PERSONAS UNICAS'],'Registrados sin contar repetidos. Se considera la misma persona si coincide el DNI (cuando viene el CUIL de 11 dígitos se usa solo el DNI que lleva adentro).'],
  ['Nuevos registros de la semana',['NUEVOS REGISTROS DE LA SEMANA'],'Embajadores que se registraron de lunes a domingo de la semana actual. Se suma con cada carga: cada vez que subís el Embajadores.xls, los que no estaban se guardan con la fecha de ese día. La fecha es la del día en que aparecieron en tu planilla.'],
  ['Registrados más de una vez',['REGISTRADOS MAS DE UNA VEZ'],'Personas con dos fichas en el padrón (mismo DNI). Hay que dejar una sola para que sus referidos no queden partidos entre dos links.'],
- ['Referidos válidos',['REFERIDOS VALIDOS'],'Referidos cargados en el CRM (reporte de Preventas) sin contar las pruebas ni los casos excluidos a mano. Es el 100% base del embudo: de acá se calcula cuántos se vinculan a una preventa y cuántos se entregan.'],
- ['Vinculados a preventa',['VINCULADOS A PREVENTA'],'Referidos que en el reporte tienen número de PREVENTA, sistema o fecha de entrega, o a los que les cargaste el PV a mano con el lápiz. Un referido que solo tiene un presupuesto en el CRM NO cuenta.'],
+ ['Referidos válidos',['REFERIDOS VALIDOS','REFERIDOS'],'Referidos cargados en el CRM (reporte de Preventas) sin contar las pruebas ni los casos excluidos a mano. Es el 100% base del embudo: de acá se calcula cuántos se vinculan a una preventa y cuántos se entregan.'],
+ ['Vinculados a preventa',['VINCULADOS A PREVENTA','PREVENTAS'],'Referidos que en el reporte tienen número de PREVENTA, sistema o fecha de entrega, o a los que les cargaste el PV a mano con el lápiz. Un referido que solo tiene un presupuesto en el CRM NO cuenta.'],
  ['Preventa sin entrega aún',['PREVENTA SIN ENTREGA AUN'],'Tienen preventa pero todavía no hay fecha de entrega en el reporte. Son los que se pagan cuando se entreguen.'],
- ['Entregados',['ENTREGADOS','ENTREGADOS TOTALES'],'Referidos con preventa y fecha de entrega, más las entregas cargadas como manuales (ej. cónyuge). Cada una devenga $500.000 para el embajador. Fórmula: entregas del reporte + manuales. Los vinculados a preventa sin fecha de entrega todavía no cuentan.'],
+ ['Entregados',['ENTREGADOS','ENTREGADOS TOTALES','ENTREGAS'],'Referidos con preventa y fecha de entrega, más las entregas cargadas como manuales (ej. cónyuge). Cada una devenga $500.000 para el embajador. Fórmula: entregas del reporte + manuales. Los vinculados a preventa sin fecha de entrega todavía no cuentan.'],
  ['Beneficios pagados',['BENEFICIOS PAGADOS'],'Entregas cuya preventa figura en la tabla de pagos que cargaste.'],
  ['Pendiente de pago',['PENDIENTE DE PAGO'],'(Entregados − Pagados) × $500.000: lo que falta abonar a los embajadores.'],
  ['Presupuesto vinculado',['PRESUPUESTO VINCULADO (AUN SIN PREVENTA)'],'El CRM asoció un seguimiento y un presupuesto al referido (en el Estado dice "Seguimiento… Presupuesto… Vinculado"). Significa que se está cotizando: todavía NO hay preventa, por eso la columna Preventa muestra "–". No suma a vinculados. Si ya existe la preventa, cargala con el lápiz.'],
@@ -1294,12 +1298,13 @@ function renderDash(k){
 const _h=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function embudoHTML(k){
   const n=v=>(!isNaN(v)&&v!==undefined&&v!==null)?v:0;
-  const tot=n(k.totalPV||k.total),vinc=n(k.vinc),ent=n(k.totalEnt),vsf=n(k.vincSF);
+  const tot=n(k.totalPV||k.total),vinc=n(k.vinc),ent=n(k.totalEnt),vsf=n(k.vincSF),man=ent-n(k.entSis);
   const p=x=>tot>0?(x/tot*100).toFixed(1).replace('.',',')+'%':'0%';
-  return `<div class="fn-cell"><div class="fn-v">${tot}</div><div class="fn-l">REFERIDOS V&Aacute;LIDOS</div><div class="fn-s">${n(k.refEmp)} de empleados &middot; ${n(k.refExt)} de externos</div></div>
-  <div class="fn-cell"><div class="fn-v lime">${vinc}</div><div class="fn-l">VINCULADOS A PREVENTA</div><div class="fn-s">${p(vinc)} de los v&aacute;lidos &middot; ${n(k.entSis)} entregados + ${vsf} sin entrega a&uacute;n</div></div>
-  <div class="fn-cell"><div class="fn-v amber">${vsf}</div><div class="fn-l">PREVENTA SIN ENTREGA A&Uacute;N</div><div class="fn-s">sin fecha de entrega en el reporte</div></div>
-  <div class="fn-cell"><div class="fn-v green">${ent}</div><div class="fn-l">ENTREGADOS</div><div class="fn-s">${p(ent)} de los v&aacute;lidos &middot; ${n(k.entSis)} del reporte + ${ent-n(k.entSis)} manuales</div></div>`;
+  const note=document.getElementById('embudo-note');
+  if(note)note.innerHTML=`${vsf} preventas todav&iacute;a sin entrega &middot; ${n(k.pagados)} de ${ent} entregas ya pagadas &middot; ${ent-n(k.pagados)} pendientes de pago`;
+  return `<div class="fn-cell"><div class="fn-v">${tot}</div><div class="fn-l">REFERIDOS</div><div class="fn-s">${n(k.refEmp)} de empleados &middot; ${n(k.refExt)} de externos</div></div>
+  <div class="fn-cell"><div class="fn-v lime">${vinc}</div><div class="fn-l">PREVENTAS</div><div class="fn-s">${p(vinc)} de los referidos</div></div>
+  <div class="fn-cell"><div class="fn-v green">${ent}</div><div class="fn-l">ENTREGAS</div><div class="fn-s">${p(ent)} de los referidos &middot; ${n(k.entSis)} del reporte + ${man} manuales</div></div>`;
 }
 function revisarHTML(k){
   const rv=k.revisar||[];
