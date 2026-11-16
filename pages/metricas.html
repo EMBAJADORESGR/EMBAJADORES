@@ -76,7 +76,7 @@
 #met-dashboard{display:none;}
 #met-dashboard.vis{display:block;}
 .kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);margin-bottom:1px;}
-.kpi-float-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+.kpi-float-row{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px;}
 @media(max-width:900px){.kpi-float-row{grid-template-columns:1fr;}}
 /* Embudo + Vendedores */
 .fn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:5px;overflow:hidden;margin-top:14px;}
@@ -384,15 +384,6 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     </div>
     <!-- KPIs flotantes: embajadores con PV -->
     <div class="kpi-float-row">
-      <div class="kpi-float">
-        <div class="kf-icon">
-          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-        </div>
-        <div class="kf-label">EMBAJADORES CON PREVENTA</div>
-        <div class="kf-v"><span id="kEmbPV">—</span> <span class="kf-total" id="kEmbPVTotal"></span></div>
-        <div class="kf-bar-track"><div class="kf-bar-fill" id="kEmbPVBar" style="width:0%"></div></div>
-        <div class="kf-sub" id="kEmbPVDesc"></div>
-      </div>
       <div class="kpi-float k-green">
         <div class="kf-icon g">
           <svg viewBox="0 0 24 24"><path d="M5 17h14M6 17l1-6h10l1 6M8 11l1-3h6l1 3"/></svg>
@@ -908,11 +899,10 @@ const GLOSS=[
  ['Referidos válidos',['REFERIDOS VALIDOS'],'Referidos cargados en el CRM (reporte de Preventas) sin contar las pruebas ni los casos excluidos a mano. Es el 100% base del embudo: de acá se calcula cuántos se vinculan a una preventa y cuántos se entregan.'],
  ['Vinculados a preventa',['VINCULADOS A PREVENTA'],'Referidos que en el reporte tienen número de PREVENTA, sistema o fecha de entrega, o a los que les cargaste el PV a mano con el lápiz. Un referido que solo tiene un presupuesto en el CRM NO cuenta.'],
  ['Preventa sin entrega aún',['PREVENTA SIN ENTREGA AUN'],'Tienen preventa pero todavía no hay fecha de entrega en el reporte. Son los que se pagan cuando se entreguen.'],
- ['Entregados',['ENTREGADOS','ENTREGADOS TOTALES'],'Referidos con preventa y fecha de entrega, más las entregas cargadas como manuales (ej. cónyuge). Cada una devenga $500.000 para el embajador.'],
+ ['Entregados',['ENTREGADOS','ENTREGADOS TOTALES'],'Referidos con preventa y fecha de entrega, más las entregas cargadas como manuales (ej. cónyuge). Cada una devenga $500.000 para el embajador. Fórmula: entregas del reporte + manuales. Los vinculados a preventa sin fecha de entrega todavía no cuentan.'],
  ['Beneficios pagados',['BENEFICIOS PAGADOS'],'Entregas cuya preventa figura en la tabla de pagos que cargaste.'],
  ['Pendiente de pago',['PENDIENTE DE PAGO'],'(Entregados − Pagados) × $500.000: lo que falta abonar a los embajadores.'],
- ['Embajadores con preventa',['EMBAJADORES CON PREVENTA'],'Embajadores distintos que tienen al menos un referido vinculado a una preventa, sobre los embajadores activos (los que ya refirieron).'],
- ['Embajadores con entrega',['EMBAJADORES CON ENTREGA'],'Embajadores distintos con al menos una entrega.'],
+ ['Embajadores con entrega',['EMBAJADORES CON ENTREGA'],'Embajadores distintos con al menos una entrega, sobre los embajadores activos (los que ya refirieron).'],
  ['Embajadores con beneficio pagado',['EMBAJADORES CON BENEFICIO PAGADO'],'Embajadores distintos a los que ya se les pagó al menos una entrega.'],
  ['Presupuesto vinculado',['PRESUPUESTO VINCULADO (AUN SIN PREVENTA)'],'El CRM asoció un seguimiento y un presupuesto al referido (en el Estado dice "Seguimiento… Presupuesto… Vinculado"). Significa que se está cotizando: todavía NO hay preventa, por eso la columna Preventa muestra "–". No suma a vinculados. Si ya existe la preventa, cargala con el lápiz.'],
  ['Vinculado por DNI',['VINCULADO POR DNI'],'El DNI del referido coincide con el de una preventa existente (Estado: "DNI igual al DNI preventa…"). Es una venta probable. Si el número de preventa no vino en el reporte, cargalo con el lápiz.'],
@@ -957,6 +947,7 @@ async function metProcess(){
   // Merge acumulativo con datos existentes en la nube
   let mergedRef=newRef, mergedPV=newPV;
   let mergedRegCount=reg.length||0;
+  let prevMap=null;   // foto del último dataset guardado: sirve para saber qué es realmente nuevo
   if(_sbOk){
     try{
       const {data:snap}=await _sb.from('emb_dataset').select('*').order('created_at',{ascending:false}).limit(1);
@@ -964,6 +955,7 @@ async function metProcess(){
         const ds=snap[0];
         const cloudRef=(ds.ref_data||[]).map(r=>({'ID':r.id,_e:r.e,_t:r.t,_op:r.op,_tm:r.tm,'FECHA CONSULTA':r.fc}));
         const cloudPV=(ds.pv_data||[]).map(r=>({'ID':r.id,'NOMBRE':r.n,'APELLIDO':r.a,_e:r.e,_v:r.v,_fe:r.fe,_sis:r.sis,_pv:r.pv,'Estado':r.est,'FECHA CONSULTA':r.fc}));
+        if(cloudPV.length){prevMap={};cloudPV.forEach(r=>{if(r['ID']!=null)prevMap[r['ID']]={estado:(r['Estado']||'Sin estado')};});}
         // Merge por ID: datos nuevos sobreescriben los existentes; IDs nuevos se agregan
         const rMap={}; cloudRef.forEach(r=>{if(r['ID'])rMap[r['ID']]=r;}); newRef.forEach(r=>{if(r['ID'])rMap[r['ID']]=r;});
         mergedRef=Object.values(rMap);
@@ -977,7 +969,7 @@ async function metProcess(){
   window._rawKPI={_ref:mergedRef,_pv:mergedPV,_reg:{length:mergedRegCount}};
 
   // Detectar novedades vs estado guardado en Supabase
-  const novedades = await syncTramites(mergedPV);
+  const novedades = await syncTramites(newPV, prevMap);
 
   await syncRegistrados(MF.reg);
   const k=calcKPIs(mergedRef,mergedPV,{length:mergedRegCount});
@@ -1015,13 +1007,16 @@ async function autoSaveToCloud(){
 }
 
 /* ════ TRAMITES — SYNC & NOVEDADES ════ */
-async function syncTramites(pvData){
+async function syncTramites(pvData, prevMap){
   const today = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
   const nuevas=[], cambios=[];
   if(!_sbOk) return {nuevas, cambios, fecha:today};
 
-  const saved={};
-  _tramites.forEach(t=>{ saved[t.id]=t; });
+  // Fuente de comparación: 1) la última foto guardada; 2) la tabla emb_tramites; 3) nada → primera carga = línea base
+  let saved=null;
+  if(prevMap){ saved=prevMap; }
+  else if(_tramites.length){ saved={}; _tramites.forEach(t=>{ saved[t.id]=t; }); }
+  const baseline=!saved;   // primera carga: se guarda todo pero NO se informa como "nuevo"
 
   const upserts=[];
   pvData.forEach(row=>{
@@ -1034,8 +1029,8 @@ async function syncTramites(pvData){
     const estado=row['Estado']||'Sin estado';
     const fc=row['FECHA CONSULTA']||'';
 
-    if(!saved[id]){
-      nuevas.push({id,nombre,apellido,embajador,tipo,estado,fc});
+    if(baseline||!saved[id]){
+      if(!baseline) nuevas.push({id,nombre,apellido,embajador,tipo,estado,fc});
       upserts.push({id,nombre,apellido,embajador,tipo,estado,estado_prev:null,fc_consulta:fc,updated_at:new Date().toISOString()});
     } else {
       const estadoAnterior=saved[id].estado;
@@ -1048,8 +1043,9 @@ async function syncTramites(pvData){
 
   if(upserts.length>0){
     try{
-      const {data:upRes}=await _sb.from('emb_tramites').upsert(upserts,{onConflict:'id'}).select();
-      if(upRes) _tramites=upRes;
+      const {data:upRes,error:upErr}=await _sb.from('emb_tramites').upsert(upserts,{onConflict:'id'}).select();
+      if(upErr) console.warn('emb_tramites no disponible (no afecta las novedades):',upErr.message);
+      else if(upRes) _tramites=upRes;
     }catch(e){console.warn('syncTramites err',e);}
   }
   // Ordenar por fecha consulta más reciente primero
@@ -1273,7 +1269,7 @@ function renderDash(k){
   $('kReg').textContent=n(k.totalReg)||n(k.totalEmb)||'—';
   $('kRegS').textContent=`${n(k.empEmb)} empl · ${n(k.extEmb)} ext activos`;
   $('kRef').textContent=n(k.totalPV||k.total);
-  $('kRefS').textContent=`${n(k.totalPV)-n(k.sinVinc)} con prev · ${n(k.sinVinc)} sin prev`;
+  $('kRefS').textContent=`${n(k.totalPV)-n(k.sinVinc)} con prev · ${n(k.sinVinc)} sin prev (referidos)`;
   renderEstadosPanel(k.est||{}, k.estDet||{}, n(k.totalPV||k.total));
   $('kEnt').textContent=n(k.totalEnt);
   $('kEntS').textContent=_manuales.length?`${_manuales.length} manuales incl.`:'';
@@ -1284,15 +1280,10 @@ function renderDash(k){
   // KPI flotantes — SIN tocar sub-elements internos
   const pct1=n(k.totalEmb)>0?Math.round(n(k.embConPV)/n(k.totalEmb)*100):0;
   const pct2=n(k.embConPV)>0?Math.round(n(k.embPagados)/n(k.embConPV)*100):0;
-  const pctP=n(k.totalEmb)>0?Math.round(n(k.embConPrev)/n(k.totalEmb)*100):0;
-  $('kEmbPV').textContent=n(k.embConPrev);
-  $('kEmbPVTotal').textContent=`/ ${n(k.totalEmb)} activos`;
-  $('kEmbPVBar').style.width=`${pctP}%`;
-  $('kEmbPVDesc').textContent=`${pctP}% de los embajadores tiene al menos una preventa`;
-  $('kEmbEnt').textContent=n(k.embConPV);
-  $('kEmbEntTotal').textContent=`/ ${n(k.embConPrev)} con preventa`;
+    $('kEmbEnt').textContent=n(k.embConPV);
+  $('kEmbEntTotal').textContent=`/ ${n(k.totalEmb)} activos`;
   $('kEmbEntBar').style.width=`${pct1}%`;
-  $('kEmbEntDesc').textContent=`${n(k.totalEnt)} entregas en ${n(k.embConPV)} embajadores (un embajador puede tener varias)`;
+  $('kEmbEntDesc').textContent=`${n(k.totalEnt)} entregas en ${n(k.embConPV)} embajadores (${n(k.entSis)} del reporte + ${n(k.totalEnt)-n(k.entSis)} manuales)`;
   $('kEmbPag').textContent=n(k.embPagados);
   $('kEmbPagTotal').textContent=`/ ${n(k.embConPV)} con entrega`;
   $('kEmbPagBar').style.width=`${pct2}%`;
@@ -1343,7 +1334,7 @@ function embudoHTML(k){
   return `<div class="fn-cell"><div class="fn-v">${tot}</div><div class="fn-l">REFERIDOS V&Aacute;LIDOS</div><div class="fn-s">${n(k.refEmp)} de empleados &middot; ${n(k.refExt)} de externos</div></div>
   <div class="fn-cell"><div class="fn-v lime">${vinc}</div><div class="fn-l">VINCULADOS A PREVENTA</div><div class="fn-s">${p(vinc)} de los v&aacute;lidos</div></div>
   <div class="fn-cell"><div class="fn-v amber">${vsf}</div><div class="fn-l">PREVENTA SIN ENTREGA A&Uacute;N</div><div class="fn-s">sin fecha de entrega en el reporte</div></div>
-  <div class="fn-cell"><div class="fn-v green">${ent}</div><div class="fn-l">ENTREGADOS</div><div class="fn-s">${p(ent)} de los v&aacute;lidos${_manuales&&_manuales.filter(m=>m.activo).length?` &middot; ${_manuales.filter(m=>m.activo).length} manuales incl.`:''}</div></div>`;
+  <div class="fn-cell"><div class="fn-v green">${ent}</div><div class="fn-l">ENTREGADOS</div><div class="fn-s">${p(ent)} de los v&aacute;lidos &middot; ${n(k.entSis)} del reporte + ${ent-n(k.entSis)} manuales</div></div>`;
 }
 function revisarHTML(k){
   const rv=k.revisar||[];
