@@ -382,28 +382,6 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div class="kpi-cell k-amber"><div class="kpi-v amber" id="kPag">—</div><div class="kpi-l">Beneficios pagados</div><div class="kpi-sub" id="kPagS"></div></div>
       <div class="kpi-cell k-gray"><div class="kpi-v" id="kMonto" style="font-size:20px;margin-top:10px">—</div><div class="kpi-l">Pendiente de pago</div><div class="kpi-sub" id="kMontoS"></div></div>
     </div>
-    <!-- KPIs flotantes: embajadores con PV -->
-    <div class="kpi-float-row">
-      <div class="kpi-float k-green">
-        <div class="kf-icon g">
-          <svg viewBox="0 0 24 24"><path d="M5 17h14M6 17l1-6h10l1 6M8 11l1-3h6l1 3"/></svg>
-        </div>
-        <div class="kf-label">EMBAJADORES CON ENTREGA</div>
-        <div class="kf-v"><span id="kEmbEnt">—</span> <span class="kf-total" id="kEmbEntTotal"></span></div>
-        <div class="kf-bar-track"><div class="kf-bar-fill g" id="kEmbEntBar" style="width:0%"></div></div>
-        <div class="kf-sub" id="kEmbEntDesc"></div>
-      </div>
-      <div class="kpi-float k-green">
-        <div class="kf-icon g">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <div class="kf-label">EMBAJADORES CON BENEFICIO PAGADO</div>
-        <div class="kf-v"><span id="kEmbPag">—</span> <span class="kf-total" id="kEmbPagTotal"></span></div>
-        <div class="kf-bar-track"><div class="kf-bar-fill g" id="kEmbPagBar" style="width:0%"></div></div>
-        <div class="kf-sub" id="kEmbPagDesc"></div>
-      </div>
-    </div>
-
     <!-- Padrón de registrados -->
     <div class="cbox" id="reg-box" style="margin-bottom:16px;display:none;">
       <div class="cbox-title">EMBAJADORES REGISTRADOS (PADR&Oacute;N DE LA WEB)</div>
@@ -902,8 +880,6 @@ const GLOSS=[
  ['Entregados',['ENTREGADOS','ENTREGADOS TOTALES'],'Referidos con preventa y fecha de entrega, más las entregas cargadas como manuales (ej. cónyuge). Cada una devenga $500.000 para el embajador. Fórmula: entregas del reporte + manuales. Los vinculados a preventa sin fecha de entrega todavía no cuentan.'],
  ['Beneficios pagados',['BENEFICIOS PAGADOS'],'Entregas cuya preventa figura en la tabla de pagos que cargaste.'],
  ['Pendiente de pago',['PENDIENTE DE PAGO'],'(Entregados − Pagados) × $500.000: lo que falta abonar a los embajadores.'],
- ['Embajadores con entrega',['EMBAJADORES CON ENTREGA'],'Embajadores distintos con al menos una entrega, sobre los embajadores activos (los que ya refirieron).'],
- ['Embajadores con beneficio pagado',['EMBAJADORES CON BENEFICIO PAGADO'],'Embajadores distintos a los que ya se les pagó al menos una entrega.'],
  ['Presupuesto vinculado',['PRESUPUESTO VINCULADO (AUN SIN PREVENTA)'],'El CRM asoció un seguimiento y un presupuesto al referido (en el Estado dice "Seguimiento… Presupuesto… Vinculado"). Significa que se está cotizando: todavía NO hay preventa, por eso la columna Preventa muestra "–". No suma a vinculados. Si ya existe la preventa, cargala con el lápiz.'],
  ['Vinculado por DNI',['VINCULADO POR DNI'],'El DNI del referido coincide con el de una preventa existente (Estado: "DNI igual al DNI preventa…"). Es una venta probable. Si el número de preventa no vino en el reporte, cargalo con el lápiz.'],
  ['Asignado',['ASIGNADO'],'Un vendedor ya tiene el referido asignado en el CRM, sin presupuesto ni venta todavía.'],
@@ -1267,27 +1243,16 @@ function renderDash(k){
   const n=v=>(!isNaN(v)&&v!==undefined&&v!==null)?v:0;
   // KPI strip principal
   $('kReg').textContent=n(k.totalReg)||n(k.totalEmb)||'—';
-  $('kRegS').textContent=`${n(k.empEmb)} empl · ${n(k.extEmb)} ext activos`;
+  $('kRegS').textContent=`${n(k.empEmb)} empl · ${n(k.extEmb)} ext ya refirieron`;
   $('kRef').textContent=n(k.totalPV||k.total);
   $('kRefS').textContent=`${n(k.totalPV)-n(k.sinVinc)} con prev · ${n(k.sinVinc)} sin prev (referidos)`;
   renderEstadosPanel(k.est||{}, k.estDet||{}, n(k.totalPV||k.total));
   $('kEnt').textContent=n(k.totalEnt);
-  $('kEntS').textContent=_manuales.length?`${_manuales.length} manuales incl.`:'';
+  $('kEntS').textContent=`${n(k.entSis)} del reporte + ${n(k.totalEnt)-n(k.entSis)} manuales`;
   $('kPag').textContent=n(k.pagados);
-  $('kPagS').textContent=`${n(k.totalEnt)-n(k.pagados)} pendientes`;
+  $('kPagS').textContent=`${n(k.pagados)} de ${n(k.totalEnt)} entregas pagadas · ${n(k.totalEnt)-n(k.pagados)} pendientes`;
   $('kMonto').textContent=`$${((n(k.montoPend))/1e6).toFixed(1)}M`;
-  $('kMontoS').textContent=`${n(k.totalEnt)-n(k.pagados)} × $500k`;
-  // KPI flotantes — SIN tocar sub-elements internos
-  const pct1=n(k.totalEmb)>0?Math.round(n(k.embConPV)/n(k.totalEmb)*100):0;
-  const pct2=n(k.embConPV)>0?Math.round(n(k.embPagados)/n(k.embConPV)*100):0;
-    $('kEmbEnt').textContent=n(k.embConPV);
-  $('kEmbEntTotal').textContent=`/ ${n(k.totalEmb)} activos`;
-  $('kEmbEntBar').style.width=`${pct1}%`;
-  $('kEmbEntDesc').textContent=`${n(k.totalEnt)} entregas en ${n(k.embConPV)} embajadores (${n(k.entSis)} del reporte + ${n(k.totalEnt)-n(k.entSis)} manuales)`;
-  $('kEmbPag').textContent=n(k.embPagados);
-  $('kEmbPagTotal').textContent=`/ ${n(k.embConPV)} con entrega`;
-  $('kEmbPagBar').style.width=`${pct2}%`;
-  $('kEmbPagDesc').textContent=`${pct2}% de los embajadores con entrega ya cobró`;
+  $('kMontoS').textContent=`${n(k.totalEnt)-n(k.pagados)} entregas × $500k`;
   // Donuts
   const eL=Object.keys(k.est),eD=Object.values(k.est);
   donut('cEstado',eL,eD,eL.map(l=>EC[l]||C.gray));
@@ -1332,7 +1297,7 @@ function embudoHTML(k){
   const tot=n(k.totalPV||k.total),vinc=n(k.vinc),ent=n(k.totalEnt),vsf=n(k.vincSF);
   const p=x=>tot>0?(x/tot*100).toFixed(1).replace('.',',')+'%':'0%';
   return `<div class="fn-cell"><div class="fn-v">${tot}</div><div class="fn-l">REFERIDOS V&Aacute;LIDOS</div><div class="fn-s">${n(k.refEmp)} de empleados &middot; ${n(k.refExt)} de externos</div></div>
-  <div class="fn-cell"><div class="fn-v lime">${vinc}</div><div class="fn-l">VINCULADOS A PREVENTA</div><div class="fn-s">${p(vinc)} de los v&aacute;lidos</div></div>
+  <div class="fn-cell"><div class="fn-v lime">${vinc}</div><div class="fn-l">VINCULADOS A PREVENTA</div><div class="fn-s">${p(vinc)} de los v&aacute;lidos &middot; ${n(k.entSis)} entregados + ${vsf} sin entrega a&uacute;n</div></div>
   <div class="fn-cell"><div class="fn-v amber">${vsf}</div><div class="fn-l">PREVENTA SIN ENTREGA A&Uacute;N</div><div class="fn-s">sin fecha de entrega en el reporte</div></div>
   <div class="fn-cell"><div class="fn-v green">${ent}</div><div class="fn-l">ENTREGADOS</div><div class="fn-s">${p(ent)} de los v&aacute;lidos &middot; ${n(k.entSis)} del reporte + ${ent-n(k.entSis)} manuales</div></div>`;
 }
