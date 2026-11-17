@@ -423,9 +423,9 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
         <div class="cbox-title">VENDEDORES (CLOSER) &mdash; REFERIDOS RECIBIDOS, PREVENTAS Y ENTREGAS</div>
         <div class="cl-ctrl">
           <span style="font-size:10px;color:var(--muted)">Ordenar por</span>
-          <button class="cl-btn active" id="clS-ent" onclick="setClSort('ent')">Entregas</button>
+          <button class="cl-btn active" id="clS-ref" onclick="setClSort('ref')">Referidos</button>
           <button class="cl-btn" id="clS-prev" onclick="setClSort('prev')">Preventas</button>
-          <button class="cl-btn" id="clS-ref" onclick="setClSort('ref')">Referidos</button>
+          <button class="cl-btn" id="clS-ent" onclick="setClSort('ent')">Entregas</button>
         </div>
       </div>
       <div class="cl-ctrl" style="margin-bottom:12px;">
@@ -439,7 +439,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div style="overflow-x:auto"><table class="mt" id="tClosers"></table></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap;">
         <button class="cl-btn" id="clMore" onclick="toggleClAll()">Ver todos</button>
-        <span style="font-size:10px;color:var(--muted)">Entregas seg&uacute;n reporte de Preventas con fecha real. Las entregas manuales no se atribuyen a un vendedor.</span>
+        <span style="font-size:10px;color:var(--muted)">Cada vendedor: de los referidos que recibi&oacute;, cu&aacute;ntos tienen preventa y cu&aacute;ntos entrega. &ldquo;Sin vendedor asignado&rdquo; son referidos que todav&iacute;a nadie gestion&oacute;. Las entregas manuales no se atribuyen a un vendedor.</span>
       </div>
     </div>
     <!-- Detalle de preventas -->
@@ -597,9 +597,10 @@ async function saveToCloud() {
   btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg> Forzar guardado';
 }
 
+const pvFromCloud=r=>{const o={'ID':r.id,'NOMBRE':r.n,'APELLIDO':r.a,_e:r.e,_v:r.v,_fe:r.fe,_sis:r.sis,_pv:r.pv,'Estado':r.est,'FECHA CONSULTA':r.fc,'CLOSER':r.c||'','PERFIL CRM':r.pc||''};if(r.vk)o[r.vk]=r.vd||'';return o;};
 function reconstruct(ds) {
   const ref=(ds.ref_data||[]).map(r=>({'ID':r.id,_e:r.e,_t:r.t,_op:r.op,_tm:r.tm,'FECHA CONSULTA':r.fc}));
-  const pv=(ds.pv_data||[]).map(r=>({'ID':r.id,'NOMBRE':r.n,'APELLIDO':r.a,_e:r.e,_v:r.v,_fe:r.fe,_sis:r.sis,_pv:r.pv,'Estado':r.est,'FECHA CONSULTA':r.fc}));
+  const pv=(ds.pv_data||[]).map(pvFromCloud);
   return {_ref:ref,_pv:pv,_reg:{length:ds.reg_count||0}};
 }
 
@@ -763,8 +764,9 @@ function calcKPIs(ref,pv,reg){
   const embConPrev = new Set(pv.filter(r=>r._v).map(r=>r._e)).size;
   // Vendedores (closer): referidos recibidos, preventas y entregas (según el reporte de Preventas)
   const _cl={};
+  const vendKey0=(()=>{for(const r of pv){const k=Object.keys(r).find(c=>/vend/i.test(c)&&!/closer/i.test(c));if(k)return k;}return null;})();
   pv.forEach(r=>{
-    const c=((r['CLOSER']||'').trim())||'(sin asignar)';
+    const c=((r['CLOSER']||'').trim())||((r._v&&vendKey0?(r[vendKey0]||'').trim():''))||'(sin asignar)';
     if(!_cl[c])_cl[c]={closer:c,ref:0,prev:0,ent:0,by:{}};
     const cat=espDe((r['PERFIL CRM']||'').trim());
     if(!_cl[c].by[cat])_cl[c].by[cat]={ref:0,prev:0,ent:0};
@@ -778,7 +780,7 @@ function calcKPIs(ref,pv,reg){
     c.esp=c.closer==='(sin asignar)'?'—':cats.slice(0,2).map(x=>x[0]).join(' · ');
   });
   // Detalle de cada preventa: vendedor que recibió el referido (CLOSER) + vendedor de la preventa (si el reporte trae esa columna)
-  const vendKey=pv.length?Object.keys(pv[0]).find(c=>/vend/i.test(c)&&!/closer/i.test(c)):null;
+  const vendKey=vendKey0;
   const prevDet=pv.filter(r=>r._v).map(r=>({
     id:+r['ID'],pv:r._pv||'—',sis:r._sis||'—',fe:r._fe||'',
     ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`,emb:r._e,
@@ -1004,7 +1006,7 @@ async function metProcess(){
       if(snap&&snap.length>0){
         const ds=snap[0];
         const cloudRef=(ds.ref_data||[]).map(r=>({'ID':r.id,_e:r.e,_t:r.t,_op:r.op,_tm:r.tm,'FECHA CONSULTA':r.fc}));
-        const cloudPV=(ds.pv_data||[]).map(r=>({'ID':r.id,'NOMBRE':r.n,'APELLIDO':r.a,_e:r.e,_v:r.v,_fe:r.fe,_sis:r.sis,_pv:r.pv,'Estado':r.est,'FECHA CONSULTA':r.fc}));
+        const cloudPV=(ds.pv_data||[]).map(pvFromCloud);
         if(cloudPV.length){prevMap={};cloudPV.forEach(r=>{if(r['ID']!=null)prevMap[r['ID']]={estado:(r['Estado']||'Sin estado')};});}
         // Merge por ID: datos nuevos sobreescriben los existentes; IDs nuevos se agregan
         const rMap={}; cloudRef.forEach(r=>{if(r['ID'])rMap[r['ID']]=r;}); newRef.forEach(r=>{if(r['ID'])rMap[r['ID']]=r;});
@@ -1038,7 +1040,9 @@ async function autoSaveToCloud(){
   const raw=window._rawKPI;
   const refData=raw._ref.map(r=>({id:r['ID'],e:r._e,t:r._t,op:r._op,tm:r._tm,fc:r['FECHA CONSULTA']||''}));
   const pvData=raw._pv.map(r=>({id:r['ID'],n:(r['NOMBRE']||'').trim(),a:(r['APELLIDO']||'').trim(),
-    e:r._e,v:r._v,fe:r._fe,sis:r._sis,pv:r._pv,est:(r['Estado']||''),fc:(r['FECHA CONSULTA']||'')}));
+    e:r._e,v:r._v,fe:r._fe,sis:r._sis,pv:r._pv,est:(r['Estado']||''),fc:(r['FECHA CONSULTA']||''),
+    c:(r['CLOSER']||'').trim(),pc:(r['PERFIL CRM']||'').trim(),
+    ...(()=>{const vk=Object.keys(r).find(c=>/vend/i.test(c)&&!/closer/i.test(c));return vk?{vk,vd:(r[vk]||'').trim()}:{};})()}));
   const {error}=await _sb.from('emb_dataset').insert({
     label:new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'short'}),
     ref_data:refData, pv_data:pvData, reg_count:raw._reg.length||0
@@ -1389,7 +1393,7 @@ function renderEmbudo(k){
   document.getElementById('embudo-grid').innerHTML=embudoHTML(k);
   document.getElementById('embudo-rev').innerHTML=revisarHTML(k);
 }
-let _clSort='ent',_clAll=false,_clEsp='all';
+let _clSort='ref',_clAll=false,_clEsp='all';
 // Especialidad según el team del CRM (PERFIL CRM)
 function espDe(p){
   const l=(p||'').toLowerCase();
@@ -1401,16 +1405,21 @@ function espDe(p){
 }
 function closersHTML(list,sort,all,esp){
   esp=esp||'all';
+  const SA='(sin asignar)';
   const base=list.map(c=>{
     if(esp==='all')return c;
     const s=c.by&&c.by[esp];
     return s?{...c,ref:s.ref,prev:s.prev,ent:s.ent}:null;
   }).filter(Boolean);
-  const rows=base.sort((a,b)=>(b[sort]-a[sort])||(b.ent-a.ent)||(b.prev-a.prev)||(b.ref-a.ref)||a.closer.localeCompare(b.closer,'es'));
-  const shown=all?rows:rows.slice(0,15);
-  return `<tr><th>#</th><th>Vendedor</th><th>Especialidad</th><th class="r">Referidos</th><th class="r">Preventas</th><th class="r">Entregas</th><th class="r">Entrega / referido</th></tr>`+
-    shown.map((r,i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${_h(r.closer)}</td><td>${_h(r.esp)}</td><td class="lime r">${r.ref}</td><td class="r">${r.prev||'<span style="color:var(--muted)">—</span>'}</td><td class="r">${r.ent?`<span class="sale-dot">${r.ent}</span>`:'<span style="color:var(--muted);font-size:10px">—</span>'}</td><td class="r">${r.ref?Math.round(r.ent/r.ref*100)+'%':'—'}</td></tr>`).join('')
-    +(rows.length?'':`<tr><td colspan="7" style="color:var(--muted);padding:14px 10px">Sin vendedores para esta especialidad en el per&iacute;odo.</td></tr>`);
+  const cmp=(a,b)=>(b[sort]-a[sort])||(b.ref-a.ref)||(b.prev-a.prev)||(b.ent-a.ent)||a.closer.localeCompare(b.closer,'es');
+  const sa=base.filter(c=>c.closer===SA),con=base.filter(c=>c.closer!==SA).sort(cmp);
+  const rows=[...con,...sa];                      // "sin asignar" siempre al final
+  const shown=all?rows:(()=>{const top=con.slice(0,15);return sa.length?[...top,...sa]:top;})();
+  const pc=(x,ref)=>ref?Math.round(x/ref*100)+'%':'—';
+  const cell=(x,ref,dot)=>x?`<span class="${dot?'sale-dot':''}" style="${dot?'':'color:var(--cream);font-weight:600'}">${x}</span> <span style="color:var(--muted);font-size:11px">de ${ref} &middot; ${pc(x,ref)}</span>`:`<span style="color:var(--muted);font-size:11px">0 de ${ref}</span>`;
+  return `<tr><th>#</th><th>Vendedor</th><th>Especialidad</th><th class="r">Referidos recibidos</th><th class="r">Con preventa</th><th class="r">Con entrega</th></tr>`+
+    shown.map((r,i)=>{const isSA=r.closer===SA;return `<tr${isSA?' style="opacity:.75"':''}><td class="r" style="color:var(--muted)">${isSA?'':(i+1)}</td><td class="name">${isSA?'Sin vendedor asignado a&uacute;n':_h(r.closer)}</td><td>${_h(r.esp)}</td><td class="lime r">${r.ref}</td><td class="r">${cell(r.prev,r.ref,false)}</td><td class="r">${cell(r.ent,r.ref,true)}</td></tr>`;}).join('')
+    +(rows.length?'':`<tr><td colspan="6" style="color:var(--muted);padding:14px 10px">Sin vendedores para esta especialidad en el per&iacute;odo.</td></tr>`);
 }
 function renderClosers(k){
   const box=document.getElementById('closers-box');if(!box)return;
