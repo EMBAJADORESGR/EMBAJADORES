@@ -436,6 +436,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
         <button class="cl-btn" data-esp="Planes de ahorro" onclick="setClEsp('Planes de ahorro')">Planes</button>
         <button class="cl-btn" data-esp="Ventas especiales" onclick="setClEsp('Ventas especiales')">Ventas especiales</button>
       </div>
+      <div id="clWarn" style="display:none;margin:0 0 12px;padding:10px 14px;border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.08);border-radius:5px;font-size:12px;line-height:1.55;color:var(--amber)"><b>Los datos guardados no tienen vendedor.</b> Se guardaron antes de esta mejora. Sub&iacute; el reporte completo de Referidos / Preventas (con la columna CLOSER) en la carga de archivos y toc&aacute; <b>Procesar</b>: desde ah&iacute; el vendedor queda guardado y no se vuelve a perder.</div>
       <div style="overflow-x:auto"><table class="mt" id="tClosers"></table></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap;">
         <button class="cl-btn" id="clMore" onclick="toggleClAll()">Ver todos</button>
@@ -1432,6 +1433,7 @@ function paintClosers(){
   const l=window._closersData||[];
   const total=_clEsp==='all'?l.length:l.filter(c=>c.by&&c.by[_clEsp]).length;
   document.getElementById('tClosers').innerHTML=closersHTML(l,_clSort,_clAll,_clEsp);
+  const _w=document.getElementById('clWarn');if(_w)_w.style.display=(l.length&&l.every(c=>c.closer==='(sin asignar)'))?'block':'none';
   const b=document.getElementById('clMore');
   b.textContent=_clAll?'Ver solo top 15':`Ver todos (${total})`;
   b.style.display=total>15?'':'none';
