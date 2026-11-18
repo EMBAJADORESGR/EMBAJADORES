@@ -758,7 +758,7 @@ function calcKPIs(ref,pv,reg){
   const totalEnt=ent.length+manBase+mans.length;
   const pagSet=new Set(_pagos.map(p=>p.preventa));
   const normEst=s=>{s=(s||'Sin estado').trim();if(s.includes('DNI'))return'Vinculado (DNI)';if(s.includes('Vinculado'))return'Pres. vinculado';return s||'Sin estado';};
-  const embTipoMap={};ref.forEach(r=>{embTipoMap[r._e]=r._t;});
+  const embTipoMap={};ref.forEach(r=>{embTipoMap[r._e]=r._t;});const _nk=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,' ');const embTipoNk={};ref.forEach(r=>{embTipoNk[_nk(r._e)]=r._t;});
   const est={},estDet={};
   pv.forEach(r=>{
     const s=normEst(r['Estado']);
@@ -776,7 +776,7 @@ function calcKPIs(ref,pv,reg){
   const topExt=Object.entries(xr).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const entDet=[
     ...ent.map(r=>({id:`pv:${r._pv}`,emb:r._e,tipo:embTipoMap[r._e]||'Empleado',ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`,pv:r._pv,sis:r._sis,fe:r._fe,manual:false})),
-    ...mans.map(m=>({id:`man:${m.id}`,manId:m.id,emb:m.embajador,tipo:m.tipo||'Empleado',ref:m.referido,pv:m.preventa||'—',sis:m.sistema||'—',fe:m.fecha_entrega||'—',manual:true,motivo:m.motivo}))
+    ...mans.map(m=>({id:`man:${m.id}`,manId:m.id,emb:m.embajador,tipo:embTipoMap[m.embajador]||embTipoNk[_nk(m.embajador)]||m.tipo||'Empleado',ref:m.referido,pv:m.preventa||'—',sis:m.sistema||'—',fe:m.fecha_entrega||'—',manual:true,motivo:m.motivo}))
   ];
   const pagados=entDet.filter(r=>pagSet.has(r.pv)&&r.pv!=='—').length;
   const montoPend=(totalEnt-pagados)*500000;
@@ -1549,7 +1549,7 @@ function paintTop(){
   const q=(document.getElementById('topQ').value||'').toLowerCase().trim();
   const rows=all.filter(r=>(!rg||(r.d&&r.d>=rg[0]&&r.d<rg[1]))&&(_topTipo==='all'||(r.tipo||'Empleado')===_topTipo));
   const g={};
-  rows.forEach(r=>{const k=r.emb||'(sin embajador)';(g[k]=g[k]||{emb:k,tipo:r.tipo||'Empleado',list:[],man:0,paid:0}).list.push(r);if(r.manual)g[k].man++;if(r.paid)g[k].paid++;});
+  rows.forEach(r=>{const k=r.emb||'(sin embajador)';const gg=(g[k]=g[k]||{emb:k,tipo:r.tipo||'Empleado',list:[],man:0,paid:0});if(!r.manual)gg.tipo=r.tipo||gg.tipo;gg.list.push(r);if(r.manual)g[k].man++;if(r.paid)g[k].paid++;});
   let top=Object.values(g).sort((a,b)=>b.list.length-a.list.length||b.paid-a.paid||a.emb.localeCompare(b.emb,'es'));
   const tot=rows.length,totPaid=rows.filter(r=>r.paid).length,totMan=rows.filter(r=>r.manual).length;
   const undated=all.filter(r=>!r.d).length;
