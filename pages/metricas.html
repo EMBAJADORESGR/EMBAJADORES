@@ -78,6 +78,14 @@ main.page-content{max-width:none!important;width:100%!important;margin-left:0!im
 @media(max-width:700px){main.page-content{padding-left:12px!important;padding-right:12px!important;}}
 #met-dashboard{display:none;}
 #met-dashboard.vis{display:block;}
+.big-kpis{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0;background:var(--ink1);border:1px solid var(--border);border-top:3px solid var(--lime);margin-bottom:12px;}
+.big-k{padding:26px 32px;text-align:center;}
+.big-l{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--muted);margin-bottom:8px;}
+.big-v{font-size:76px;font-weight:700;line-height:1;letter-spacing:-.03em;color:var(--cream);}
+.big-v.lime{color:var(--lime);}.big-v.green{color:var(--green);}
+.big-s{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;}
+.big-arrow{display:flex;align-items:center;font-size:34px;color:var(--muted);padding:0 4px;}
+@media(max-width:700px){.big-kpis{grid-template-columns:1fr;}.big-arrow{display:none;}.big-v{font-size:56px;}}
 .kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);margin-bottom:1px;}
 .kpi-float-row{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px;}
 @media(max-width:900px){.kpi-float-row{grid-template-columns:1fr;}}
@@ -347,6 +355,8 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     <button class="filter-btn" onclick="setFilter('30',this)">30 d&iacute;as</button>
     <button class="filter-btn" onclick="setFilter('60',this)">60 d&iacute;as</button>
     <button class="filter-btn" onclick="setFilter('90',this)">90 d&iacute;as</button>
+    <button class="filter-btn" onclick="setFilter('month',this)">Este mes</button>
+    <button class="filter-btn" onclick="setFilter('prevmonth',this)">Mes pasado</button>
     <span style="font-size:10px;color:var(--muted)">Desde</span>
     <input type="date" class="date-input" id="dateFrom" onchange="setFilterCustom()">
     <span style="font-size:10px;color:var(--muted)">Hasta</span>
@@ -382,6 +392,11 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     <!-- NOVEDADES DEL DÍA -->
     <div id="novedades"></div>
     <!-- KPIs -->
+    <div class="big-kpis">
+      <div class="big-k"><div class="big-l">PREVENTAS</div><div class="big-v lime" id="bkPrev">&mdash;</div><div class="big-s" id="bkPrevS"></div></div>
+      <div class="big-arrow">&rarr;</div>
+      <div class="big-k"><div class="big-l">ENTREGADOS</div><div class="big-v green" id="bkEnt">&mdash;</div><div class="big-s" id="bkEntS"></div></div>
+    </div>
     <div class="kpi-strip">
       <div class="kpi-cell k-lime"><div class="kpi-v lime" id="kReg">—</div><div class="kpi-l">Embajadores registrados</div><div class="kpi-sub" id="kRegS"></div></div>
       <div class="kpi-cell k-blue"><div class="kpi-v" id="kRef">—</div><div class="kpi-l">Referidos v&aacute;lidos</div><div class="kpi-sub" id="kRefS"></div></div>
@@ -622,7 +637,7 @@ async function saveToCloud() {
   btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg> Forzar guardado';
 }
 
-const pvFromCloud=r=>{const o={'ID':r.id,'NOMBRE':r.n,'APELLIDO':r.a,_e:r.e,_v:r.v,_fe:r.fe,_sis:r.sis,_pv:r.pv,'Estado':r.est,'FECHA CONSULTA':r.fc,'CLOSER':r.c||'','PERFIL CRM':r.pc||''};if(r.vk)o[r.vk]=r.vd||'';return o;};
+const pvFromCloud=r=>{const o={_co:r.co||r.c||'',_ca:r.ca||r.c||'','ID':r.id,'NOMBRE':r.n,'APELLIDO':r.a,_e:r.e,_v:r.v,_fe:r.fe,_sis:r.sis,_pv:r.pv,'Estado':r.est,'FECHA CONSULTA':r.fc,'CLOSER':r.c||'','PERFIL CRM':r.pc||''};if(r.vk)o[r.vk]=r.vd||'';return o;};
 function reconstruct(ds) {
   const ref=(ds.ref_data||[]).map(r=>({'ID':r.id,_e:r.e,_t:r.t,_op:r.op,_tm:r.tm,'FECHA CONSULTA':r.fc}));
   const pv=(ds.pv_data||[]).map(pvFromCloud);
@@ -724,20 +739,30 @@ function loadMet(inp,k){
 
 /* ════ FILTER ════ */
 let _af='all',_df=null,_dt=null;
-function setFilter(p,btn){_af=p;_df=null;_dt=null;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');document.getElementById('dateFrom').value='';document.getElementById('dateTo').value='';if(window._rawKPI)refreshDash();}
+function setFilter(p,btn){_af=p;_df=null;_dt=null;try{if(p==='all')document.getElementById('filterInfo').classList.remove('vis');}catch(e){}document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');document.getElementById('dateFrom').value='';document.getElementById('dateTo').value='';if(window._rawKPI)refreshDash();}
 function setFilterCustom(){const from=document.getElementById('dateFrom').value,to=document.getElementById('dateTo').value;if(!from&&!to)return;_af='custom';_df=from||null;_dt=to||null;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));if(window._rawKPI)refreshDash();}
 function parseDate(str){if(!str)return null;const p=str.split(' ')[0].split('/');return p.length===3?new Date(p[2],p[1]-1,p[0]):null;}
+function globalRange(){
+  if(_af==='all'&&!_df&&!_dt)return null;
+  const now=new Date(),y=now.getFullYear(),m=now.getMonth(),d=now.getDate(),tom=new Date(y,m,d+1);
+  if(_af==='month')return [new Date(y,m,1),tom];
+  if(_af==='prevmonth')return [new Date(y,m-1,1),new Date(y,m,1)];
+  if(_af==='custom'){const f=_df?_parseFe(_df):null,t2=_dt?_parseFe(_dt):null;if(t2)t2.setDate(t2.getDate()+1);return [f,t2||tom];}
+  const n=parseInt(_af)||0;return [new Date(y,m,d-n),tom];
+}
 function applyFilter(raw){
-  if(_af==='all'&&!_df&&!_dt)return raw;
-  const now=new Date();let from=null,to=new Date(now);
-  if(_af!=='custom'){const d=parseInt(_af)||0;from=new Date(now);from.setDate(now.getDate()-d);}
-  else{if(_df)from=new Date(_df);if(_dt)to=new Date(_dt);}
-  const fR=raw._ref.filter(r=>{const d=parseDate(r['FECHA CONSULTA']);return !d||((!from||d>=from)&&(!to||d<=to));});
-  const fP=raw._pv.filter(r=>{const d=parseDate(r['FECHA CONSULTA']);return !d||((!from||d>=from)&&(!to||d<=to));});
+  window._entFull=null;window._entRg=null;
+  const rg=globalRange();
+  if(!rg)return raw;
+  const [from,to]=rg;
+  const inR=r=>{const d=parseDate(r['FECHA CONSULTA']);return !d||((!from||d>=from)&&(!to||d<to));};
+  const fR=raw._ref.filter(inR),fP=raw._pv.filter(inR);
+  window._entFull=raw._pv;window._entRg=rg;          // las ENTREGAS se miden por fecha de entrega, no de consulta
   const info=document.getElementById('filterInfo');
+  const last=to?new Date(to.getTime()-864e5):null;
   const fs=from?from.toLocaleDateString('es-AR',{day:'2-digit',month:'short'}):'inicio';
-  const ts=to?to.toLocaleDateString('es-AR',{day:'2-digit',month:'short'}):'hoy';
-  info.textContent=`Período: ${fs} → ${ts} · ${fR.length} de ${raw._ref.length} referidos`;
+  const ts=last?last.toLocaleDateString('es-AR',{day:'2-digit',month:'short'}):'hoy';
+  info.textContent=`Período: ${fs} → ${ts} · referidos y preventas por fecha de consulta (${fR.length} de ${raw._ref.length}) · entregas y pagos por fecha de entrega / pago`;
   info.classList.add('vis');
   return {_ref:fR,_pv:fP,_reg:raw._reg};
 }
@@ -751,10 +776,13 @@ function calcKPIs(ref,pv,reg){
   pv=applyPvOv(pv);
   const em={};ref.forEach(r=>{if(!em[r._e])em[r._e]={t:r._t,n:0};em[r._e].n++;});
   const emvs=Object.values(em);
-  const ent=pv.filter(r=>r._v&&r._fe),vsf=pv.filter(r=>r._v&&!r._fe);
+  const rg=window._entRg||null;
+  const inRg=fe=>{if(!rg)return true;const d=_parseFe(fe);return !!d&&(!rg[0]||d>=rg[0])&&(!rg[1]||d<rg[1]);};
+  const pvAll=rg&&window._entFull?applyPvOv(window._entFull):pv;
+  const entAll=pvAll.filter(r=>r._v&&r._fe),ent=rg?entAll.filter(r=>inRg(r._fe)):entAll,vsf=pv.filter(r=>r._v&&!r._fe);
   const pvIDs=new Set(pv.map(r=>+r['ID']));
-  const manBase=[29,85,121].filter(id=>!pvIDs.has(id)).length;
-  const mans=_manuales.filter(m=>m.activo);
+  const manBase=rg?0:[29,85,121].filter(id=>!pvIDs.has(id)).length;
+  const mansAll=_manuales.filter(m=>m.activo),mans=rg?mansAll.filter(m=>inRg(m.fecha_entrega)):mansAll;
   const totalEnt=ent.length+manBase+mans.length;
   const pagSet=new Set(_pagos.map(p=>p.preventa));
   const normEst=s=>{s=(s||'Sin estado').trim();if(s.includes('DNI'))return'Vinculado (DNI)';if(s.includes('Vinculado'))return'Pres. vinculado';return s||'Sin estado';};
@@ -774,10 +802,14 @@ function calcKPIs(ref,pv,reg){
   const xr={};ref.filter(r=>r._t==='Externo').forEach(r=>{xr[r._e]=(xr[r._e]||0)+1;});
   const topAll=Object.entries(er).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const topExt=Object.entries(xr).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const entDet=[
-    ...ent.map(r=>({id:`pv:${r._pv}`,emb:r._e,tipo:embTipoMap[r._e]||'Empleado',ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`,pv:r._pv,sis:r._sis,fe:r._fe,manual:false})),
-    ...mans.map(m=>({id:`man:${m.id}`,manId:m.id,emb:m.embajador,tipo:embTipoMap[m.embajador]||embTipoNk[_nk(m.embajador)]||m.tipo||'Empleado',ref:m.referido,pv:m.preventa||'—',sis:m.sistema||'—',fe:m.fecha_entrega||'—',manual:true,motivo:m.motivo}))
+  const mkEnt=(E,M)=>[
+    ...E.map(r=>({id:`pv:${r._pv}`,emb:r._e,tipo:embTipoMap[r._e]||'Empleado',ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`,pv:r._pv,sis:r._sis,fe:r._fe,manual:false,co:r._co||'',ca:r._ca||''})),
+    ...M.map(m=>({id:`man:${m.id}`,manId:m.id,emb:m.embajador,tipo:embTipoMap[m.embajador]||embTipoNk[_nk(m.embajador)]||m.tipo||'Empleado',ref:m.referido,pv:m.preventa||'—',sis:m.sistema||'—',fe:m.fecha_entrega||'—',manual:true,motivo:m.motivo}))
   ];
+  const entDet=mkEnt(ent,mans),entDetAll=rg?mkEnt(entAll,mansAll):entDet;
+  // pagos del período (por fecha de pago)
+  const pagosPer=_pagos.filter(p=>inRg(p.fecha_pago));
+  const pagosPerEmb=new Set(pagosPer.map(p=>p.embajador)).size;
   const pagados=entDet.filter(r=>pagSet.has(r.pv)&&r.pv!=='—').length;
   const montoPend=(totalEnt-pagados)*500000;
   const regLen=typeof reg==='object'&&reg!==null?(reg.length||0):0;
@@ -792,12 +824,17 @@ function calcKPIs(ref,pv,reg){
   const vendKey0=(()=>{for(const r of pv){const k=Object.keys(r).find(c=>/vend/i.test(c)&&!/closer/i.test(c));if(k)return k;}return null;})();
   pv.forEach(r=>{
     const c=((r['CLOSER']||'').trim())||((r._v&&vendKey0?(r[vendKey0]||'').trim():''))||'(sin asignar)';
-    if(!_cl[c])_cl[c]={closer:c,ref:0,prev:0,ent:0,by:{}};
+    if(!_cl[c])_cl[c]={closer:c,ref:0,prev:0,ent:0,by:{},out:0,outEnt:0,inn:0,innEnt:0};
     const cat=espDe((r['PERFIL CRM']||'').trim());
     if(!_cl[c].by[cat])_cl[c].by[cat]={ref:0,prev:0,ent:0};
     _cl[c].ref++;_cl[c].by[cat].ref++;
     if(r._v){_cl[c].prev++;_cl[c].by[cat].prev++;}
     if(r._v&&r._fe){_cl[c].ent++;_cl[c].by[cat].ent++;}
+    const co=(r._co||'').trim();
+    if(co&&co!==c&&c!=='(sin asignar)'){            // transferido: el original cedió, el actual recibió
+      if(!_cl[co])_cl[co]={closer:co,ref:0,prev:0,ent:0,by:{},out:0,outEnt:0,inn:0,innEnt:0};
+      _cl[co].out++;_cl[c].inn++;if(r._v&&r._fe){_cl[co].outEnt++;_cl[c].innEnt++;}
+    }
   });
   const closers=Object.values(_cl);
   closers.forEach(c=>{
@@ -809,7 +846,7 @@ function calcKPIs(ref,pv,reg){
   const prevDet=pv.filter(r=>r._v).map(r=>({
     id:+r['ID'],pv:r._pv||'—',sis:r._sis||'—',fe:r._fe||'',
     ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`,emb:r._e,
-    closer:((r['CLOSER']||'').trim())||'(sin asignar)',
+    closer:((r['CLOSER']||'').trim())||'(sin asignar)',co:((r._co||'').trim())||((r['CLOSER']||'').trim())||'(sin asignar)',
     esp:espDe((r['PERFIL CRM']||'').trim()),team:(r['PERFIL CRM']||'').trim(),
     vendPV:vendKey?((r[vendKey]||'').trim()||'—'):null}));
   // Referidos con presupuesto/DNI vinculado en el CRM pero SIN número de preventa en el cruce (a revisar)
@@ -821,7 +858,7 @@ function calcKPIs(ref,pv,reg){
     refEmp:ref.filter(r=>r._t!=='Externo').length,refExt:ref.filter(r=>r._t==='Externo').length,
     totalEnt,pagados,montoPend,vincSF:vsf.length,sinVinc:pv.filter(r=>!r._v).length,
     embConPV,embPagados,embConPrev,closers,revisar,prevDet,vendKey,vinc:pv.filter(r=>r._v).length,entSis:ent.length,
-    est,estDet,ops,tm,sis,topAll,topExt,entDet,pagSet};
+    est,estDet,ops,tm,sis,topAll,topExt,entDet,entDetAll,pagSet,pagosPer:pagosPer.length,pagosPerEmb,rangoActivo:!!rg};
 }
 
 
@@ -1020,6 +1057,11 @@ function closeGloss(){document.getElementById('glossModal').style.display='none'
 async function metProcess(){
   const reg=MF.reg||[];
   const newRef=cleanRef(MF.pv), newPV=cleanPV(MF.pv);
+  // Closer original / actual: salen del Reporte de embajadores (por ID); si no está cargado, se usa la columna CLOSER del reporte de preventas
+  const clById={};(MF.ref||[]).forEach(r=>{const id=+r['ID'];if(id)clById[id]={co:(r['CLOSER ORIGINAL']||'').trim(),ca:(r['CLOSER ACTUAL']||'').trim(),pc:(r['PERFIL CRM']||'').trim()};});
+  newPV.forEach(r=>{const x=clById[+r['ID']]||{},base=(r['CLOSER']||'').trim();
+    r._ca=x.ca||(r['CLOSER ACTUAL']||'').trim()||base;r._co=x.co||(r['CLOSER ORIGINAL']||'').trim()||r._ca;
+    if(r._ca)r['CLOSER']=r._ca;if(!(r['PERFIL CRM']||'').trim()&&x.pc)r['PERFIL CRM']=x.pc;});
 
   // Merge acumulativo con datos existentes en la nube
   let mergedRef=newRef, mergedPV=newPV;
@@ -1049,8 +1091,7 @@ async function metProcess(){
   const novedades = await syncTramites(newPV, prevMap);
 
   await syncRegistrados(MF.reg);
-  const k=calcKPIs(mergedRef,mergedPV,{length:mergedRegCount});
-  renderDash(k);
+  refreshDash();
   renderRegistro();
   renderNovedades(novedades);
   document.getElementById('met-dashboard').classList.add('vis');
@@ -1066,7 +1107,7 @@ async function autoSaveToCloud(){
   const refData=raw._ref.map(r=>({id:r['ID'],e:r._e,t:r._t,op:r._op,tm:r._tm,fc:r['FECHA CONSULTA']||''}));
   const pvData=raw._pv.map(r=>({id:r['ID'],n:(r['NOMBRE']||'').trim(),a:(r['APELLIDO']||'').trim(),
     e:r._e,v:r._v,fe:r._fe,sis:r._sis,pv:r._pv,est:(r['Estado']||''),fc:(r['FECHA CONSULTA']||''),
-    c:(r['CLOSER']||'').trim(),pc:(r['PERFIL CRM']||'').trim(),
+    c:(r['CLOSER']||'').trim(),co:(r._co||'').trim(),ca:(r._ca||'').trim(),pc:(r['PERFIL CRM']||'').trim(),
     ...(()=>{const vk=Object.keys(r).find(c=>/vend/i.test(c)&&!/closer/i.test(c));return vk?{vk,vd:(r[vk]||'').trim()}:{};})()}));
   const {error}=await _sb.from('emb_dataset').insert({
     label:new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'short'}),
@@ -1350,10 +1391,15 @@ function renderDash(k){
   $('kRef').textContent=n(k.totalPV||k.total);
   $('kRefS').textContent=`${n(k.totalPV)-n(k.sinVinc)} con prev · ${n(k.sinVinc)} sin prev (referidos)`;
   renderEstadosPanel(k.est||{}, k.estDet||{}, n(k.totalPV||k.total));
+  const man=n(k.totalEnt)-n(k.entSis),prevTot=n(k.vinc)+man;
+  $('bkPrev').textContent=prevTot;
+  $('bkPrevS').textContent=`${n(k.vinc)} del reporte + ${man} manuales${k.rangoActivo?' · por fecha de consulta':''}`;
+  $('bkEnt').textContent=n(k.totalEnt);
+  $('bkEntS').textContent=`${n(k.entSis)} del reporte + ${man} manuales · ${n(k.pagados)} pagadas${k.rangoActivo?' · por fecha de entrega':''}${n(k.vincSF)?` · ${n(k.vincSF)} preventas sin entrega aún`:''}`;
   $('kEnt').textContent=n(k.totalEnt);
   $('kEntS').textContent=`${n(k.entSis)} del reporte + ${n(k.totalEnt)-n(k.entSis)} manuales`;
   $('kPag').textContent=n(k.pagados);
-  $('kPagS').textContent=`${n(k.pagados)} de ${n(k.totalEnt)} entregas pagadas · ${n(k.totalEnt)-n(k.pagados)} pendientes`;
+  $('kPagS').textContent=`${n(k.pagados)} de ${n(k.totalEnt)} entregas pagadas · ${n(k.totalEnt)-n(k.pagados)} pendientes`+(k.rangoActivo?` · ${n(k.pagosPer)} pagos realizados en el período a ${n(k.pagosPerEmb)} embajadores`:'');
   $('kMonto').textContent=`$${((n(k.montoPend))/1e6).toFixed(1)}M`;
   $('kMontoS').textContent=`${n(k.totalEnt)-n(k.pagados)} entregas × $500k`;
   // Donuts
@@ -1442,9 +1488,9 @@ function closersHTML(list,sort,all,esp){
   const shown=all?rows:(()=>{const top=con.slice(0,15);return sa.length?[...top,...sa]:top;})();
   const pc=(x,ref)=>ref?Math.round(x/ref*100)+'%':'—';
   const cell=(x,ref,dot)=>x?`<span class="${dot?'sale-dot':''}" style="${dot?'':'color:var(--cream);font-weight:600'}">${x}</span> <span style="color:var(--muted);font-size:11px">de ${ref} &middot; ${pc(x,ref)}</span>`:`<span style="color:var(--muted);font-size:11px">0 de ${ref}</span>`;
-  return `<tr><th>#</th><th>Vendedor</th><th>Especialidad</th><th class="r">Referidos recibidos</th><th class="r">Con preventa</th><th class="r">Con entrega</th></tr>`+
-    shown.map((r,i)=>{const isSA=r.closer===SA;return `<tr${isSA?' style="opacity:.75"':''}><td class="r" style="color:var(--muted)">${isSA?'':(i+1)}</td><td class="name">${isSA?'Sin vendedor asignado a&uacute;n':_h(r.closer)}</td><td>${_h(r.esp)}</td><td class="lime r">${r.ref}</td><td class="r">${cell(r.prev,r.ref,false)}</td><td class="r">${cell(r.ent,r.ref,true)}</td></tr>`;}).join('')
-    +(rows.length?'':`<tr><td colspan="6" style="color:var(--muted);padding:14px 10px">Sin vendedores para esta especialidad en el per&iacute;odo.</td></tr>`);
+  return `<tr><th>#</th><th>Vendedor</th><th>Especialidad</th><th class="r">Referidos recibidos</th><th class="r">Con preventa</th><th class="r">Con entrega</th><th class="r" title="Referidos que recibió y pasó a otro vendedor (entregas entre paréntesis)">Cedidos</th><th class="r" title="Referidos que le pasaron otros vendedores (entregas entre paréntesis)">Recibidos por traspaso</th></tr>`+
+    shown.map((r,i)=>{const isSA=r.closer===SA;return `<tr${isSA?' style="opacity:.75"':''}><td class="r" style="color:var(--muted)">${isSA?'':(i+1)}</td><td class="name">${isSA?'Sin vendedor asignado a&uacute;n':_h(r.closer)}</td><td>${_h(r.esp)}</td><td class="lime r">${r.ref}</td><td class="r">${cell(r.prev,r.ref,false)}</td><td class="r">${cell(r.ent,r.ref,true)}</td><td class="r">${r.out?`<span style="color:var(--amber)">${r.out}</span> <span style="color:var(--muted);font-size:11px">(${r.outEnt} ent.)</span>`:'<span style="color:var(--muted)">—</span>'}</td><td class="r">${r.inn?`<span style="color:var(--cream);font-weight:600">${r.inn}</span> <span style="color:var(--muted);font-size:11px">(${r.innEnt} ent.)</span>`:'<span style="color:var(--muted)">—</span>'}</td></tr>`;}).join('')
+    +(rows.length?'':`<tr><td colspan="8" style="color:var(--muted);padding:14px 10px">Sin vendedores para esta especialidad en el per&iacute;odo.</td></tr>`);
 }
 function renderClosers(k){
   const box=document.getElementById('closers-box');if(!box)return;
@@ -1488,22 +1534,22 @@ function trazaRows(){
   const pagSet=window._pagSet||new Set();
   const isPaid=pv=>!!pv&&pv!=='—'&&pagSet.has(pv);
   const rows=[];
-  (window._prevDet||[]).forEach(r=>rows.push({emb:r.emb,ref:r.ref,pv:r.pv,sis:r.sis,fe:r.fe||'',vend:r.closer,vendPV:r.vendPV||'',esp:r.esp,manual:false,paid:isPaid(r.pv)}));
-  (window._entDet||[]).filter(r=>r.manual).forEach(r=>rows.push({emb:r.emb,ref:r.ref,pv:r.pv,sis:r.sis,fe:r.fe&&r.fe!=='—'?r.fe:'',vend:'—',vendPV:'',esp:'—',manual:true,manId:r.manId,motivo:r.motivo,paid:isPaid(r.pv)}));
-  return rows.map(r=>({...r,ent:!!r.fe||r.manual,pe:r.paid?(_pagos.find(p=>p.preventa===r.pv)||null):null}));
+  (window._prevDet||[]).forEach(r=>rows.push({emb:r.emb,ref:r.ref,pv:r.pv,sis:r.sis,fe:r.fe||'',vend:r.closer,co:r.co||r.closer,vendPV:r.vendPV||'',esp:r.esp,manual:false,paid:isPaid(r.pv)}));
+  (window._entDet||[]).filter(r=>r.manual).forEach(r=>rows.push({emb:r.emb,ref:r.ref,pv:r.pv,sis:r.sis,fe:r.fe&&r.fe!=='—'?r.fe:'',vend:'—',co:'—',vendPV:'',esp:'—',manual:true,manId:r.manId,motivo:r.motivo,paid:isPaid(r.pv)}));
+  return rows.map(r=>({...r,trf:!!r.co&&r.co!=='—'&&r.co!==r.vend&&r.vend!=='(sin asignar)',ent:!!r.fe||r.manual,pe:r.paid?(_pagos.find(p=>p.preventa===r.pv)||null):null}));
 }
 function paintTraza(){
   const box=document.getElementById('traza-box');if(!box)return;
   const all=trazaRows();
   box.style.display=all.length?'block':'none';
   const vk=window._vendKey;
-  const cnt={all:all.length,ent:all.filter(r=>r.ent).length,sin:all.filter(r=>!r.ent).length,paid:all.filter(r=>r.paid).length,pend:all.filter(r=>r.ent&&!r.paid).length};
+  const cnt={all:all.length,ent:all.filter(r=>r.ent).length,sin:all.filter(r=>!r.ent).length,paid:all.filter(r=>r.paid).length,pend:all.filter(r=>r.ent&&!r.paid).length,trf:all.filter(r=>r.trf).length};
   const btn=(f,l)=>`<button class="cl-btn${_tzFilter===f?' active':''}" onclick="setTzF('${f}')">${l} (${cnt[f]})</button>`;
-  document.getElementById('tzF').innerHTML=btn('all','Todas')+btn('ent','Entregadas')+btn('sin','Sin entrega')+btn('paid','Pagadas')+btn('pend','Pendientes de pago');
+  document.getElementById('tzF').innerHTML=btn('all','Todas')+btn('ent','Entregadas')+btn('sin','Sin entrega')+btn('paid','Pagadas')+btn('pend','Pendientes de pago')+btn('trf','Transferidas entre closers');
   document.getElementById('tzNote').innerHTML=`${cnt.all} registros (preventas + manuales) &middot; ${cnt.ent} entregados &middot; ${cnt.paid} pagadas &middot; ${cnt.pend} pendientes de pago. Las vinculaciones manuales (c&oacute;nyuge, otro nombre) llevan la marca <span class="tag-manual">Manual</span>.`;
   const q=(document.getElementById('tzQ').value||'').toLowerCase().trim();
-  const rows=all.filter(r=>(_tzFilter==='all'||(_tzFilter==='ent'&&r.ent)||(_tzFilter==='sin'&&!r.ent)||(_tzFilter==='paid'&&r.paid)||(_tzFilter==='pend'&&r.ent&&!r.paid))
-      &&(!q||[r.pv,r.ref,r.emb,r.vend,r.vendPV,r.esp,r.sis,r.fe,r.ent?'entregada':'sin entrega',r.paid?'pagado':(r.ent?'pendiente':'')].join(' ').toLowerCase().includes(q)))
+  const rows=all.filter(r=>(_tzFilter==='all'||(_tzFilter==='ent'&&r.ent)||(_tzFilter==='sin'&&!r.ent)||(_tzFilter==='paid'&&r.paid)||(_tzFilter==='pend'&&r.ent&&!r.paid)||(_tzFilter==='trf'&&r.trf))
+      &&(!q||[r.pv,r.ref,r.emb,r.vend,r.co,r.vendPV,r.esp,r.sis,r.fe,r.ent?'entregada':'sin entrega',r.paid?'pagado':(r.ent?'pendiente':'')].join(' ').toLowerCase().includes(q)))
     .sort((a,b)=>(b.ent?1:0)-(a.ent?1:0)||_feKey(b.fe).localeCompare(_feKey(a.fe)));
   const pagoCell=r=>{
     if(!r.ent)return '<span style="color:var(--muted);font-size:11px">—</span>';
@@ -1512,9 +1558,9 @@ function paintTraza(){
   };
   const estCell=r=>`${r.ent?`<span class="sale-dot">Entregada${r.fe?' '+_h(r.fe):''}</span>`:'<span style="color:var(--amber);font-size:11px;font-weight:600">Sin entrega a&uacute;n</span>'}${r.manual?` <span class="tag-manual">Manual</span> <button class="btn-row btn-del" title="Quitar vinculaci&oacute;n manual" onclick="deleteManual('${r.manId}')">✕</button>`:''}`;
   document.getElementById('tTraza').innerHTML=
-   `<tr><th>#</th><th>Embajador</th><th>Referido</th><th>PV</th><th>Sistema</th><th>Vendedor${vk?' (CLOSER)':''}</th>${vk?'<th>Vendedor preventa</th>':''}<th>Especialidad</th><th>Estado</th><th class="r">Pago</th></tr>`+
-   rows.map((r,i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${_h(r.emb)}</td><td>${_h(r.ref)}</td><td class="lime">${_h(r.pv)}</td><td>${_h(r.sis)}</td><td class="name">${_h(r.vend)}</td>${vk?`<td class="name">${_h(r.vendPV)}</td>`:''}<td>${_h(r.esp)}</td><td>${estCell(r)}</td><td class="r">${pagoCell(r)}</td></tr>`).join('')
-   +(rows.length?'':`<tr><td colspan="${vk?10:9}" style="color:var(--muted);padding:14px 10px">Sin resultados.</td></tr>`);
+   `<tr><th>#</th><th>Embajador</th><th>Referido</th><th>PV</th><th>Sistema</th><th>Closer original</th><th>Closer actual</th>${vk?'<th>Vendedor preventa</th>':''}<th>Especialidad</th><th>Estado</th><th class="r">Pago</th></tr>`+
+   rows.map((r,i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${_h(r.emb)}</td><td>${_h(r.ref)}</td><td class="lime">${_h(r.pv)}</td><td>${_h(r.sis)}</td><td class="name">${_h(r.co)}</td><td class="name">${_h(r.vend)}${r.trf?' <span class="tag-manual" title="Referido transferido: dividir comisión entre closer original y actual">Transferido</span>':''}</td>${vk?`<td class="name">${_h(r.vendPV)}</td>`:''}<td>${_h(r.esp)}</td><td>${estCell(r)}</td><td class="r">${pagoCell(r)}</td></tr>`).join('')
+   +(rows.length?'':`<tr><td colspan="${vk?11:10}" style="color:var(--muted);padding:14px 10px">Sin resultados.</td></tr>`);
 }
 
 
@@ -1539,7 +1585,7 @@ function topRange(){
 function paintTop(){
   const box=document.getElementById('top-box');if(!box)return;
   const pagSet=window._pagSet||new Set();
-  const all=(window._entDet||[]).map(r=>({...r,d:_parseFe(r.fe),paid:!!r.pv&&r.pv!=='—'&&pagSet.has(r.pv)}));
+  const all=(window._entDetAll||window._entDet||[]).map(r=>({...r,d:_parseFe(r.fe),paid:!!r.pv&&r.pv!=='—'&&pagSet.has(r.pv)}));
   box.style.display=all.length?'block':'none';
   const per=[['week','Esta semana'],['prev','Semana pasada'],['month','Este mes'],['30','Últimos 30 días'],['all','Todo'],['custom','Personalizado']];
   document.getElementById('topPer').innerHTML=per.map(([v,l])=>`<button class="cl-btn${_topPer===v?' active':''}" onclick="setTopPer('${v}')">${l}</button>`).join('');
@@ -1569,7 +1615,7 @@ function paintTop(){
 
 /* ════ GESTIÓN PAGOS ════ */
 function renderGestion(k){
-  window._entDet=k.entDet||[];window._pagSet=k.pagSet||new Set();
+  window._entDet=k.entDet||[];window._entDetAll=k.entDetAll||k.entDet||[];window._pagSet=k.pagSet||new Set();
   paintTraza();paintTop();
   if(_manuales.length>0){
     document.getElementById('panelManuales').classList.add('vis');
@@ -1580,9 +1626,7 @@ function renderGestion(k){
 
 function refreshAfterChange(){
   if(!window._rawKPI)return;
-  const k=calcKPIs(window._rawKPI._ref,window._rawKPI._pv,window._rawKPI._reg);
-  ['kEnt','kPag','kMonto'].forEach(id=>{});
-  renderDash(k);
+  refreshDash();
 }
 
 function esc(s){return(s||'').replace(/'/g,"\\'");}
