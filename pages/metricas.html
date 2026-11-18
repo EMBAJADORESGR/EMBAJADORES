@@ -87,6 +87,7 @@ main.page-content{max-width:none!important;width:100%!important;margin-left:0!im
 .fn-grid4 .fn-v{font-size:44px;}.fn-grid4 .fn-cell{padding:22px 24px;}
 @media(max-width:900px){.fn-grid4{grid-template-columns:repeat(2,1fr);}}
 .roi-in{background:var(--faint);border:1px solid var(--border);border-radius:3px;padding:6px 10px;font-size:13px;font-family:var(--ff);color:var(--cream);outline:none;width:150px;}
+.tag-pu{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:3px;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.3);color:#93C5FD;white-space:nowrap;}
 .big-kpis{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0;background:var(--ink1);border:1px solid var(--border);border-top:3px solid var(--lime);margin-bottom:12px;}
 .big-k{padding:26px 32px;text-align:center;}
 .big-l{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--muted);margin-bottom:8px;}
@@ -287,6 +288,7 @@ main.page-content{max-width:none!important;width:100%!important;margin-left:0!im
   <div class="h-tabs">
     <a href="programa.html" class="h-tab">PROGRAMA</a>
     <a href="metricas.html" class="h-tab active">M&Eacute;TRICAS</a>
+    <a href="material-admin.html" class="h-tab">MATERIAL</a>
   </div>
   <div class="h-right">
     <span class="h-user" id="navUser"></span>
@@ -450,12 +452,25 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
         <span style="font-size:10px;color:var(--muted)">Tipo</span>
         <div class="cl-ctrl" id="topTipo" style="margin:0"></div>
+        <span style="font-size:10px;color:var(--muted);margin-left:10px">Puesto</span>
+        <div class="cl-ctrl" id="topPu" style="margin:0"></div>
         <span style="font-size:10px;color:var(--muted);margin-left:10px">Ver</span>
         <div class="cl-ctrl" id="topVer" style="margin:0"></div>
         <input type="text" id="topQ" class="ep-emb-in" style="width:240px;margin-left:auto" placeholder="Buscar embajador..." oninput="paintTop()" autocomplete="off">
       </div>
       <div id="topNote" class="fn-s" style="margin:0 0 10px;"></div>
       <div style="overflow:auto;max-height:520px"><table class="mt" id="tTop"></table></div>
+    </div>
+    <!-- Por puesto -->
+    <div class="cbox" id="pu-box" style="margin-bottom:16px;display:none;">
+      <div class="cbox-header">
+        <div class="cbox-title">POR PUESTO &mdash; QUI&Eacute;N REFIERE Y QUI&Eacute;N CIERRA</div>
+        <label class="btn-add" style="cursor:pointer">Cargar puestos (Excel de actividad)<input type="file" accept=".xls,.xlsx,.csv,.htm,.html" style="display:none" onchange="cargarPuestos(this)"></label>
+      </div>
+      <div class="cl-ctrl" id="puVer" style="margin-bottom:10px"></div>
+      <div id="puNote" class="fn-s" style="margin:0 0 10px;"></div>
+      <div style="overflow-x:auto"><table class="mt" id="tPu"></table></div>
+      <div id="puMiss"></div>
     </div>
     <!-- Padrón de registrados -->
     <div class="cbox" id="reg-box" style="margin-bottom:16px;display:none;">
@@ -500,6 +515,9 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
         <button class="cl-btn" data-esp="Usados" onclick="setClEsp('Usados')">Usados</button>
         <button class="cl-btn" data-esp="Planes de ahorro" onclick="setClEsp('Planes de ahorro')">Planes</button>
         <button class="cl-btn" data-esp="Ventas especiales" onclick="setClEsp('Ventas especiales')">Ventas especiales</button>
+      </div>
+      <div class="cl-ctrl" style="margin-bottom:12px;" id="clPuBox">
+        <span style="font-size:10px;color:var(--muted)">Puesto</span><span id="clPu" style="display:contents"></span>
       </div>
       <div id="clWarn" style="display:none;margin:0 0 12px;padding:10px 14px;border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.08);border-radius:5px;font-size:12px;line-height:1.55;color:var(--amber)"><b>Los datos guardados no tienen vendedor.</b> Se guardaron antes de esta mejora. Sub&iacute; el reporte completo de Referidos / Preventas (con la columna CLOSER) en la carga de archivos y toc&aacute; <b>Procesar</b>: desde ah&iacute; el vendedor queda guardado y no se vuelve a perder.</div>
       <div style="overflow-x:auto"><table class="mt" id="tClosers"></table></div>
@@ -873,8 +891,9 @@ function calcKPIs(ref,pv,reg){
   const revisar=pv.filter(r=>!r._v&&/vinculado|dni igual/i.test(r['Estado']||'')).map(r=>({
     id:+r['ID'],ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`,emb:r._e,closer:((r['CLOSER']||'').trim())||'(sin asignar)',estado:(r['Estado']||'').trim()}));
 
+  const prevByEmb={};pv.forEach(r=>{if(r._v)prevByEmb[r._e]=(prevByEmb[r._e]||0)+1;});
   const refByEmb={};ref.forEach(r=>{refByEmb[r._e]=(refByEmb[r._e]||0)+1;});
-  return{refByEmb,embTipoMap,total:ref.length,totalPV:pv.length,totalEmb:emvs.length,totalReg:regLen,
+  return{refByEmb,prevByEmb,embTipoMap,total:ref.length,totalPV:pv.length,totalEmb:emvs.length,totalReg:regLen,
     empEmb:emvs.filter(e=>e.t!=='Externo').length,extEmb:emvs.filter(e=>e.t==='Externo').length,
     refEmp:ref.filter(r=>r._t!=='Externo').length,refExt:ref.filter(r=>r._t==='Externo').length,
     totalEnt,pagados,montoPend,vincSF:vsf.length,sinVinc:pv.filter(r=>!r._v).length,
@@ -902,6 +921,7 @@ async function fetchRegistrados(){
 }
 async function loadExtras(){
   try{const {data,error}=await _sb.from('emb_pv_manual').select('*');if(!error){_pvMan={};(data||[]).forEach(x=>_pvMan[x.referido_id]=x);}}catch(e){}
+  await loadPuestos();
   try{await fetchRegistrados();}catch(e){_regDb=[];}
 }
 // "17/7/2026" o "17/7/2026 10:32" → fecha (mediodía, hora Argentina)
@@ -989,6 +1009,7 @@ function applyPvOv(pv){
 }
 function refreshDash(){
   const raw=window._rawKPI;if(!raw)return;
+  _pIdx=null;
   const f=applyFilter(raw);
   renderDash(calcKPIs(f._ref,f._pv,f._reg));
 }
@@ -1413,7 +1434,7 @@ function renderDash(k){
   $('kRef').textContent=n(k.totalPV||k.total);
   $('kRefS').textContent=`${n(k.totalPV)-n(k.sinVinc)} con prev · ${n(k.sinVinc)} sin prev (referidos)`;
   renderEstadosPanel(k.est||{}, k.estDet||{}, n(k.totalPV||k.total));
-  window._lastK=k;paintTotal(k);paintRoi(k);
+  window._lastK=k;paintTotal(k);paintRoi(k);paintPuesto(k);
   $('kEnt').textContent=n(k.totalEnt);
   $('kEntS').textContent=`${n(k.entSis)} del reporte + ${n(k.totalEnt)-n(k.entSis)} manuales`;
   $('kPag').textContent=n(k.pagados);
@@ -1483,7 +1504,7 @@ function closersHTML(list,sort,all,esp){
     if(esp==='all')return c;
     const s=c.by&&c.by[esp];
     return s?{...c,ref:s.ref,prev:s.prev,ent:s.ent}:null;
-  }).filter(Boolean);
+  }).filter(Boolean).filter(c=>_clPu==='all'||(c.closer!==SA&&puName(c.closer)===_clPu));
   const ord={ent:['ent','prev','ref'],prev:['prev','ent','ref'],ref:['ref','prev','ent']}[sort]||['ent','prev','ref'];
   const cmp=(a,b)=>(b[ord[0]]-a[ord[0]])||(b[ord[1]]-a[ord[1]])||(b[ord[2]]-a[ord[2]])||a.closer.localeCompare(b.closer,'es');
   const sa=base.filter(c=>c.closer===SA),con=base.filter(c=>c.closer!==SA).sort(cmp);
@@ -1491,13 +1512,13 @@ function closersHTML(list,sort,all,esp){
   const shown=all?rows:(()=>{const top=con.slice(0,15);return sa.length?[...top,...sa]:top;})();
   const pc=(x,ref)=>ref?Math.round(x/ref*100)+'%':'—';
   const cell=(x,ref,dot)=>x?`<span class="${dot?'sale-dot':''}" style="${dot?'':'color:var(--cream);font-weight:600'}">${x}</span> <span style="color:var(--muted);font-size:11px">de ${ref} &middot; ${pc(x,ref)}</span>`:`<span style="color:var(--muted);font-size:11px">0 de ${ref}</span>`;
-  const man=esp==='all'?(window._closersMan||0):0;
+  const man=(esp==='all'&&_clPu==='all')?(window._closersMan||0):0;
   const T={ref:base.reduce((s,c)=>s+c.ref,0),prev:base.reduce((s,c)=>s+c.prev,0)+man,ent:base.reduce((s,c)=>s+c.ent,0)+man,out:base.reduce((s,c)=>s+c.out,0),outEnt:base.reduce((s,c)=>s+c.outEnt,0)};
-  const manRow=man?`<tr style="opacity:.85"><td></td><td class="name">Ventas manuales (sin vendedor)</td><td>&mdash;</td><td class="r" style="color:var(--muted)">&mdash;</td><td class="r"><span style="color:var(--cream);font-weight:600">${man}</span></td><td class="r"><span class="sale-dot">${man}</span></td><td class="r">&mdash;</td><td class="r">&mdash;</td></tr>`:'';
-  const totRow=`<tr style="border-top:2px solid var(--l20)"><td></td><td class="name" style="color:var(--lime)">TOTAL (todos los vendedores${esp==='all'?'':' de esta especialidad'})</td><td></td><td class="lime r">${T.ref}</td><td class="r" style="color:var(--cream);font-weight:700">${T.prev}</td><td class="r"><span class="sale-dot">${T.ent}</span></td><td class="r">${T.out?T.out+' <span style="color:var(--muted);font-size:11px">('+T.outEnt+' ent.)</span>':'&mdash;'}</td><td class="r">${T.out?T.out+' <span style="color:var(--muted);font-size:11px">('+T.outEnt+' ent.)</span>':'&mdash;'}</td></tr>`;
-  return `<tr><th>#</th><th>Vendedor</th><th>Especialidad</th><th class="r">Referidos recibidos</th><th class="r">Con preventa</th><th class="r">Con entrega</th><th class="r" title="Referidos que recibió y pasó a otro vendedor (entregas entre paréntesis)">Cedidos</th><th class="r" title="Referidos que le pasaron otros vendedores (entregas entre paréntesis)">Recibidos por traspaso</th></tr>`+
-    shown.map((r,i)=>{const isSA=r.closer===SA;return `<tr${isSA?' style="opacity:.75"':''}><td class="r" style="color:var(--muted)">${isSA?'':(i+1)}</td><td class="name">${isSA?'Sin vendedor asignado a&uacute;n':_h(r.closer)}</td><td>${_h(r.esp)}</td><td class="lime r">${r.ref}</td><td class="r">${cell(r.prev,r.ref,false)}</td><td class="r">${cell(r.ent,r.ref,true)}</td><td class="r">${r.out?`<span style="color:var(--amber)">${r.out}</span> <span style="color:var(--muted);font-size:11px">(${r.outEnt} ent.)</span>`:'<span style="color:var(--muted)">—</span>'}</td><td class="r">${r.inn?`<span style="color:var(--cream);font-weight:600">${r.inn}</span> <span style="color:var(--muted);font-size:11px">(${r.innEnt} ent.)</span>`:'<span style="color:var(--muted)">—</span>'}</td></tr>`;}).join('')
-    +manRow+(rows.length?totRow:`<tr><td colspan="8" style="color:var(--muted);padding:14px 10px">Sin vendedores para esta especialidad en el per&iacute;odo.</td></tr>`);
+  const manRow=man?`<tr style="opacity:.85"><td></td><td class="name">Ventas manuales (sin vendedor)</td><td>&mdash;</td><td>&mdash;</td><td class="r" style="color:var(--muted)">&mdash;</td><td class="r"><span style="color:var(--cream);font-weight:600">${man}</span></td><td class="r"><span class="sale-dot">${man}</span></td><td class="r">&mdash;</td><td class="r">&mdash;</td></tr>`:'';
+  const totRow=`<tr style="border-top:2px solid var(--l20)"><td></td><td class="name" style="color:var(--lime)">TOTAL (todos los vendedores${esp==='all'&&_clPu==='all'?'':' de este filtro'})</td><td></td><td></td><td class="lime r">${T.ref}</td><td class="r" style="color:var(--cream);font-weight:700">${T.prev}</td><td class="r"><span class="sale-dot">${T.ent}</span></td><td class="r">${T.out?T.out+' <span style="color:var(--muted);font-size:11px">('+T.outEnt+' ent.)</span>':'&mdash;'}</td><td class="r">${T.out?T.out+' <span style="color:var(--muted);font-size:11px">('+T.outEnt+' ent.)</span>':'&mdash;'}</td></tr>`;
+  return `<tr><th>#</th><th>Vendedor</th><th>Puesto</th><th>Especialidad</th><th class="r">Referidos recibidos</th><th class="r">Con preventa</th><th class="r">Con entrega</th><th class="r" title="Referidos que recibió y pasó a otro vendedor (entregas entre paréntesis)">Cedidos</th><th class="r" title="Referidos que le pasaron otros vendedores (entregas entre paréntesis)">Recibidos por traspaso</th></tr>`+
+    shown.map((r,i)=>{const isSA=r.closer===SA;return `<tr${isSA?' style="opacity:.75"':''}><td class="r" style="color:var(--muted)">${isSA?'':(i+1)}</td><td class="name">${isSA?'Sin vendedor asignado a&uacute;n':_h(r.closer)}</td><td>${isSA?'':puTag(r.closer)}</td><td>${_h(r.esp)}</td><td class="lime r">${r.ref}</td><td class="r">${cell(r.prev,r.ref,false)}</td><td class="r">${cell(r.ent,r.ref,true)}</td><td class="r">${r.out?`<span style="color:var(--amber)">${r.out}</span> <span style="color:var(--muted);font-size:11px">(${r.outEnt} ent.)</span>`:'<span style="color:var(--muted)">—</span>'}</td><td class="r">${r.inn?`<span style="color:var(--cream);font-weight:600">${r.inn}</span> <span style="color:var(--muted);font-size:11px">(${r.innEnt} ent.)</span>`:'<span style="color:var(--muted)">—</span>'}</td></tr>`;}).join('')
+    +manRow+(rows.length?totRow:`<tr><td colspan="9" style="color:var(--muted);padding:14px 10px">Sin vendedores para esta especialidad en el per&iacute;odo.</td></tr>`);
 }
 function renderClosers(k){
   const box=document.getElementById('closers-box');if(!box)return;
@@ -1508,7 +1529,8 @@ function renderClosers(k){
 }
 function paintClosers(){
   const l=window._closersData||[];
-  const total=_clEsp==='all'?l.length:l.filter(c=>c.by&&c.by[_clEsp]).length;
+  chipsPu('clPu',_clPu,'setClPu',l.filter(c=>c.closer!=='(sin asignar)').map(c=>puName(c.closer)));
+  const total=(_clEsp==='all'?l:l.filter(c=>c.by&&c.by[_clEsp])).filter(c=>_clPu==='all'||(c.closer!=='(sin asignar)'&&puName(c.closer)===_clPu)).length;
   document.getElementById('tClosers').innerHTML=closersHTML(l,_clSort,_clAll,_clEsp);
   const _w=document.getElementById('clWarn');if(_w)_w.style.display=(l.length&&l.every(c=>c.closer==='(sin asignar)'))?'block':'none';
   const b=document.getElementById('clMore');
@@ -1602,11 +1624,13 @@ function paintTop(){
   document.getElementById('topCustom').style.display=_topPer==='custom'?'inline-flex':'none';
   const rg=topRange();
   const q=(document.getElementById('topQ').value||'').toLowerCase().trim();
-  const rows=all.filter(r=>(!rg||(r.d&&r.d>=rg[0]&&r.d<rg[1]))&&(_topTipo==='all'||(r.tipo||'Empleado')===_topTipo));
+  const puOf=e=>((window._embTipo||{})[e]||'Empleado')==='Externo'?'Externo':puName(e);
+  chipsPu('topPu',_topPu,'setTopPu',[...all.map(r=>puOf(r.emb)),...Object.keys(window._refByEmb||{}).map(puOf)]);
+  const rows=all.filter(r=>(!rg||(r.d&&r.d>=rg[0]&&r.d<rg[1]))&&(_topTipo==='all'||(r.tipo||'Empleado')===_topTipo)&&(_topPu==='all'||puOf(r.emb)===_topPu));
   const g={};
   rows.forEach(r=>{const k=r.emb||'(sin embajador)';const gg=(g[k]=g[k]||{emb:k,tipo:r.tipo||'Empleado',list:[],man:0,paid:0});if(!r.manual)gg.tipo=r.tipo||gg.tipo;gg.list.push(r);if(r.manual)g[k].man++;if(r.paid)g[k].paid++;});
   const rbe=window._refByEmb||{},etp=window._embTipo||{};
-  if(_topVer==='all')Object.keys(rbe).forEach(e=>{if(!g[e]&&(_topTipo==='all'||(etp[e]||'Empleado')===_topTipo))g[e]={emb:e,tipo:etp[e]||'Empleado',list:[],man:0,paid:0};});
+  if(_topVer==='all')Object.keys(rbe).forEach(e=>{if(!g[e]&&(_topTipo==='all'||(etp[e]||'Empleado')===_topTipo)&&(_topPu==='all'||puOf(e)===_topPu))g[e]={emb:e,tipo:etp[e]||'Empleado',list:[],man:0,paid:0};});
   let top=Object.values(g).sort((a,b)=>b.list.length-a.list.length||(rbe[b.emb]||0)-(rbe[a.emb]||0)||b.paid-a.paid||a.emb.localeCompare(b.emb,'es'));
   const tot=rows.length,totPaid=rows.filter(r=>r.paid).length,totMan=rows.filter(r=>r.manual).length;
   const undated=all.filter(r=>!r.d).length;
@@ -1614,16 +1638,104 @@ function paintTop(){
   if(q)top=top.filter(x=>x.emb.toLowerCase().includes(q));
   const rowsHtml=top.map((x,i)=>{
     const key=encodeURIComponent(x.emb),open=!!_topOpen[x.emb];
-    let h=`<tr style="cursor:pointer" onclick="toggleTop('${key}')"><td class="r" style="color:var(--muted)">${i+1}</td><td class="name" style="${x.tipo==='Externo'?'color:#ffffff':'color:var(--lime)'}">${open?'▾':'▸'} ${_h(x.emb)}</td><td>${_h(x.tipo)}</td><td class="lime r">${rbe[x.emb]||0}</td><td class="r">${x.list.length?`<span class="sale-dot">${x.list.length}</span>`:'<span style="color:var(--muted)">—</span>'}</td><td class="r" style="color:var(--muted);font-size:11px">${rbe[x.emb]?Math.round(x.list.length/rbe[x.emb]*100)+'%':'—'}</td><td class="r">${x.man?`<span class="tag-manual">${x.man} manual${x.man>1?'es':''}</span>`:'<span style="color:var(--muted)">—</span>'}</td><td class="r">$${(x.list.length*0.5).toFixed(1).replace(/\.0$/,'')}M</td><td class="r">${x.paid} de ${x.list.length}</td></tr>`;
+    let h=`<tr style="cursor:pointer" onclick="toggleTop('${key}')"><td class="r" style="color:var(--muted)">${i+1}</td><td class="name" style="${x.tipo==='Externo'?'color:#ffffff':'color:var(--lime)'}">${open?'▾':'▸'} ${_h(x.emb)}</td><td>${_h(x.tipo)}</td><td>${x.tipo==='Externo'?'<span style="color:var(--muted);font-size:11px">—</span>':puTag(x.emb)}</td><td class="lime r">${rbe[x.emb]||0}</td><td class="r">${x.list.length?`<span class="sale-dot">${x.list.length}</span>`:'<span style="color:var(--muted)">—</span>'}</td><td class="r" style="color:var(--muted);font-size:11px">${rbe[x.emb]?Math.round(x.list.length/rbe[x.emb]*100)+'%':'—'}</td><td class="r">${x.man?`<span class="tag-manual">${x.man} manual${x.man>1?'es':''}</span>`:'<span style="color:var(--muted)">—</span>'}</td><td class="r">$${(x.list.length*0.5).toFixed(1).replace(/\.0$/,'')}M</td><td class="r">${x.paid} de ${x.list.length}</td></tr>`;
     if(open){
       const det=x.list.slice().sort((a,b)=>(b.d?b.d.getTime():0)-(a.d?a.d.getTime():0)).map(r=>`<tr><td>${_h(r.ref)}</td><td class="lime">${_h(r.pv)}</td><td>${_h(r.sis)}</td><td>${_fmtFe(r.d)}</td><td>${r.paid?'<span class="tag-paid">✓ Pagado</span>':'<span style="color:var(--amber);font-size:11px">Pendiente</span>'}</td><td class="r">${r.manual?`<span class="tag-manual">Manual</span> <button class="btn-row" title="Editar" onclick="event.stopPropagation();editManual('${r.manId}')">✎</button> <button class="btn-row btn-del" title="Quitar" onclick="event.stopPropagation();deleteManual('${r.manId}')">✕</button>`:'<span style="color:var(--muted);font-size:10px">Auto</span>'}</td></tr>`).join('');
-      h+=`<tr><td></td><td colspan="8" style="padding:6px 0 14px"><table class="mt" style="width:100%"><tr><th>Referido</th><th>PV</th><th>Sistema</th><th>Fecha entrega</th><th>Pago</th><th class="r">Origen</th></tr>${det}</table><button class="btn-row" style="margin-top:8px" onclick="event.stopPropagation();openModal(decodeURIComponent('${key}'))">+ Sumar venta manual a este embajador</button></td></tr>`;
+      h+=`<tr><td></td><td colspan="9" style="padding:6px 0 14px"><table class="mt" style="width:100%"><tr><th>Referido</th><th>PV</th><th>Sistema</th><th>Fecha entrega</th><th>Pago</th><th class="r">Origen</th></tr>${det}</table><button class="btn-row" style="margin-top:8px" onclick="event.stopPropagation();openModal(decodeURIComponent('${key}'))">+ Sumar venta manual a este embajador</button></td></tr>`;
     }
     return h;
   }).join('');
-  document.getElementById('tTop').innerHTML=`<tr><th>#</th><th>Embajador</th><th>Tipo</th><th class="r">Referidos</th><th class="r">Entregas</th><th class="r">% conv.</th><th class="r">Manuales</th><th class="r">Devengado</th><th class="r">Pagadas</th></tr>`+rowsHtml+(top.length?'':`<tr><td colspan="9" style="color:var(--muted);padding:14px 10px">Sin entregas en este per&iacute;odo.</td></tr>`);
+  document.getElementById('tTop').innerHTML=`<tr><th>#</th><th>Embajador</th><th>Tipo</th><th>Puesto</th><th class="r">Referidos</th><th class="r">Entregas</th><th class="r">% conv.</th><th class="r">Manuales</th><th class="r">Devengado</th><th class="r">Pagadas</th></tr>`+rowsHtml+(top.length?'':`<tr><td colspan="10" style="color:var(--muted);padding:14px 10px">Sin entregas en este per&iacute;odo.</td></tr>`);
 }
 
+
+
+/* ════ PUESTOS (Setter / Fisher / Closer / Zonal …) ════ */
+let _puestos=[],_pIdx=null,_pCache={},_puVer='emb',_clPu='all',_topPu='all';
+const _pTok=s=>[...new Set(String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z ]/g,' ').split(/\s+/).filter(w=>w.length>1))];
+const PUESTO_BASE=['setter','fisher','closer','zonal','comprador','vendedor','responsable','gerente','supervisor','jefe'];
+function puestoBase(p){const l=String(p||'').toLowerCase();for(const b of PUESTO_BASE)if(l.includes(b))return b[0].toUpperCase()+b.slice(1);return String(p||'').trim()?'No comercial':'';}
+async function loadPuestos(){try{const {data,error}=await _sb.from('emb_puestos').select('*');if(!error)_puestos=data||[];}catch(e){}_pIdx=null;}
+function _pBuild(){
+  _pIdx=[];_pCache={};
+  _puestos.forEach(p=>{const pu=puestoBase(p.puesto);if(pu)_pIdx.push({set:_pTok(p.nombre),puesto:pu,salon:p.salon||'',pri:1});});
+  (typeof _regDb!=='undefined'?_regDb:[]).forEach(r=>{const pu=puestoBase(r.puesto);if(pu)_pIdx.push({set:_pTok((r.nombre||'')+' '+(r.apellido||'')),puesto:pu,salon:[r.puesto,r.unidad].filter(Boolean).join(' · '),pri:0});});
+}
+// Cruza por nombre sin importar el orden (Apellido Nombre / Nombre Apellido) ni nombres de más o de menos
+function puestoDe(name){
+  if(!name||name==='(sin asignar)')return null;
+  if(!_pIdx)_pBuild();
+  if(name in _pCache)return _pCache[name];
+  const t=_pTok(name);let res=null;
+  if(t.length>=2){
+    let best=0,bests=[];
+    _pIdx.forEach(e=>{
+      const inter=t.filter(w=>e.set.includes(w)).length;
+      if(inter<2||inter<Math.min(t.length,e.set.length))return;
+      const sc=inter/(t.length+e.set.length-inter)+e.pri*0.5;
+      if(sc>best+1e-9){best=sc;bests=[e];}else if(Math.abs(sc-best)<1e-9)bests.push(e);
+    });
+    if(bests.length&&new Set(bests.map(b=>b.puesto)).size===1)res={puesto:bests[0].puesto,salon:bests[0].salon};
+  }
+  return _pCache[name]=res;
+}
+const puTag=n=>{const p=puestoDe(n);return p?`<span class="tag-pu" title="${_h(p.salon)}">${_h(p.puesto)}</span>`:'<span style="color:var(--muted);font-size:11px">—</span>';};
+const puName=n=>{const p=puestoDe(n);return p?p.puesto:'Sin puesto';};
+function chipsPu(id,cur,fn,names){
+  const u=[...new Set(names)].sort((a,b)=>(a==='Sin puesto')-(b==='Sin puesto')||a.localeCompare(b,'es'));
+  document.getElementById(id).innerHTML=[['all','Todos'],...u.map(x=>[x,x])].map(([v,l])=>`<button class="cl-btn${cur===v?' active':''}" data-v="${_h(v)}" onclick="${fn}(this.dataset.v)">${_h(l)}</button>`).join('');
+}
+function setClPu(v){_clPu=v;paintClosers();}
+function setTopPu(v){_topPu=v;paintTop();}
+function setPuVer(v){_puVer=v;paintPuesto(window._lastK);}
+async function cargarPuestos(inp){
+  const f=inp.files[0];if(!f)return;inp.value='';
+  try{
+    const rows=await readTable(f),by={};
+    rows.forEach(r=>{
+      const g=n=>{const k=Object.keys(r).find(x=>String(x).trim().toUpperCase()===n);return k?String(r[k]).trim():'';};
+      const nom=g('VENDEDOR'),pu=g('PUESTO');if(!nom||!pu)return;
+      const fe=_parseFe(g('FECHA')),key=_pTok(nom).sort().join(' ');
+      if(!by[key]||(fe&&(!by[key]._f||fe>by[key]._f)))by[key]={nk:key,nombre:nom,salon:g('SALON'),puesto:pu,fecha:g('FECHA'),_f:fe,updated_at:new Date().toISOString()};
+    });
+    const up=Object.values(by).map(({_f,...x})=>x);
+    if(!up.length)return alert('No encontré las columnas VENDEDOR y PUESTO en el archivo.');
+    const {error}=await _sb.from('emb_puestos').upsert(up,{onConflict:'nk'});
+    if(error)return alert('No se pudo guardar: '+error.message+'\n¿Corriste supabase_puestos.sql en Supabase?');
+    await loadPuestos();alert(up.length+' personas con puesto cargadas.');refreshDash();
+  }catch(e){alert('No se pudo leer el archivo: '+e.message);}
+}
+function paintPuesto(k){
+  const box=document.getElementById('pu-box');if(!box||!k)return;
+  box.style.display='block';
+  document.getElementById('puVer').innerHTML=[['emb','Como embajador (empleados)'],['ven','Como vendedor (closer)']].map(([v,l])=>`<button class="cl-btn${_puVer===v?' active':''}" onclick="setPuVer('${v}')">${l}</button>`).join('');
+  const etp=k.embTipoMap||{},pct=(a,b)=>b?Math.round(a/b*100)+'%':'—';
+  const G={};const get=p=>G[p]||(G[p]={puesto:p,n:0,ref:0,prev:0,ent:0,paid:0});
+  let missing=[],noteTxt='';
+  if(_puVer==='emb'){
+    const ent={},paidE={},manE={};
+    (k.entDet||[]).forEach(r=>{ent[r.emb]=(ent[r.emb]||0)+1;if(r.manual)manE[r.emb]=(manE[r.emb]||0)+1;if(r.pv&&r.pv!=='—'&&k.pagSet&&k.pagSet.has(r.pv))paidE[r.emb]=(paidE[r.emb]||0)+1;});
+    const names=new Set([...Object.keys(k.refByEmb||{}),...Object.keys(ent)]);
+    names.forEach(e=>{
+      if((etp[e]||(( (k.entDet||[]).find(r=>r.emb===e)||{}).tipo)||'Empleado')==='Externo')return;
+      const g=get(puName(e));g.n++;g.ref+=(k.refByEmb||{})[e]||0;g.prev+=((k.prevByEmb||{})[e]||0)+(manE[e]||0);g.ent+=ent[e]||0;g.paid+=paidE[e]||0;
+      if(!puestoDe(e))missing.push([e,(k.refByEmb||{})[e]||0,ent[e]||0]);
+    });
+    noteTxt='Empleados que ya refirieron o tienen entregas, agrupados por el puesto que ocupan. Los externos no se incluyen.';
+  }else{
+    (k.closers||[]).forEach(c=>{if(c.closer==='(sin asignar)')return;const g=get(puName(c.closer));g.n++;g.ref+=c.ref;g.prev+=c.prev;g.ent+=c.ent;if(!puestoDe(c.closer))missing.push([c.closer,c.ref,c.ent]);});
+    noteTxt='Vendedores que recibieron referidos, agrupados por puesto. No incluye las ventas manuales (no tienen vendedor).';
+  }
+  const rows=Object.values(G).sort((a,b)=>(a.puesto==='Sin puesto')-(b.puesto==='Sin puesto')||b.ent-a.ent||b.ref-a.ref);
+  const T=rows.reduce((s,r)=>({n:s.n+r.n,ref:s.ref+r.ref,prev:s.prev+r.prev,ent:s.ent+r.ent,paid:s.paid+r.paid}),{n:0,ref:0,prev:0,ent:0,paid:0});
+  const emb=_puVer==='emb';
+  document.getElementById('puNote').innerHTML=noteTxt+(_puestos.length?` &middot; ${_puestos.length} personas con puesto cargado.`:' <span style="color:var(--amber)">Todav&iacute;a no cargaste el Excel de puestos: se usa solo el puesto del padr&oacute;n de registrados.</span>');
+  const line=r=>`<tr><td class="name">${r.puesto==='Sin puesto'?'<span style="color:var(--muted)">Sin puesto identificado</span>':_h(r.puesto)}</td><td class="r">${r.n}</td><td class="lime r">${r.ref}</td><td class="r">${r.prev}</td><td class="r">${r.ent?`<span class="sale-dot">${r.ent}</span>`:'<span style="color:var(--muted)">—</span>'}</td><td class="r" style="color:var(--muted)">${pct(r.ent,r.ref)}</td>${emb?`<td class="r">${r.paid}</td><td class="r">$${(r.ent*0.5).toFixed(1).replace(/\.0$/,'')}M</td>`:''}</tr>`;
+  document.getElementById('tPu').innerHTML=`<tr><th>Puesto</th><th class="r">${emb?'Embajadores':'Vendedores'}</th><th class="r">Referidos</th><th class="r">Preventas</th><th class="r">Entregas</th><th class="r">% conv.</th>${emb?'<th class="r">Pagadas</th><th class="r">Inversi&oacute;n</th>':''}</tr>`+rows.map(line).join('')+
+    `<tr style="border-top:2px solid var(--l20)"><td class="name" style="color:var(--lime)">TOTAL</td><td class="r">${T.n}</td><td class="lime r">${T.ref}</td><td class="r">${T.prev}</td><td class="r"><span class="sale-dot">${T.ent}</span></td><td class="r" style="color:var(--muted)">${pct(T.ent,T.ref)}</td>${emb?`<td class="r">${T.paid}</td><td class="r">$${(T.ent*0.5).toFixed(1).replace(/\.0$/,'')}M</td>`:''}</tr>`;
+  missing.sort((a,b)=>b[1]-a[1]||b[2]-a[2]);
+  document.getElementById('puMiss').innerHTML=missing.length?`<details class="fn-rev"><summary>${missing.length} sin puesto identificado &mdash; revisar (no est&aacute;n en el Excel de puestos ni en el padr&oacute;n, o el nombre no coincide)</summary><table class="mt"><tr><th>Nombre</th><th class="r">Referidos</th><th class="r">Entregas</th></tr>${missing.map(m=>`<tr><td class="name">${_h(m[0])}</td><td class="r">${m[1]}</td><td class="r">${m[2]}</td></tr>`).join('')}</table></details>`:'';
+}
 
 /* ════ TOTAL EMBAJADORES + ROI ════ */
 const COSTO_EMB=500000;
