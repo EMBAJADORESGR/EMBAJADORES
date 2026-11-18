@@ -73,6 +73,9 @@
 .snap-btn:hover{border-color:var(--lime);color:var(--cream);}
 .snap-btn.active{background:var(--lime);border-color:var(--lime);color:var(--ink);font-weight:700;}
 /* KPIs */
+/* Ancho completo: sin márgenes laterales vacíos */
+main.page-content{max-width:none!important;width:100%!important;margin-left:0!important;margin-right:0!important;padding-left:24px!important;padding-right:24px!important;box-sizing:border-box;}
+@media(max-width:700px){main.page-content{padding-left:12px!important;padding-right:12px!important;}}
 #met-dashboard{display:none;}
 #met-dashboard.vis{display:block;}
 .kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);margin-bottom:1px;}
