@@ -433,7 +433,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     <!-- Top embajadores por entregas -->
     <div class="cbox" id="top-box" style="margin-bottom:16px;display:none;">
       <div class="cbox-header">
-        <div class="cbox-title">TOP EMBAJADORES &mdash; ENTREGAS (INCLUYE VENTAS MANUALES)</div>
+        <div class="cbox-title">TOP EMBAJADORES &mdash; REFERIDOS Y ENTREGAS (INCLUYE VENTAS MANUALES)</div>
         <button class="btn-add" onclick="openModal()">
           <svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-width="1.5"/></svg>
           Agregar venta manual
@@ -450,6 +450,8 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
         <span style="font-size:10px;color:var(--muted)">Tipo</span>
         <div class="cl-ctrl" id="topTipo" style="margin:0"></div>
+        <span style="font-size:10px;color:var(--muted);margin-left:10px">Ver</span>
+        <div class="cl-ctrl" id="topVer" style="margin:0"></div>
         <input type="text" id="topQ" class="ep-emb-in" style="width:240px;margin-left:auto" placeholder="Buscar embajador..." oninput="paintTop()" autocomplete="off">
       </div>
       <div id="topNote" class="fn-s" style="margin:0 0 10px;"></div>
@@ -527,14 +529,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div style="overflow-x:auto"><table class="mt" id="tVend"></table></div>
     </div>
     <!-- Tables -->
-    <div class="cg cg-2">
-      <div class="cbox"><div class="cbox-title">POR TEAM (CRM)</div><div style="overflow-x:auto"><table class="mt" id="tTeams"></table></div></div>
-      <div class="cbox"><div class="cbox-title">TOP EMPLEADOS — REFS Y VENTAS EFECTIVAS</div><div style="overflow-x:auto"><table class="mt" id="tTopEmpl"></table></div></div>
-    </div>
-    <div class="cbox" style="margin-bottom:10px;">
-      <div class="cbox-title">EMBAJADORES EXTERNOS — REFS Y VENTAS EFECTIVAS</div>
-      <div style="overflow-x:auto"><table class="mt" id="tExt"></table></div>
-    </div>
+    <div class="cbox" style="margin-bottom:10px;"><div class="cbox-title">POR TEAM (CRM)</div><div style="overflow-x:auto"><table class="mt" id="tTeams"></table></div></div>
     <!-- Manuales -->
     <div class="gestion-panel" id="panelManuales">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -848,13 +843,19 @@ function calcKPIs(ref,pv,reg){
     if(!_cl[c].by[cat])_cl[c].by[cat]={ref:0,prev:0,ent:0};
     _cl[c].ref++;_cl[c].by[cat].ref++;
     if(r._v){_cl[c].prev++;_cl[c].by[cat].prev++;}
-    if(r._v&&r._fe){_cl[c].ent++;_cl[c].by[cat].ent++;}
+    if(!rg&&r._v&&r._fe){_cl[c].ent++;_cl[c].by[cat].ent++;}
     const co=(r._co||'').trim();
     if(co&&co!==c&&c!=='(sin asignar)'){            // transferido: el original cedió, el actual recibió
       if(!_cl[co])_cl[co]={closer:co,ref:0,prev:0,ent:0,by:{},out:0,outEnt:0,inn:0,innEnt:0};
       _cl[co].out++;_cl[c].inn++;if(r._v&&r._fe){_cl[co].outEnt++;_cl[c].innEnt++;}
     }
   });
+  if(rg)ent.forEach(r=>{            // con período: las entregas se cuentan por fecha de entrega (igual que el KPI)
+    const c=((r['CLOSER']||'').trim())||'(sin asignar)';
+    if(!_cl[c])_cl[c]={closer:c,ref:0,prev:0,ent:0,by:{},out:0,outEnt:0,inn:0,innEnt:0};
+    const cat=espDe((r['PERFIL CRM']||'').trim());
+    if(!_cl[c].by[cat])_cl[c].by[cat]={ref:0,prev:0,ent:0};
+    _cl[c].ent++;_cl[c].by[cat].ent++;});
   const closers=Object.values(_cl);
   closers.forEach(c=>{
     const cats=Object.entries(c.by).sort((a,b)=>b[1].ref-a[1].ref);
@@ -872,12 +873,13 @@ function calcKPIs(ref,pv,reg){
   const revisar=pv.filter(r=>!r._v&&/vinculado|dni igual/i.test(r['Estado']||'')).map(r=>({
     id:+r['ID'],ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`,emb:r._e,closer:((r['CLOSER']||'').trim())||'(sin asignar)',estado:(r['Estado']||'').trim()}));
 
-  return{total:ref.length,totalPV:pv.length,totalEmb:emvs.length,totalReg:regLen,
+  const refByEmb={};ref.forEach(r=>{refByEmb[r._e]=(refByEmb[r._e]||0)+1;});
+  return{refByEmb,embTipoMap,total:ref.length,totalPV:pv.length,totalEmb:emvs.length,totalReg:regLen,
     empEmb:emvs.filter(e=>e.t!=='Externo').length,extEmb:emvs.filter(e=>e.t==='Externo').length,
     refEmp:ref.filter(r=>r._t!=='Externo').length,refExt:ref.filter(r=>r._t==='Externo').length,
     totalEnt,pagados,montoPend,vincSF:vsf.length,sinVinc:pv.filter(r=>!r._v).length,
     embConPV,embPagados,embConPrev,closers,revisar,prevDet,vendKey,vinc:pv.filter(r=>r._v).length,entSis:ent.length,
-    est,estDet,ops,tm,sis,topAll,topExt,entDet,entDetAll,pagSet,pagosPer:pagosPer.length,pagosPerEmb,rangoActivo:!!rg};
+    est,estDet,ops,tm,sis,topAll,topExt,manEnt:totalEnt-ent.length,entDet,entDetAll,pagSet,pagosPer:pagosPer.length,pagosPerEmb,rangoActivo:!!rg};
 }
 
 
@@ -1431,23 +1433,6 @@ function renderDash(k){
   const tms=Object.entries(k.tm).sort((a,b)=>b[1]-a[1]);
   $('tTeams').innerHTML=`<tr><th>#</th><th>Team</th><th class="r">Refs</th><th class="r">%</th></tr>`+
     tms.map(([t,n],i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${t}</td><td class="lime">${n}</td><td class="r">${(n/k.total*100).toFixed(0)}%</td></tr>`).join('');
-  // Mapa ventas por embajador
-  const sv={};
-  k.entDet.forEach(r=>{sv[r.emb]=(sv[r.emb]||0)+1;});
-  // Top empleados con ventas
-  if($('tTopEmpl')){
-    $('tTopEmpl').innerHTML=`<tr><th>#</th><th>Embajador</th><th class="r">Refs</th><th class="r">Ventas</th></tr>`+
-      k.topAll.map(([n,v],i)=>{
-        const s=sv[n]||0;
-        return `<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${n}</td><td class="lime">${v}</td><td class="r">${s>0?`<span class="sale-dot">${s}</span>`:'<span style="color:var(--muted);font-size:10px">—</span>'}</td></tr>`;
-      }).join('');
-  }
-  // Externos con ventas
-  $('tExt').innerHTML=`<tr><th>#</th><th>Embajador externo</th><th class="r">Refs</th><th class="r">Ventas</th></tr>`+
-    k.topExt.map(([n,v],i)=>{
-      const s=sv[n]||0;
-      return `<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${n}</td><td class="lime">${v}</td><td class="r">${s>0?`<span class="sale-dot">${s}</span>`:'<span style="color:var(--muted);font-size:10px">—</span>'}</td></tr>`;
-    }).join('');
   renderEmbudo(k);
   renderRegistro();addTips();
   renderClosers(k);
@@ -1481,7 +1466,7 @@ function renderEmbudo(k){
   document.getElementById('embudo-grid').innerHTML=embudoHTML(k);
   document.getElementById('embudo-rev').innerHTML=revisarHTML(k);
 }
-let _clSort='ref',_clAll=false,_clEsp='all';
+let _clSort='ent',_clAll=false,_clEsp='all';
 // Especialidad según el team del CRM (PERFIL CRM)
 function espDe(p){
   const l=(p||'').toLowerCase();
@@ -1499,19 +1484,24 @@ function closersHTML(list,sort,all,esp){
     const s=c.by&&c.by[esp];
     return s?{...c,ref:s.ref,prev:s.prev,ent:s.ent}:null;
   }).filter(Boolean);
-  const cmp=(a,b)=>(b[sort]-a[sort])||(b.ref-a.ref)||(b.prev-a.prev)||(b.ent-a.ent)||a.closer.localeCompare(b.closer,'es');
+  const ord={ent:['ent','prev','ref'],prev:['prev','ent','ref'],ref:['ref','prev','ent']}[sort]||['ent','prev','ref'];
+  const cmp=(a,b)=>(b[ord[0]]-a[ord[0]])||(b[ord[1]]-a[ord[1]])||(b[ord[2]]-a[ord[2]])||a.closer.localeCompare(b.closer,'es');
   const sa=base.filter(c=>c.closer===SA),con=base.filter(c=>c.closer!==SA).sort(cmp);
   const rows=[...con,...sa];                      // "sin asignar" siempre al final
   const shown=all?rows:(()=>{const top=con.slice(0,15);return sa.length?[...top,...sa]:top;})();
   const pc=(x,ref)=>ref?Math.round(x/ref*100)+'%':'—';
   const cell=(x,ref,dot)=>x?`<span class="${dot?'sale-dot':''}" style="${dot?'':'color:var(--cream);font-weight:600'}">${x}</span> <span style="color:var(--muted);font-size:11px">de ${ref} &middot; ${pc(x,ref)}</span>`:`<span style="color:var(--muted);font-size:11px">0 de ${ref}</span>`;
+  const man=esp==='all'?(window._closersMan||0):0;
+  const T={ref:base.reduce((s,c)=>s+c.ref,0),prev:base.reduce((s,c)=>s+c.prev,0)+man,ent:base.reduce((s,c)=>s+c.ent,0)+man,out:base.reduce((s,c)=>s+c.out,0),outEnt:base.reduce((s,c)=>s+c.outEnt,0)};
+  const manRow=man?`<tr style="opacity:.85"><td></td><td class="name">Ventas manuales (sin vendedor)</td><td>&mdash;</td><td class="r" style="color:var(--muted)">&mdash;</td><td class="r"><span style="color:var(--cream);font-weight:600">${man}</span></td><td class="r"><span class="sale-dot">${man}</span></td><td class="r">&mdash;</td><td class="r">&mdash;</td></tr>`:'';
+  const totRow=`<tr style="border-top:2px solid var(--l20)"><td></td><td class="name" style="color:var(--lime)">TOTAL (todos los vendedores${esp==='all'?'':' de esta especialidad'})</td><td></td><td class="lime r">${T.ref}</td><td class="r" style="color:var(--cream);font-weight:700">${T.prev}</td><td class="r"><span class="sale-dot">${T.ent}</span></td><td class="r">${T.out?T.out+' <span style="color:var(--muted);font-size:11px">('+T.outEnt+' ent.)</span>':'&mdash;'}</td><td class="r">${T.out?T.out+' <span style="color:var(--muted);font-size:11px">('+T.outEnt+' ent.)</span>':'&mdash;'}</td></tr>`;
   return `<tr><th>#</th><th>Vendedor</th><th>Especialidad</th><th class="r">Referidos recibidos</th><th class="r">Con preventa</th><th class="r">Con entrega</th><th class="r" title="Referidos que recibió y pasó a otro vendedor (entregas entre paréntesis)">Cedidos</th><th class="r" title="Referidos que le pasaron otros vendedores (entregas entre paréntesis)">Recibidos por traspaso</th></tr>`+
     shown.map((r,i)=>{const isSA=r.closer===SA;return `<tr${isSA?' style="opacity:.75"':''}><td class="r" style="color:var(--muted)">${isSA?'':(i+1)}</td><td class="name">${isSA?'Sin vendedor asignado a&uacute;n':_h(r.closer)}</td><td>${_h(r.esp)}</td><td class="lime r">${r.ref}</td><td class="r">${cell(r.prev,r.ref,false)}</td><td class="r">${cell(r.ent,r.ref,true)}</td><td class="r">${r.out?`<span style="color:var(--amber)">${r.out}</span> <span style="color:var(--muted);font-size:11px">(${r.outEnt} ent.)</span>`:'<span style="color:var(--muted)">—</span>'}</td><td class="r">${r.inn?`<span style="color:var(--cream);font-weight:600">${r.inn}</span> <span style="color:var(--muted);font-size:11px">(${r.innEnt} ent.)</span>`:'<span style="color:var(--muted)">—</span>'}</td></tr>`;}).join('')
-    +(rows.length?'':`<tr><td colspan="8" style="color:var(--muted);padding:14px 10px">Sin vendedores para esta especialidad en el per&iacute;odo.</td></tr>`);
+    +manRow+(rows.length?totRow:`<tr><td colspan="8" style="color:var(--muted);padding:14px 10px">Sin vendedores para esta especialidad en el per&iacute;odo.</td></tr>`);
 }
 function renderClosers(k){
   const box=document.getElementById('closers-box');if(!box)return;
-  window._closersData=k.closers||[];
+  window._closersData=k.closers||[];window._closersMan=k.manEnt||0;
   box.style.display=window._closersData.length?'block':'none';
   paintClosers();
   renderPrevDet(k);
@@ -1582,7 +1572,8 @@ function paintTraza(){
 
 
 /* ════ TOP EMBAJADORES — ENTREGAS (período + ventas manuales) ════ */
-let _topPer='all',_topTipo='all',_topOpen={};
+let _topPer='all',_topTipo='all',_topOpen={},_topVer='ent';
+function setTopVer(v){_topVer=v;paintTop();}
 const _parseFe=s=>{s=String(s||'').trim();let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);
   m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);if(m){let y=+m[3];if(y<100)y+=2000;return new Date(y,+m[2]-1,+m[1]);}return null;};
 const _fmtFe=d=>d?`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`:'sin fecha';
@@ -1607,27 +1598,30 @@ function paintTop(){
   const per=[['week','Esta semana'],['prev','Semana pasada'],['month','Este mes'],['30','Últimos 30 días'],['all','Todo'],['custom','Personalizado']];
   document.getElementById('topPer').innerHTML=per.map(([v,l])=>`<button class="cl-btn${_topPer===v?' active':''}" onclick="setTopPer('${v}')">${l}</button>`).join('');
   document.getElementById('topTipo').innerHTML=[['all','Todos'],['Empleado','Empleados'],['Externo','Externos']].map(([v,l])=>`<button class="cl-btn${_topTipo===v?' active':''}" onclick="setTopTipo('${v}')">${l}</button>`).join('');
+  document.getElementById('topVer').innerHTML=[['ent','Con entregas'],['all','Todos los que refirieron']].map(([v,l])=>`<button class="cl-btn${_topVer===v?' active':''}" onclick="setTopVer('${v}')">${l}</button>`).join('');
   document.getElementById('topCustom').style.display=_topPer==='custom'?'inline-flex':'none';
   const rg=topRange();
   const q=(document.getElementById('topQ').value||'').toLowerCase().trim();
   const rows=all.filter(r=>(!rg||(r.d&&r.d>=rg[0]&&r.d<rg[1]))&&(_topTipo==='all'||(r.tipo||'Empleado')===_topTipo));
   const g={};
   rows.forEach(r=>{const k=r.emb||'(sin embajador)';const gg=(g[k]=g[k]||{emb:k,tipo:r.tipo||'Empleado',list:[],man:0,paid:0});if(!r.manual)gg.tipo=r.tipo||gg.tipo;gg.list.push(r);if(r.manual)g[k].man++;if(r.paid)g[k].paid++;});
-  let top=Object.values(g).sort((a,b)=>b.list.length-a.list.length||b.paid-a.paid||a.emb.localeCompare(b.emb,'es'));
+  const rbe=window._refByEmb||{},etp=window._embTipo||{};
+  if(_topVer==='all')Object.keys(rbe).forEach(e=>{if(!g[e]&&(_topTipo==='all'||(etp[e]||'Empleado')===_topTipo))g[e]={emb:e,tipo:etp[e]||'Empleado',list:[],man:0,paid:0};});
+  let top=Object.values(g).sort((a,b)=>b.list.length-a.list.length||(rbe[b.emb]||0)-(rbe[a.emb]||0)||b.paid-a.paid||a.emb.localeCompare(b.emb,'es'));
   const tot=rows.length,totPaid=rows.filter(r=>r.paid).length,totMan=rows.filter(r=>r.manual).length;
   const undated=all.filter(r=>!r.d).length;
   document.getElementById('topNote').innerHTML=`<b style="color:var(--cream)">${tot}</b> entregas de <b style="color:var(--cream)">${top.length}</b> embajadores${rg?'':' (todo el hist&oacute;rico)'} &middot; ${totMan} manuales &middot; ${totPaid} pagadas &middot; ${tot-totPaid} pendientes de pago &middot; $${((tot*500000)/1e6).toFixed(1)}M devengado ($500.000 c/u)${rg&&undated?` &middot; <span style="color:var(--amber)">${undated} entrega${undated>1?'s':''} sin fecha fuera de este per&iacute;odo</span>`:''}`;
   if(q)top=top.filter(x=>x.emb.toLowerCase().includes(q));
   const rowsHtml=top.map((x,i)=>{
     const key=encodeURIComponent(x.emb),open=!!_topOpen[x.emb];
-    let h=`<tr style="cursor:pointer" onclick="toggleTop('${key}')"><td class="r" style="color:var(--muted)">${i+1}</td><td class="name" style="${x.tipo==='Externo'?'color:#ffffff':'color:var(--lime)'}">${open?'▾':'▸'} ${_h(x.emb)}</td><td>${_h(x.tipo)}</td><td class="r"><span class="sale-dot">${x.list.length}</span></td><td class="r">${x.man?`<span class="tag-manual">${x.man} manual${x.man>1?'es':''}</span>`:'<span style="color:var(--muted)">—</span>'}</td><td class="r">$${(x.list.length*0.5).toFixed(1).replace(/\.0$/,'')}M</td><td class="r">${x.paid} de ${x.list.length}</td></tr>`;
+    let h=`<tr style="cursor:pointer" onclick="toggleTop('${key}')"><td class="r" style="color:var(--muted)">${i+1}</td><td class="name" style="${x.tipo==='Externo'?'color:#ffffff':'color:var(--lime)'}">${open?'▾':'▸'} ${_h(x.emb)}</td><td>${_h(x.tipo)}</td><td class="lime r">${rbe[x.emb]||0}</td><td class="r">${x.list.length?`<span class="sale-dot">${x.list.length}</span>`:'<span style="color:var(--muted)">—</span>'}</td><td class="r" style="color:var(--muted);font-size:11px">${rbe[x.emb]?Math.round(x.list.length/rbe[x.emb]*100)+'%':'—'}</td><td class="r">${x.man?`<span class="tag-manual">${x.man} manual${x.man>1?'es':''}</span>`:'<span style="color:var(--muted)">—</span>'}</td><td class="r">$${(x.list.length*0.5).toFixed(1).replace(/\.0$/,'')}M</td><td class="r">${x.paid} de ${x.list.length}</td></tr>`;
     if(open){
       const det=x.list.slice().sort((a,b)=>(b.d?b.d.getTime():0)-(a.d?a.d.getTime():0)).map(r=>`<tr><td>${_h(r.ref)}</td><td class="lime">${_h(r.pv)}</td><td>${_h(r.sis)}</td><td>${_fmtFe(r.d)}</td><td>${r.paid?'<span class="tag-paid">✓ Pagado</span>':'<span style="color:var(--amber);font-size:11px">Pendiente</span>'}</td><td class="r">${r.manual?`<span class="tag-manual">Manual</span> <button class="btn-row" title="Editar" onclick="event.stopPropagation();editManual('${r.manId}')">✎</button> <button class="btn-row btn-del" title="Quitar" onclick="event.stopPropagation();deleteManual('${r.manId}')">✕</button>`:'<span style="color:var(--muted);font-size:10px">Auto</span>'}</td></tr>`).join('');
-      h+=`<tr><td></td><td colspan="6" style="padding:6px 0 14px"><table class="mt" style="width:100%"><tr><th>Referido</th><th>PV</th><th>Sistema</th><th>Fecha entrega</th><th>Pago</th><th class="r">Origen</th></tr>${det}</table><button class="btn-row" style="margin-top:8px" onclick="event.stopPropagation();openModal(decodeURIComponent('${key}'))">+ Sumar venta manual a este embajador</button></td></tr>`;
+      h+=`<tr><td></td><td colspan="8" style="padding:6px 0 14px"><table class="mt" style="width:100%"><tr><th>Referido</th><th>PV</th><th>Sistema</th><th>Fecha entrega</th><th>Pago</th><th class="r">Origen</th></tr>${det}</table><button class="btn-row" style="margin-top:8px" onclick="event.stopPropagation();openModal(decodeURIComponent('${key}'))">+ Sumar venta manual a este embajador</button></td></tr>`;
     }
     return h;
   }).join('');
-  document.getElementById('tTop').innerHTML=`<tr><th>#</th><th>Embajador</th><th>Tipo</th><th class="r">Entregas</th><th class="r">Manuales</th><th class="r">Devengado</th><th class="r">Pagadas</th></tr>`+rowsHtml+(top.length?'':`<tr><td colspan="7" style="color:var(--muted);padding:14px 10px">Sin entregas en este per&iacute;odo.</td></tr>`);
+  document.getElementById('tTop').innerHTML=`<tr><th>#</th><th>Embajador</th><th>Tipo</th><th class="r">Referidos</th><th class="r">Entregas</th><th class="r">% conv.</th><th class="r">Manuales</th><th class="r">Devengado</th><th class="r">Pagadas</th></tr>`+rowsHtml+(top.length?'':`<tr><td colspan="9" style="color:var(--muted);padding:14px 10px">Sin entregas en este per&iacute;odo.</td></tr>`);
 }
 
 
@@ -1665,7 +1659,7 @@ function paintRoi(k){
 
 /* ════ GESTIÓN PAGOS ════ */
 function renderGestion(k){
-  window._entDet=k.entDet||[];window._entDetAll=k.entDetAll||k.entDet||[];window._pagSet=k.pagSet||new Set();
+  window._refByEmb=k.refByEmb||{};window._embTipo=k.embTipoMap||{};window._entDet=k.entDet||[];window._entDetAll=k.entDetAll||k.entDet||[];window._pagSet=k.pagSet||new Set();
   paintTraza();paintTop();
   if(_manuales.length>0){
     document.getElementById('panelManuales').classList.add('vis');
