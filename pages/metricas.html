@@ -396,6 +396,31 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div id="embudo-note" class="fn-s" style="margin-top:12px;line-height:1.6"></div>
       <div id="embudo-rev"></div>
     </div>
+    <!-- Top embajadores por entregas -->
+    <div class="cbox" id="top-box" style="margin-bottom:16px;display:none;">
+      <div class="cbox-header">
+        <div class="cbox-title">TOP EMBAJADORES &mdash; ENTREGAS (INCLUYE VENTAS MANUALES)</div>
+        <button class="btn-add" onclick="openModal()">
+          <svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-width="1.5"/></svg>
+          Agregar venta manual
+        </button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <span style="font-size:10px;color:var(--muted)">Per&iacute;odo (fecha de entrega)</span>
+        <div class="cl-ctrl" id="topPer" style="margin:0"></div>
+        <span id="topCustom" style="display:none;align-items:center;gap:6px;font-size:10px;color:var(--muted)">
+          desde <input type="date" class="date-input" id="topFrom" onchange="paintTop()">
+          hasta <input type="date" class="date-input" id="topTo" onchange="paintTop()">
+        </span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <span style="font-size:10px;color:var(--muted)">Tipo</span>
+        <div class="cl-ctrl" id="topTipo" style="margin:0"></div>
+        <input type="text" id="topQ" class="ep-emb-in" style="width:240px;margin-left:auto" placeholder="Buscar embajador..." oninput="paintTop()" autocomplete="off">
+      </div>
+      <div id="topNote" class="fn-s" style="margin:0 0 10px;"></div>
+      <div style="overflow:auto;max-height:520px"><table class="mt" id="tTop"></table></div>
+    </div>
     <!-- Padrón de registrados -->
     <div class="cbox" id="reg-box" style="margin-bottom:16px;display:none;">
       <div class="cbox-title">EMBAJADORES REGISTRADOS (PADR&Oacute;N DE LA WEB)</div>
@@ -1492,14 +1517,64 @@ function paintTraza(){
    +(rows.length?'':`<tr><td colspan="${vk?10:9}" style="color:var(--muted);padding:14px 10px">Sin resultados.</td></tr>`);
 }
 
+
+/* ════ TOP EMBAJADORES — ENTREGAS (período + ventas manuales) ════ */
+let _topPer='all',_topTipo='all',_topOpen={};
+const _parseFe=s=>{s=String(s||'').trim();let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);if(m){let y=+m[3];if(y<100)y+=2000;return new Date(y,+m[2]-1,+m[1]);}return null;};
+const _fmtFe=d=>d?`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`:'sin fecha';
+function setTopPer(v){_topPer=v;paintTop();}
+function setTopTipo(v){_topTipo=v;paintTop();}
+function toggleTop(i){const k=decodeURIComponent(i);_topOpen[k]=!_topOpen[k];paintTop();}
+function topRange(){
+  const now=new Date(),mon=mondayOf(now),d=n=>{const x=new Date(mon);x.setDate(mon.getDate()+n);return x;};
+  if(_topPer==='week')return [mon,d(7)];
+  if(_topPer==='prev')return [d(-7),mon];
+  if(_topPer==='month')return [new Date(now.getFullYear(),now.getMonth(),1),new Date(now.getFullYear(),now.getMonth()+1,1)];
+  if(_topPer==='30'){const f=new Date(now);f.setDate(now.getDate()-30);const e=new Date(now);e.setDate(now.getDate()+1);return [new Date(f.getFullYear(),f.getMonth(),f.getDate()),new Date(e.getFullYear(),e.getMonth(),e.getDate())];}
+  if(_topPer==='custom'){const f=document.getElementById('topFrom').value,t=document.getElementById('topTo').value;
+    const fd=f?_parseFe(f):new Date(0),td=t?_parseFe(t):new Date(8640000000000000);if(t)td.setDate(td.getDate()+1);return [fd,td];}
+  return null;
+}
+function paintTop(){
+  const box=document.getElementById('top-box');if(!box)return;
+  const pagSet=window._pagSet||new Set();
+  const all=(window._entDet||[]).map(r=>({...r,d:_parseFe(r.fe),paid:!!r.pv&&r.pv!=='—'&&pagSet.has(r.pv)}));
+  box.style.display=all.length?'block':'none';
+  const per=[['week','Esta semana'],['prev','Semana pasada'],['month','Este mes'],['30','Últimos 30 días'],['all','Todo'],['custom','Personalizado']];
+  document.getElementById('topPer').innerHTML=per.map(([v,l])=>`<button class="cl-btn${_topPer===v?' active':''}" onclick="setTopPer('${v}')">${l}</button>`).join('');
+  document.getElementById('topTipo').innerHTML=[['all','Todos'],['Empleado','Empleados'],['Externo','Externos']].map(([v,l])=>`<button class="cl-btn${_topTipo===v?' active':''}" onclick="setTopTipo('${v}')">${l}</button>`).join('');
+  document.getElementById('topCustom').style.display=_topPer==='custom'?'inline-flex':'none';
+  const rg=topRange();
+  const q=(document.getElementById('topQ').value||'').toLowerCase().trim();
+  const rows=all.filter(r=>(!rg||(r.d&&r.d>=rg[0]&&r.d<rg[1]))&&(_topTipo==='all'||(r.tipo||'Empleado')===_topTipo));
+  const g={};
+  rows.forEach(r=>{const k=r.emb||'(sin embajador)';(g[k]=g[k]||{emb:k,tipo:r.tipo||'Empleado',list:[],man:0,paid:0}).list.push(r);if(r.manual)g[k].man++;if(r.paid)g[k].paid++;});
+  let top=Object.values(g).sort((a,b)=>b.list.length-a.list.length||b.paid-a.paid||a.emb.localeCompare(b.emb,'es'));
+  const tot=rows.length,totPaid=rows.filter(r=>r.paid).length,totMan=rows.filter(r=>r.manual).length;
+  const undated=all.filter(r=>!r.d).length;
+  document.getElementById('topNote').innerHTML=`<b style="color:var(--cream)">${tot}</b> entregas de <b style="color:var(--cream)">${top.length}</b> embajadores${rg?'':' (todo el hist&oacute;rico)'} &middot; ${totMan} manuales &middot; ${totPaid} pagadas &middot; ${tot-totPaid} pendientes de pago &middot; $${((tot*500000)/1e6).toFixed(1)}M devengado ($500.000 c/u)${rg&&undated?` &middot; <span style="color:var(--amber)">${undated} entrega${undated>1?'s':''} sin fecha fuera de este per&iacute;odo</span>`:''}`;
+  if(q)top=top.filter(x=>x.emb.toLowerCase().includes(q));
+  const rowsHtml=top.map((x,i)=>{
+    const key=encodeURIComponent(x.emb),open=!!_topOpen[x.emb];
+    let h=`<tr style="cursor:pointer" onclick="toggleTop('${key}')"><td class="r" style="color:var(--muted)">${i+1}</td><td class="name" style="${x.tipo==='Externo'?'color:#ffffff':'color:var(--lime)'}">${open?'▾':'▸'} ${_h(x.emb)}</td><td>${_h(x.tipo)}</td><td class="r"><span class="sale-dot">${x.list.length}</span></td><td class="r">${x.man?`<span class="tag-manual">${x.man} manual${x.man>1?'es':''}</span>`:'<span style="color:var(--muted)">—</span>'}</td><td class="r">$${(x.list.length*0.5).toFixed(1).replace(/\.0$/,'')}M</td><td class="r">${x.paid} de ${x.list.length}</td></tr>`;
+    if(open){
+      const det=x.list.slice().sort((a,b)=>(b.d?b.d.getTime():0)-(a.d?a.d.getTime():0)).map(r=>`<tr><td>${_h(r.ref)}</td><td class="lime">${_h(r.pv)}</td><td>${_h(r.sis)}</td><td>${_fmtFe(r.d)}</td><td>${r.paid?'<span class="tag-paid">✓ Pagado</span>':'<span style="color:var(--amber);font-size:11px">Pendiente</span>'}</td><td class="r">${r.manual?`<span class="tag-manual">Manual</span> <button class="btn-row" title="Editar" onclick="event.stopPropagation();editManual('${r.manId}')">✎</button> <button class="btn-row btn-del" title="Quitar" onclick="event.stopPropagation();deleteManual('${r.manId}')">✕</button>`:'<span style="color:var(--muted);font-size:10px">Auto</span>'}</td></tr>`).join('');
+      h+=`<tr><td></td><td colspan="6" style="padding:6px 0 14px"><table class="mt" style="width:100%"><tr><th>Referido</th><th>PV</th><th>Sistema</th><th>Fecha entrega</th><th>Pago</th><th class="r">Origen</th></tr>${det}</table><button class="btn-row" style="margin-top:8px" onclick="event.stopPropagation();openModal(decodeURIComponent('${key}'))">+ Sumar venta manual a este embajador</button></td></tr>`;
+    }
+    return h;
+  }).join('');
+  document.getElementById('tTop').innerHTML=`<tr><th>#</th><th>Embajador</th><th>Tipo</th><th class="r">Entregas</th><th class="r">Manuales</th><th class="r">Devengado</th><th class="r">Pagadas</th></tr>`+rowsHtml+(top.length?'':`<tr><td colspan="7" style="color:var(--muted);padding:14px 10px">Sin entregas en este per&iacute;odo.</td></tr>`);
+}
+
 /* ════ GESTIÓN PAGOS ════ */
 function renderGestion(k){
   window._entDet=k.entDet||[];window._pagSet=k.pagSet||new Set();
-  paintTraza();
+  paintTraza();paintTop();
   if(_manuales.length>0){
     document.getElementById('panelManuales').classList.add('vis');
     document.getElementById('manCnt').textContent=`${_manuales.length} entrada${_manuales.length!==1?'s':''}`;
-    document.getElementById('tManuales').innerHTML=`<tr><th>#</th><th>Embajador</th><th>Referido</th><th>PV</th><th>Sistema</th><th>Motivo</th><th>Fecha carga</th></tr>`+_manuales.map((m,i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${m.embajador}</td><td>${m.referido}</td><td class="lime">${m.preventa||'—'}</td><td>${m.sistema||'—'}</td><td style="font-size:11px">${m.motivo||'—'}</td><td style="font-size:10px;color:var(--muted)">${m.created_at?new Date(m.created_at).toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'}):''}</td></tr>`).join('');
+    document.getElementById('tManuales').innerHTML=`<tr><th>#</th><th>Embajador</th><th>Referido</th><th>PV</th><th>Sistema</th><th>Motivo</th><th>Fecha entrega</th><th></th></tr>`+_manuales.map((m,i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${m.embajador}</td><td>${m.referido}</td><td class="lime">${m.preventa||'—'}</td><td>${m.sistema||'—'}</td><td style="font-size:11px">${m.motivo||'—'}</td><td style="font-size:11px">${m.fecha_entrega?_fmtFe(_parseFe(m.fecha_entrega)):'<span style="color:var(--muted)">sin fecha</span>'}</td><td class="r"><button class="btn-row" title="Editar" onclick="editManual('${m.id}')">✎</button> <button class="btn-row btn-del" title="Quitar" onclick="deleteManual('${m.id}')">✕</button></td></tr>`).join('');
   }
 }
 
@@ -1529,7 +1604,24 @@ async function unmarkPaid(id,preventa){
 }
 
 /* ════ MODAL MANUAL ════ */
-function openModal(){
+let _editManId=null;
+function setManUI(edit){
+  const tt=document.querySelector('#modalBg .modal-title');if(tt)tt.textContent=edit?'Editar vinculación manual':'Agregar vinculación manual';
+  const b=document.getElementById('btnSub');if(b)b.textContent=edit?'Guardar cambios':'Guardar vinculación';
+}
+function editManual(id){
+  const m=_manuales.find(x=>x.id===id);if(!m)return;
+  openModal();
+  const f=document.getElementById('manForm');
+  f.embajador.value=m.embajador||'';f.tipo_emb.value=m.tipo||'Empleado';f.referido.value=m.referido||'';
+  f.preventa.value=m.preventa||'';f.sistema.value=m.sistema||'';
+  const d=_parseFe(m.fecha_entrega);f.fecha_entrega.value=d?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`:'';
+  f.motivo.value=m.motivo||'';f.notas.value=m.notas||'';
+  _editManId=id;setManUI(true);
+}
+function openModal(pre){
+  _editManId=null;setManUI(false);
+  const mf=document.getElementById('manForm');if(mf){mf.reset();if(typeof pre==='string'&&pre)mf.embajador.value=pre;}
   document.getElementById('modalBg').classList.add('open');
   document.body.style.overflow='hidden';
   populateEmbajadoresList();
@@ -1549,7 +1641,7 @@ function populateEmbajadoresList(){
   const sorted = [...names].sort((a,b) => a.localeCompare(b,'es'));
   dl.innerHTML = sorted.map(n => `<option value="${n.replace(/"/g,'&quot;')}">`).join('');
 }
-function closeModal(){document.getElementById('modalBg').classList.remove('open');document.body.style.overflow='';}
+function closeModal(){document.getElementById('modalBg').classList.remove('open');document.body.style.overflow='';_editManId=null;}
 function closeModalBg(e){if(e.target===document.getElementById('modalBg'))closeModal();}
 
 async function submitManual(e){
@@ -1562,11 +1654,14 @@ async function submitManual(e){
     preventa:form.preventa.value.trim()||null,sistema:form.sistema.value||null,
     fecha_entrega:form.fecha_entrega.value||null,motivo:form.motivo.value.trim(),
     notas:form.notas.value.trim()||null,activo:true};
-  const {data,error}=await _sb.from('emb_manuales').insert(entry).select().single();
-  if(error){alert('Error: '+error.message);btn.disabled=false;btn.textContent='Guardar vinculación';return;}
-  _manuales.push(data);
+  const editing=_editManId;
+  const {data,error}=editing
+    ?await _sb.from('emb_manuales').update(entry).eq('id',editing).select().single()
+    :await _sb.from('emb_manuales').insert(entry).select().single();
+  if(error){alert('Error: '+error.message);btn.disabled=false;setManUI(!!editing);return;}
+  if(editing){const ix=_manuales.findIndex(x=>x.id===editing);if(ix>=0)_manuales[ix]=data;}else _manuales.push(data);
   closeModal();form.reset();
-  btn.disabled=false;btn.textContent='Guardar vinculación';
+  btn.disabled=false;setManUI(false);
   refreshAfterChange();
 }
 
