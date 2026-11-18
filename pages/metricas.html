@@ -81,6 +81,7 @@
 /* Embudo + Vendedores */
 .fn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:5px;overflow:hidden;margin-top:14px;}
 .fn-grid3{grid-template-columns:repeat(3,1fr);}
+#tTraza th{position:sticky;top:0;background:var(--ink1);z-index:1;}
 .fn-grid3 .fn-v{font-size:44px;}
 .fn-grid3 .fn-cell{padding:22px 24px;}
 .fn-cell{background:var(--ink1);padding:16px 18px;}
@@ -443,14 +444,21 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
         <span style="font-size:10px;color:var(--muted)">Cada vendedor: de los referidos que recibi&oacute;, cu&aacute;ntos tienen preventa y cu&aacute;ntos entrega. &ldquo;Sin vendedor asignado&rdquo; son referidos que todav&iacute;a nadie gestion&oacute;. Las entregas manuales no se atribuyen a un vendedor.</span>
       </div>
     </div>
-    <!-- Detalle de preventas -->
-    <div class="cbox" id="prevdet-box" style="margin-bottom:10px;display:none;">
+    <!-- Trazabilidad completa: embajador → referido → preventa → entrega → pago -->
+    <div class="cbox" id="traza-box" style="margin-bottom:10px;display:none;">
       <div class="cbox-header">
-        <div class="cbox-title">DETALLE DE PREVENTAS &mdash; VENDEDOR Y ESPECIALIDAD</div>
-        <input type="text" id="pdQ" class="ep-emb-in" style="width:260px" placeholder="Buscar vendedor, embajador, referido, preventa..." oninput="paintPrevDet()" autocomplete="off">
+        <div class="cbox-title">TRAZABILIDAD &mdash; EMBAJADOR &rarr; REFERIDO &rarr; PREVENTA &rarr; ENTREGA &rarr; PAGO</div>
+        <button class="btn-add" onclick="openModal()">
+          <svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-width="1.5"/></svg>
+          Agregar vinculaci&oacute;n manual
+        </button>
       </div>
-      <div id="pdNote" class="fn-s" style="margin:-4px 0 10px;"></div>
-      <div style="overflow:auto;max-height:460px"><table class="mt" id="tPrevDet"></table></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <input type="text" id="tzQ" class="ep-emb-in" style="width:340px" placeholder="Buscar preventa, referido, embajador, vendedor..." oninput="paintTraza()" autocomplete="off">
+        <div class="cl-ctrl" id="tzF" style="margin:0"></div>
+      </div>
+      <div id="tzNote" class="fn-s" style="margin:0 0 10px;"></div>
+      <div style="overflow:auto;max-height:560px"><table class="mt" id="tTraza"></table></div>
     </div>
     <div class="cbox" id="vend-box" style="margin-bottom:10px;display:none;">
       <div class="cbox-title" style="margin-bottom:12px;">TOP VENDEDORES POR PREVENTA CERRADA</div>
@@ -464,18 +472,6 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     <div class="cbox" style="margin-bottom:10px;">
       <div class="cbox-title">EMBAJADORES EXTERNOS — REFS Y VENTAS EFECTIVAS</div>
       <div style="overflow-x:auto"><table class="mt" id="tExt"></table></div>
-    </div>
-    <!-- Gestión de pagos -->
-    <div class="cbox" style="margin-bottom:10px;">
-      <div class="cbox-header">
-        <span class="cbox-title">ENTREGAS — GESTI&Oacute;N DE PAGOS</span>
-        <button class="btn-add" onclick="openModal()">
-          <svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke-width="1.5"/></svg>
-          Agregar vinculaci&oacute;n manual
-        </button>
-      </div>
-      <p style="font-size:11px;color:var(--muted);margin-bottom:12px;">Marc&aacute; cada pago realizado. Las vinculaciones manuales (c&oacute;nyuge, otro nombre) aparecen en verde lima.</p>
-      <div style="overflow-x:auto"><table class="mt" id="tGestion"></table></div>
     </div>
     <!-- Manuales -->
     <div class="gestion-panel" id="panelManuales">
@@ -1444,25 +1440,12 @@ function setClSort(s){_clSort=s;paintClosers();}
 function setClEsp(e){_clEsp=e;_clAll=false;paintClosers();}
 function toggleClAll(){_clAll=!_clAll;paintClosers();}
 
-/* Detalle de preventas */
+/* Trazabilidad: preventas + pagos en un solo cuadro */
 function _feKey(fe){if(!fe)return '';const p=fe.split('/');return p.length===3?p[2]+p[1]+p[0]:'';}
-function prevDetHTML(det,vendKey,q){
-  q=(q||'').toLowerCase().trim();
-  const rows=det.filter(r=>!q||[r.pv,r.ref,r.emb,r.closer,r.vendPV||'',r.esp,r.team,r.sis].join(' ').toLowerCase().includes(q))
-    .sort((a,b)=>(b.fe?1:0)-(a.fe?1:0)||_feKey(b.fe).localeCompare(_feKey(a.fe)));
-  const vh=vendKey?'<th>Vendedor de la preventa</th>':'';
-  return `<tr><th>Preventa</th><th>Sistema</th><th>Referido</th><th>Embajador</th><th>Vendedor que recibi&oacute; el referido</th>${vh}<th>Especialidad</th><th>Estado</th></tr>`+
-    rows.map(r=>`<tr><td class="name">${_h(r.pv)}</td><td>${_h(r.sis)}</td><td>${_h(r.ref)}</td><td>${_h(r.emb)}</td><td class="name">${_h(r.closer)}</td>${vendKey?`<td class="name">${_h(r.vendPV)}</td>`:''}<td>${_h(r.esp)}</td><td>${r.fe?`<span class="sale-dot">Entregada ${_h(r.fe)}</span>`:'<span style="color:var(--amber);font-size:11px">Sin entrega a&uacute;n</span>'}</td></tr>`).join('')
-    +(rows.length?'':`<tr><td colspan="${vendKey?8:7}" style="color:var(--muted);padding:14px 10px">Sin resultados.</td></tr>`);
-}
+let _tzFilter='all';
+function setTzF(f){_tzFilter=f;paintTraza();}
 function renderPrevDet(k){
-  const box=document.getElementById('prevdet-box');if(!box)return;
   window._prevDet=k.prevDet||[];window._vendKey=k.vendKey||null;
-  box.style.display=window._prevDet.length?'block':'none';
-  document.getElementById('pdNote').innerHTML=window._vendKey
-    ?`${window._prevDet.length} preventas vinculadas a referidos.`
-    :`${window._prevDet.length} preventas vinculadas a referidos. <span style="color:var(--amber)">El reporte no trae el vendedor que hizo la preventa</span> &mdash; solo el vendedor al que le lleg&oacute; el referido (CLOSER). Si agreg&aacute;s al export una columna <strong style="color:var(--cream)">VENDEDOR PREVENTA</strong>, aparece ac&aacute; autom&aacute;ticamente junto con su ranking.`;
-  paintPrevDet();
   // Ranking de vendedores de preventa (solo si el reporte trae la columna)
   const vb=document.getElementById('vend-box');
   if(window._vendKey){
@@ -1473,23 +1456,43 @@ function renderPrevDet(k){
     vb.style.display='block';
   }else vb.style.display='none';
 }
-function paintPrevDet(){
-  document.getElementById('tPrevDet').innerHTML=prevDetHTML(window._prevDet||[],window._vendKey,document.getElementById('pdQ').value);
+function trazaRows(){
+  const pagSet=window._pagSet||new Set();
+  const isPaid=pv=>!!pv&&pv!=='—'&&pagSet.has(pv);
+  const rows=[];
+  (window._prevDet||[]).forEach(r=>rows.push({emb:r.emb,ref:r.ref,pv:r.pv,sis:r.sis,fe:r.fe||'',vend:r.closer,vendPV:r.vendPV||'',esp:r.esp,manual:false,paid:isPaid(r.pv)}));
+  (window._entDet||[]).filter(r=>r.manual).forEach(r=>rows.push({emb:r.emb,ref:r.ref,pv:r.pv,sis:r.sis,fe:r.fe&&r.fe!=='—'?r.fe:'',vend:'—',vendPV:'',esp:'—',manual:true,manId:r.manId,motivo:r.motivo,paid:isPaid(r.pv)}));
+  return rows.map(r=>({...r,ent:!!r.fe||r.manual,pe:r.paid?(_pagos.find(p=>p.preventa===r.pv)||null):null}));
+}
+function paintTraza(){
+  const box=document.getElementById('traza-box');if(!box)return;
+  const all=trazaRows();
+  box.style.display=all.length?'block':'none';
+  const vk=window._vendKey;
+  const cnt={all:all.length,ent:all.filter(r=>r.ent).length,sin:all.filter(r=>!r.ent).length,paid:all.filter(r=>r.paid).length,pend:all.filter(r=>r.ent&&!r.paid).length};
+  const btn=(f,l)=>`<button class="cl-btn${_tzFilter===f?' active':''}" onclick="setTzF('${f}')">${l} (${cnt[f]})</button>`;
+  document.getElementById('tzF').innerHTML=btn('all','Todas')+btn('ent','Entregadas')+btn('sin','Sin entrega')+btn('paid','Pagadas')+btn('pend','Pendientes de pago');
+  document.getElementById('tzNote').innerHTML=`${cnt.all} registros (preventas + manuales) &middot; ${cnt.ent} entregados &middot; ${cnt.paid} pagadas &middot; ${cnt.pend} pendientes de pago. Las vinculaciones manuales (c&oacute;nyuge, otro nombre) llevan la marca <span class="tag-manual">Manual</span>.`;
+  const q=(document.getElementById('tzQ').value||'').toLowerCase().trim();
+  const rows=all.filter(r=>(_tzFilter==='all'||(_tzFilter==='ent'&&r.ent)||(_tzFilter==='sin'&&!r.ent)||(_tzFilter==='paid'&&r.paid)||(_tzFilter==='pend'&&r.ent&&!r.paid))
+      &&(!q||[r.pv,r.ref,r.emb,r.vend,r.vendPV,r.esp,r.sis,r.fe,r.ent?'entregada':'sin entrega',r.paid?'pagado':(r.ent?'pendiente':'')].join(' ').toLowerCase().includes(q)))
+    .sort((a,b)=>(b.ent?1:0)-(a.ent?1:0)||_feKey(b.fe).localeCompare(_feKey(a.fe)));
+  const pagoCell=r=>{
+    if(!r.ent)return '<span style="color:var(--muted);font-size:11px">—</span>';
+    if(r.paid)return `<span class="tag-paid">✓ Pagado${r.pe&&r.pe.fecha_pago?' '+_h(r.pe.fecha_pago):''}</span>${r.pe?` <button class="btn-row btn-del" title="Deshacer pago" onclick="unmarkPaid('${r.pe.id}','${esc(r.pv)}')">↶</button>`:''}`;
+    return `<button class="btn-row btn-mark-paid" onclick="markPaid('${esc(r.pv)}','${esc(r.emb)}','${esc(r.ref)}','${esc(r.sis)}')">Marcar pagado</button>`;
+  };
+  const estCell=r=>`${r.ent?`<span class="sale-dot">Entregada${r.fe?' '+_h(r.fe):''}</span>`:'<span style="color:var(--amber);font-size:11px;font-weight:600">Sin entrega a&uacute;n</span>'}${r.manual?` <span class="tag-manual">Manual</span> <button class="btn-row btn-del" title="Quitar vinculaci&oacute;n manual" onclick="deleteManual('${r.manId}')">✕</button>`:''}`;
+  document.getElementById('tTraza').innerHTML=
+   `<tr><th>#</th><th>Embajador</th><th>Referido</th><th>PV</th><th>Sistema</th><th>Vendedor${vk?' (CLOSER)':''}</th>${vk?'<th>Vendedor preventa</th>':''}<th>Especialidad</th><th>Estado</th><th class="r">Pago</th></tr>`+
+   rows.map((r,i)=>`<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name">${_h(r.emb)}</td><td>${_h(r.ref)}</td><td class="lime">${_h(r.pv)}</td><td>${_h(r.sis)}</td><td class="name">${_h(r.vend)}</td>${vk?`<td class="name">${_h(r.vendPV)}</td>`:''}<td>${_h(r.esp)}</td><td>${estCell(r)}</td><td class="r">${pagoCell(r)}</td></tr>`).join('')
+   +(rows.length?'':`<tr><td colspan="${vk?10:9}" style="color:var(--muted);padding:14px 10px">Sin resultados.</td></tr>`);
 }
 
 /* ════ GESTIÓN PAGOS ════ */
 function renderGestion(k){
-  const rows=k.entDet.map((r,i)=>{
-    const paid=k.pagSet.has(r.pv)&&r.pv!=='—';
-    const pe=_pagos.find(p=>p.preventa===r.pv);
-    const statusCell=paid
-      ?`<span class="tag-paid">✓ Pagado${pe?.fecha_pago?' '+pe.fecha_pago:''}</span>`
-      :`<button class="btn-row btn-mark-paid" onclick="markPaid('${esc(r.pv)}','${esc(r.emb)}','${esc(r.ref)}','${r.sis}')">Marcar pagado</button>`;
-    const tipoCell=r.manual?`<span class="tag-manual">Manual</span>&nbsp;<button class="btn-row btn-del" onclick="deleteManual('${r.manId}')">✕</button>`:`<span style="color:var(--muted);font-size:10px">Auto</span>`;
-    const embColor=r.tipo==='Externo'?'color:#ffffff':r.tipo==='Manual'?'color:var(--muted)':'color:var(--lime)';
-    return `<tr><td class="r" style="color:var(--muted)">${i+1}</td><td class="name" style="${embColor}">${r.emb}</td><td>${r.ref}</td><td class="lime">${r.pv}</td><td>${r.sis}</td><td>${r.fe||'—'}</td><td>${tipoCell}</td><td class="r">${statusCell}</td></tr>`;
-  }).join('');
-  document.getElementById('tGestion').innerHTML=`<tr><th>#</th><th>Embajador</th><th>Referido</th><th>PV</th><th>Sistema</th><th>Fecha</th><th>Tipo</th><th class="r">Estado pago</th></tr>${rows}`;
+  window._entDet=k.entDet||[];window._pagSet=k.pagSet||new Set();
+  paintTraza();
   if(_manuales.length>0){
     document.getElementById('panelManuales').classList.add('vis');
     document.getElementById('manCnt').textContent=`${_manuales.length} entrada${_manuales.length!==1?'s':''}`;
