@@ -78,6 +78,15 @@ main.page-content{max-width:none!important;width:100%!important;margin-left:0!im
 @media(max-width:700px){main.page-content{padding-left:12px!important;padding-right:12px!important;}}
 #met-dashboard{display:none;}
 #met-dashboard.vis{display:block;}
+.tot-box{display:grid;grid-template-columns:1.4fr 1fr 1fr;background:var(--ink1);border:1px solid var(--border);border-top:3px solid var(--lime);margin-bottom:12px;}
+.tot-main,.tot-side{padding:26px 32px;text-align:center;}
+.tot-side{border-left:1px solid var(--border);}
+.big-v2{font-size:56px;font-weight:700;line-height:1;letter-spacing:-.03em;color:var(--lime);}
+@media(max-width:700px){.tot-box{grid-template-columns:1fr;}.tot-side{border-left:0;border-top:1px solid var(--border);}}
+.fn-grid4{grid-template-columns:repeat(4,1fr);}
+.fn-grid4 .fn-v{font-size:44px;}.fn-grid4 .fn-cell{padding:22px 24px;}
+@media(max-width:900px){.fn-grid4{grid-template-columns:repeat(2,1fr);}}
+.roi-in{background:var(--faint);border:1px solid var(--border);border-radius:3px;padding:6px 10px;font-size:13px;font-family:var(--ff);color:var(--cream);outline:none;width:150px;}
 .big-kpis{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0;background:var(--ink1);border:1px solid var(--border);border-top:3px solid var(--lime);margin-bottom:12px;}
 .big-k{padding:26px 32px;text-align:center;}
 .big-l{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--muted);margin-bottom:8px;}
@@ -392,12 +401,12 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     <!-- NOVEDADES DEL DÍA -->
     <div id="novedades"></div>
     <!-- KPIs -->
-    <div class="big-kpis">
-      <div class="big-k"><div class="big-l">PREVENTAS</div><div class="big-v lime" id="bkPrev">&mdash;</div><div class="big-s" id="bkPrevS"></div></div>
-      <div class="big-arrow">&rarr;</div>
-      <div class="big-k"><div class="big-l">ENTREGADOS</div><div class="big-v green" id="bkEnt">&mdash;</div><div class="big-s" id="bkEntS"></div></div>
+    <div class="tot-box">
+      <div class="tot-main"><div class="big-l">TOTAL DE EMBAJADORES</div><div class="big-v lime" id="bkTot">&mdash;</div><div class="big-s" id="bkTotS">registrados en el programa</div></div>
+      <div class="tot-side"><div class="big-l">NUESTROS</div><div class="big-v2" id="bkEmp">&mdash;</div><div class="big-s">empleados del grupo</div></div>
+      <div class="tot-side"><div class="big-l">EXTERNOS</div><div class="big-v2" id="bkExt" style="color:#fff">&mdash;</div><div class="big-s">clientes y otros</div></div>
     </div>
-    <div class="kpi-strip">
+    <div class="kpi-strip" style="display:none">
       <div class="kpi-cell k-lime"><div class="kpi-v lime" id="kReg">—</div><div class="kpi-l">Embajadores registrados</div><div class="kpi-sub" id="kRegS"></div></div>
       <div class="kpi-cell k-blue"><div class="kpi-v" id="kRef">—</div><div class="kpi-l">Referidos v&aacute;lidos</div><div class="kpi-sub" id="kRefS"></div></div>
       <div class="kpi-cell k-green"><div class="kpi-v green" id="kEnt">—</div><div class="kpi-l">Entregados totales</div><div class="kpi-sub" id="kEntS"></div></div>
@@ -406,10 +415,20 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     </div>
     <!-- Embudo referidos -> preventa -> entrega -->
     <div class="cbox" id="embudo-box" style="margin-bottom:16px;display:none;">
-      <div class="cbox-title">DEL REFERIDO A LA ENTREGA</div>
-      <div class="fn-grid fn-grid3" id="embudo-grid"></div>
+      <div class="cbox-title">EMBAJADORES &rarr; REFERIDOS &rarr; PREVENTA &rarr; ENTREGADOS</div>
+      <div class="fn-grid fn-grid4" id="embudo-grid"></div>
       <div id="embudo-note" class="fn-s" style="margin-top:12px;line-height:1.6"></div>
       <div id="embudo-rev"></div>
+    </div>
+    <!-- Resultados e inversión -->
+    <div class="cbox" id="roi-box" style="margin-bottom:16px;display:none;">
+      <div class="cbox-title">RESULTADOS E INVERSI&Oacute;N (ROI)</div>
+      <div class="fn-grid fn-grid4" id="roi-grid"></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
+        <span style="font-size:11px;color:var(--muted)">Ingreso o margen bruto promedio por entrega (AR$)</span>
+        <input type="text" inputmode="numeric" class="roi-in" id="roiMargen" placeholder="ej: 3000000" oninput="roiInput()" autocomplete="off">
+        <span id="roiNote" class="fn-s" style="margin:0"></span>
+      </div>
     </div>
     <!-- Top embajadores por entregas -->
     <div class="cbox" id="top-box" style="margin-bottom:16px;display:none;">
@@ -929,6 +948,7 @@ function renderRegistro(){
     grid.innerHTML=`<div class="fn-cell" style="grid-column:1/-1"><div class="fn-v" style="font-size:15px;line-height:1.5">Falta activar el seguimiento de registros</div><div class="fn-s" style="margin-top:8px;line-height:1.6">1) Corr&eacute; <b>supabase_registrados.sql</b> en Supabase (SQL Editor). &nbsp; 2) Sub&iacute; el <b>Embajadores.xls</b> en la carga de archivos y toc&aacute; <b>Procesar</b>. Desde ah&iacute; este panel muestra cu&aacute;ntos embajadores nuevos se registraron cada semana (lunes a domingo) y qui&eacute;nes son.</div></div>`;
     document.getElementById('reg-new').innerHTML='';document.getElementById('reg-dup').innerHTML='';return;
   }
+  paintTotal(window._lastK);
   const st=regStats(_regDb);
   const [mon,next]=regRange('week');const dom=new Date(next);dom.setDate(next.getDate()-1);
   const wk=regNuevos('week').length,pw=regNuevos('prev').length;
@@ -1391,11 +1411,7 @@ function renderDash(k){
   $('kRef').textContent=n(k.totalPV||k.total);
   $('kRefS').textContent=`${n(k.totalPV)-n(k.sinVinc)} con prev · ${n(k.sinVinc)} sin prev (referidos)`;
   renderEstadosPanel(k.est||{}, k.estDet||{}, n(k.totalPV||k.total));
-  const man=n(k.totalEnt)-n(k.entSis),prevTot=n(k.vinc)+man;
-  $('bkPrev').textContent=prevTot;
-  $('bkPrevS').textContent=`${n(k.vinc)} del reporte + ${man} manuales${k.rangoActivo?' · por fecha de consulta':''}`;
-  $('bkEnt').textContent=n(k.totalEnt);
-  $('bkEntS').textContent=`${n(k.entSis)} del reporte + ${man} manuales · ${n(k.pagados)} pagadas${k.rangoActivo?' · por fecha de entrega':''}${n(k.vincSF)?` · ${n(k.vincSF)} preventas sin entrega aún`:''}`;
+  window._lastK=k;paintTotal(k);paintRoi(k);
   $('kEnt').textContent=n(k.totalEnt);
   $('kEntS').textContent=`${n(k.entSis)} del reporte + ${n(k.totalEnt)-n(k.entSis)} manuales`;
   $('kPag').textContent=n(k.pagados);
@@ -1443,13 +1459,14 @@ function renderDash(k){
 const _h=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function embudoHTML(k){
   const n=v=>(!isNaN(v)&&v!==undefined&&v!==null)?v:0;
-  const tot=n(k.totalPV||k.total),vinc=n(k.vinc),ent=n(k.totalEnt),vsf=n(k.vincSF),man=ent-n(k.entSis);
-  const p=x=>tot>0?(x/tot*100).toFixed(1).replace('.',',')+'%':'0%';
+  const emb=n(k.totalEmb),ref=n(k.totalPV||k.total),ent=n(k.totalEnt),man=ent-n(k.entSis),prev=n(k.vinc)+man,vsf=n(k.vincSF);
+  const pc=(x,b)=>b>0?(x/b*100).toFixed(1).replace('.',',')+'%':'0%';
   const note=document.getElementById('embudo-note');
-  if(note)note.innerHTML=`${vsf} preventas todav&iacute;a sin entrega &middot; ${n(k.pagados)} de ${ent} entregas ya pagadas &middot; ${ent-n(k.pagados)} pendientes de pago`;
-  return `<div class="fn-cell"><div class="fn-v">${tot}</div><div class="fn-l">REFERIDOS</div><div class="fn-s">${n(k.refEmp)} de empleados &middot; ${n(k.refExt)} de externos</div></div>
-  <div class="fn-cell"><div class="fn-v lime">${vinc}</div><div class="fn-l">PREVENTAS</div><div class="fn-s">${p(vinc)} de los referidos</div></div>
-  <div class="fn-cell"><div class="fn-v green">${ent}</div><div class="fn-l">ENTREGAS</div><div class="fn-s">${p(ent)} de los referidos &middot; ${n(k.entSis)} del reporte + ${man} manuales</div></div>`;
+  if(note)note.innerHTML=`${vsf} preventas todav&iacute;a sin entrega${k.rangoActivo?' &middot; referidos y preventas por fecha de consulta, entregas por fecha de entrega (pueden venir de consultas anteriores al per&iacute;odo)':''}`;
+  return `<div class="fn-cell"><div class="fn-v">${emb}</div><div class="fn-l">EMBAJADORES</div><div class="fn-s">que ya refirieron &middot; ${n(k.empEmb)} nuestros &middot; ${n(k.extEmb)} externos</div></div>
+  <div class="fn-cell"><div class="fn-v">${ref}</div><div class="fn-l">REFERIDOS</div><div class="fn-s">${emb?(ref/emb).toFixed(1).replace('.',','):'0'} por embajador &middot; ${n(k.refEmp)} de empleados &middot; ${n(k.refExt)} de externos</div></div>
+  <div class="fn-cell"><div class="fn-v lime">${prev}</div><div class="fn-l">PREVENTA</div><div class="fn-s">${pc(prev,ref)} de los referidos &middot; ${n(k.vinc)} del reporte + ${man} manuales</div></div>
+  <div class="fn-cell"><div class="fn-v green">${ent}</div><div class="fn-l">ENTREGADOS</div><div class="fn-s">${pc(ent,prev)} de las preventas &middot; ${pc(ent,ref)} de los referidos</div></div>`;
 }
 function revisarHTML(k){
   const rv=k.revisar||[];
@@ -1611,6 +1628,39 @@ function paintTop(){
     return h;
   }).join('');
   document.getElementById('tTop').innerHTML=`<tr><th>#</th><th>Embajador</th><th>Tipo</th><th class="r">Entregas</th><th class="r">Manuales</th><th class="r">Devengado</th><th class="r">Pagadas</th></tr>`+rowsHtml+(top.length?'':`<tr><td colspan="7" style="color:var(--muted);padding:14px 10px">Sin entregas en este per&iacute;odo.</td></tr>`);
+}
+
+
+/* ════ TOTAL EMBAJADORES + ROI ════ */
+const COSTO_EMB=500000;
+function paintTotal(k){
+  const $=id=>document.getElementById(id);if(!$('bkTot'))return;
+  let tot,emp,ext;
+  if(typeof _regDb!=='undefined'&&_regDb.length){
+    const g={};_regDb.forEach(r=>{const key=dniNorm(r.dni)||('pk:'+r.pkey);if(!g[key])g[key]=r.tipo==='Externo'?'E':'N';else if(r.tipo!=='Externo')g[key]='N';});
+    const v=Object.values(g);tot=v.length;emp=v.filter(x=>x==='N').length;ext=v.length-emp;
+  }else if(k){tot=k.totalReg||k.totalEmb||0;emp=k.empEmb||0;ext=k.extEmb||0;$('bkTotS').textContent='embajadores que ya refirieron (falta cargar el padrón)';}
+  if(tot==null)return;
+  $('bkTot').textContent=tot;$('bkEmp').textContent=emp;$('bkExt').textContent=ext;
+  if(typeof _regDb!=='undefined'&&_regDb.length)$('bkTotS').textContent='registrados en el programa (sin duplicados por DNI)';
+}
+const _fmt$=v=>'$'+Math.round(v).toLocaleString('es-AR');
+function roiInput(){try{localStorage.setItem('emb_margen',document.getElementById('roiMargen').value);}catch(e){}paintRoi(window._lastK);}
+function paintRoi(k){
+  const g=document.getElementById('roi-grid');if(!g||!k)return;
+  window._lastK=k;
+  document.getElementById('roi-box').style.display='block';
+  const inp=document.getElementById('roiMargen');
+  if(!inp.dataset.init){inp.dataset.init='1';try{inp.value=localStorage.getItem('emb_margen')||'';}catch(e){}}
+  const ent=k.totalEnt||0,pag=k.pagados||0,inv=ent*COSTO_EMB,invPag=pag*COSTO_EMB;
+  const margen=parseFloat(String(inp.value).replace(/[^\d]/g,''))||0;
+  const ing=ent*margen,roi=inv>0&&margen?((ing-inv)/inv*100):null;
+  g.innerHTML=
+   `<div class="fn-cell"><div class="fn-v green">${ent}</div><div class="fn-l">ENTREGADOS</div><div class="fn-s">${k.rangoActivo?'en el período':'en total'}</div></div>
+    <div class="fn-cell"><div class="fn-v amber">${pag}</div><div class="fn-l">PAGADOS</div><div class="fn-s">${pag} de ${ent} entregas con beneficio pagado</div></div>
+    <div class="fn-cell"><div class="fn-v" style="font-size:30px">${_fmt$(inv)}</div><div class="fn-l">INVERSIÓN</div><div class="fn-s">${ent} entregas × ${_fmt$(COSTO_EMB)} &middot; pagado hasta hoy ${_fmt$(invPag)}</div></div>
+    <div class="fn-cell"><div class="fn-v ${roi==null?'':roi>=0?'green':'amber'}">${roi==null?'&mdash;':(roi>=0?'+':'')+roi.toFixed(0)+'%'}</div><div class="fn-l">ROI</div><div class="fn-s">${roi==null?'Cargá el ingreso por entrega para calcularlo':`ingreso ${_fmt$(ing)} &middot; $${(ing/inv).toFixed(1).replace('.',',')} por cada $1 invertido`}</div></div>`;
+  document.getElementById('roiNote').textContent=margen?'ROI = (ingreso − inversión) / inversión. La inversión cuenta $500.000 por entrega.':'';
 }
 
 /* ════ GESTIÓN PAGOS ════ */
