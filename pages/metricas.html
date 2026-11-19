@@ -1282,12 +1282,20 @@ function renderEstadosPanel(est, estDet, total){
   const allEmbs=new Set();
   Object.values(estDet).forEach(rows=>rows.forEach(r=>{if(r.emb)allEmbs.add(r.emb);}));
   const embOpts=[...allEmbs].sort().map(e=>`<option value="${e}">`).join('');
+  const puSet=new Set();Object.values(estDet).forEach(rows=>rows.forEach(r=>puSet.add(puRow(r))));
+  const puOpts=[...puSet].sort((a,b)=>(a==='Sin puesto')-(b==='Sin puesto')||a.localeCompare(b,'es')).map(x=>`<option value="${_h(x)}">${_h(x)}</option>`).join('');
 
   el.innerHTML=`<div class="ep-hdr">
     <span class="ep-hdr-title">TRÁMITES POR ESTADO</span>
     <div class="ep-filt">
       <input type="text" id="epFiltEmb" class="ep-emb-in" list="epEmbList" placeholder="Embajador..." oninput="filterEstados()" autocomplete="off">
       <datalist id="epEmbList">${embOpts}</datalist>
+      <select id="epFiltPu" class="ep-emb-in" style="width:auto" onchange="filterEstados()"><option value="all">Todos los puestos</option>${puOpts}</select>
+      <span class="ep-filt-div"></span>
+      <button class="cl-btn" onclick="epPreset('today')">Hoy</button>
+      <button class="cl-btn" onclick="epPreset('yesterday')">Ayer</button>
+      <button class="cl-btn" onclick="epPreset('week')">Esta semana</button>
+      <button class="cl-btn" onclick="epPreset('month')">Este mes</button>
       <span class="ep-filt-div"></span>
       <label class="ep-filt-lbl">Desde</label>
       <input type="date" id="epFiltDesde" class="ep-date-in" onchange="filterEstados()">
@@ -1297,10 +1305,25 @@ function renderEstadosPanel(est, estDet, total){
     </div>
     <span class="ep-hdr-total" id="epTotalLbl">${total} en total</span>
   </div>
+  <div id="epPuSum" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--border)"></div>
   <div id="ep-body"></div>`;
 
-  renderEstBody(est, estDet, total);
+  filterEstados();
 }
+// Puesto del embajador de un referido (los externos van aparte)
+function puRow(r){return r.tipo==='Externo'?'Externo (cliente)':puName(r.emb);}
+function epPreset(k){
+  const now=new Date(),iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const day=n=>{const x=new Date(now.getFullYear(),now.getMonth(),now.getDate()+n);return x;};
+  let a,b;
+  if(k==='today'){a=b=day(0);}
+  else if(k==='yesterday'){a=b=day(-1);}
+  else if(k==='week'){a=mondayOf(now);b=day(0);}
+  else {a=new Date(now.getFullYear(),now.getMonth(),1);b=day(0);}
+  document.getElementById('epFiltDesde').value=iso(a);document.getElementById('epFiltHasta').value=iso(b);
+  filterEstados();
+}
+function epSetPu(v){document.getElementById('epFiltPu').value=v;filterEstados();}
 
 function renderEstBody(est, estDet, total){
   const bodyEl=document.getElementById('ep-body');
@@ -1334,6 +1357,8 @@ function filterEstados(){
   const desde=document.getElementById('epFiltDesde')?.value;
   const hasta=document.getElementById('epFiltHasta')?.value;
   const emb=(document.getElementById('epFiltEmb')?.value||'').trim().toLowerCase();
+  const pu=document.getElementById('epFiltPu')?.value||'all';
+  const puCnt={};
   const lbl=document.getElementById('epTotalLbl');
   if(!window._estDetFull) return;
   const parseFC=s=>{if(!s)return 0;const ds=s.split(' ')[0];const p=ds.split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]).getTime():0;};
@@ -1341,7 +1366,7 @@ function filterEstados(){
   const tsDesde=parseISO(desde), tsHasta=parseISO(hasta);
   const filtEst={}, filtDet={};
   Object.entries(window._estDetFull).forEach(([s,rows])=>{
-    const fr=rows.filter(r=>{
+    const base=rows.filter(r=>{
       // filtro por embajador (siempre se aplica)
       if(emb && !(r.emb||'').toLowerCase().includes(emb)) return false;
       // filtro por fecha (solo si hay fecha válida)
@@ -1352,12 +1377,24 @@ function filterEstados(){
       }
       return true;
     });
+    base.forEach(r=>{const k=puRow(r);puCnt[k]=(puCnt[k]||0)+1;});
+    const fr=pu==='all'?base:base.filter(r=>puRow(r)===pu);
     if(fr.length){filtEst[s]=fr.length;filtDet[s]=fr;}
   });
   const filtTotal=Object.values(filtEst).reduce((a,b)=>a+b,0);
-  const hayFiltro=emb||desde||hasta;
+  const hayFiltro=emb||desde||hasta||pu!=='all';
   if(lbl) lbl.textContent=(!hayFiltro||filtTotal===window._estTotal)?`${filtTotal} en total`:`${filtTotal} de ${window._estTotal}`;
   renderEstBody(filtEst, filtDet, filtTotal);
+  // Resumen: referidos que ingresaron según puesto del embajador (con los filtros de fecha / embajador)
+  const sum=document.getElementById('epPuSum');
+  if(sum){
+    const tot=Object.values(puCnt).reduce((a,b)=>a+b,0);
+    const ext=puCnt['Externo (cliente)']||0,sp=puCnt['Sin puesto']||0;
+    sum.innerHTML=`<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--muted)">REFERIDOS POR PUESTO</span>`+
+      (tot?Object.entries(puCnt).sort((a,b)=>(a[0]==='Sin puesto')-(b[0]==='Sin puesto')||b[1]-a[1]).map(([k,n])=>`<button class="cl-btn${pu===k?' active':''}" data-v="${_h(k)}" onclick="epSetPu(this.dataset.v)">${_h(k)} <b>${n}</b></button>`).join('')+
+       `<span style="font-size:11px;color:var(--muted);margin-left:auto">${tot-ext} de empleados &middot; ${ext} de externos${sp?` &middot; ${sp} sin puesto identificado`:''}</span>`
+       :`<span style="font-size:11px;color:var(--muted)">Sin referidos en este per&iacute;odo.</span>`);
+  }
   // Si filtró por embajador → auto-expandir todos los estados
   if(emb){
     document.querySelectorAll('#ep-body .ep-detail').forEach(d=>d.classList.add('open'));
@@ -1372,9 +1409,8 @@ function clearEstFilter(){
   if(d) d.value='';
   if(h) h.value='';
   if(eb) eb.value='';
-  const lbl=document.getElementById('epTotalLbl');
-  if(lbl) lbl.textContent=`${window._estTotal} en total`;
-  if(window._estFull&&window._estDetFull) renderEstBody(window._estFull,window._estDetFull,window._estTotal);
+  const pf=document.getElementById('epFiltPu');if(pf)pf.value='all';
+  filterEstados();
 }
 
 function buildEstDetTable(rows){
@@ -1382,10 +1418,10 @@ function buildEstDetTable(rows){
   // Ordenar por fecha más reciente
   const parseFC=s=>{if(!s)return 0;const ds=s.split(' ')[0];const p=ds.split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]).getTime():0;};
   rows=rows.slice().sort((a,b)=>parseFC(b.fc)-parseFC(a.fc));
-  let t=`<table class="ep-dt"><thead><tr><th>Apellido y nombre</th><th>Embajador</th><th>Preventa</th><th>Fecha consulta</th><th></th></tr></thead><tbody>`;
+  let t=`<table class="ep-dt"><thead><tr><th>Apellido y nombre</th><th>Embajador</th><th>Puesto</th><th>Preventa</th><th>Fecha consulta</th><th></th></tr></thead><tbody>`;
   rows.forEach(r=>{
     const ec=r.tipo==='Externo'?'color:#ffffff':r.tipo==='Manual'?'color:var(--muted)':'color:var(--lime)';
-    t+=`<tr><td class="name">${r.apellido}${r.nombre?' '+r.nombre:''}</td><td style="${ec}">${r.emb||'—'}</td><td class="pv">${r.pv||'—'}${r.man?'<span class="man" title="Cargada a mano">✎ manual</span>':''}</td><td>${r.fc||'—'}</td><td><button class="pv-edit" title="Cargar o corregir la preventa a mano" onclick="event.stopPropagation();openPvEdit(${r.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button></td></tr>`;
+    t+=`<tr><td class="name">${r.apellido}${r.nombre?' '+r.nombre:''}</td><td style="${ec}">${r.emb||'—'}</td><td>${r.tipo==='Externo'?'<span style="color:var(--muted);font-size:10px">Externo</span>':puTag(r.emb)}</td><td class="pv">${r.pv||'—'}${r.man?'<span class="man" title="Cargada a mano">✎ manual</span>':''}</td><td>${r.fc||'—'}</td><td><button class="pv-edit" title="Cargar o corregir la preventa a mano" onclick="event.stopPropagation();openPvEdit(${r.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button></td></tr>`;
   });
   return t+'</tbody></table>';
 }
