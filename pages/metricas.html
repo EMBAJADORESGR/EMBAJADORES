@@ -88,6 +88,10 @@ main.page-content{max-width:none!important;width:100%!important;margin-left:0!im
 @media(max-width:900px){.fn-grid4{grid-template-columns:repeat(2,1fr);}}
 .roi-in{background:var(--faint);border:1px solid var(--border);border-radius:3px;padding:6px 10px;font-size:13px;font-family:var(--ff);color:var(--cream);outline:none;width:150px;}
 .tag-pu{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:3px;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.3);color:#93C5FD;white-space:nowrap;}
+body.vista-com .page-content>*:not(#met-dashboard){display:none!important;}
+body.vista-com #met-dashboard>*:not(#com-box){display:none!important;}
+body.vista-com .h-tabs,body.vista-com .no-vista{display:none!important;}
+.only-vista{display:none;}body.vista-com .only-vista{display:block;}
 .big-kpis{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0;background:var(--ink1);border:1px solid var(--border);border-top:3px solid var(--lime);margin-bottom:12px;}
 .big-k{padding:26px 32px;text-align:center;}
 .big-l{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--muted);margin-bottom:8px;}
@@ -434,7 +438,15 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     </div>
     <!-- Referidos de embajadores comerciales -->
     <div class="cbox" id="com-box" style="margin-bottom:16px;display:none;">
-      <div class="cbox-title">EMBAJADORES COMERCIALES &mdash; REFERIDOS QUE TRAJERON Y A QUI&Eacute;N LLEG&Oacute;</div>
+      <div class="only-vista" style="margin-bottom:14px"><div class="s-kicker">Programa de Embajadores &middot; Grupo Randazzo</div><div style="font-size:11px;color:var(--muted)" id="comGen"></div></div>
+      <div class="cbox-header">
+        <div class="cbox-title">EMBAJADORES COMERCIALES &mdash; REFERIDOS QUE TRAJERON Y A QUI&Eacute;N LLEG&Oacute;</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-add" onclick="descargarCom()">Descargar Excel</button>
+          <button class="btn-add no-vista" onclick="abrirVista()">Vista para direcci&oacute;n</button>
+          <button class="btn-add no-vista" onclick="copiarVista()">Copiar link</button>
+        </div>
+      </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0 8px">
         <span style="font-size:10px;color:var(--muted)">Per&iacute;odo (fecha de consulta)</span>
         <div class="cl-ctrl" id="comPer" style="margin:0"></div>
@@ -1833,10 +1845,34 @@ function paintCom(){
   $('comSum').innerHTML=rows.length?chipRow('LLEGARON AL TEAM',cnt(r=>r.team))+chipRow('LLEGARON AL CLOSER',cnt(r=>r.ca)):'';
   const ec={};rows.forEach(r=>{ec[r.emb]=(ec[r.emb]||0)+1;});
   rows.sort((x,y)=>ec[y.emb]-ec[x.emb]||x.emb.localeCompare(y.emb,'es')||(parseDate(y.fc)||0)-(parseDate(x.fc)||0)||String(y.fc).localeCompare(String(x.fc)));
+  const perLbl={today:'Hoy',yesterday:'Ayer',week:'Esta semana',month:'Este mes'}[_comPer]||(()=>{const f=$('comFrom').value,t2=$('comTo').value;return 'Del '+(f?f.split('-').reverse().join('/'):'inicio')+' al '+(t2?t2.split('-').reverse().join('/'):'hoy');})();
+  const dShort=d=>d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  window._comRows=rows.slice();window._comMeta={per:perLbl+(_comPer==='today'||_comPer==='yesterday'?' ('+dShort(a)+')':''),emb:embs.size,ref:rows.length,teams:cnt(r=>r.team),closers:cnt(r=>r.ca)};
+  const gen=$('comGen');if(gen)gen.textContent='Período: '+window._comMeta.per+' · actualizado al '+new Date().toLocaleString('es-AR');
   let last='';
   $('tCom').innerHTML=rows.length?`<tr><th>Embajador</th><th>Puesto</th><th>Referido</th><th>Fecha consulta</th><th>Team</th><th>Closer original</th><th>Closer actual</th><th>Estado</th></tr>`+rows.map(r=>{
     const first=r.emb!==last;last=r.emb;
     return `<tr${first?' style="border-top:2px solid var(--border)"':''}><td class="name">${first?`${_h(r.emb)} <span class="sale-dot">${ec[r.emb]}</span>`:''}</td><td>${first?(COMERCIALES.includes(r.pu)||r.pu==='No comercial'?`<span class="tag-pu" title="${_h(r.sal)}">${_h(r.pu)}</span>`:`<span style="color:var(--muted);font-size:11px">${_h(r.pu)}</span>`):''}</td><td>${_h(r.ref)}</td><td style="font-size:11px">${_h(r.fc)}</td><td>${_h(r.team)}</td><td class="name">${r.co===SA?'<span style="color:var(--muted)">—</span>':_h(r.co)}</td><td class="name">${r.ca===SA?'<span style="color:var(--amber)">Sin asignar a&uacute;n</span>':_h(r.ca)}${r.co!==r.ca&&r.ca!==SA&&r.co!==SA?' <span class="tag-manual" title="Cambi&oacute; de closer">Transferido</span>':''}</td><td style="font-size:11px;color:var(--muted)">${_h(r.est)}</td></tr>`;}).join(''):'';
+}
+
+
+function vistaUrl(){return location.origin+location.pathname+'?vista=comerciales';}
+function abrirVista(){window.open(vistaUrl(),'_blank');}
+function copiarVista(){navigator.clipboard.writeText(vistaUrl()).then(()=>alert('Link copiado. Quien lo abra necesita iniciar sesión con su usuario del programa.'));}
+(function(){
+  try{if(new URLSearchParams(location.search).get('vista')==='comerciales')document.addEventListener('DOMContentLoaded',()=>{document.body.classList.add('vista-com');document.title='Embajadores comerciales — Grupo Randazzo';});}catch(e){}
+})();
+async function descargarCom(){
+  const rows=window._comRows||[],m=window._comMeta||{};
+  if(!rows.length)return alert('No hay datos para descargar en este período.');
+  try{await _loadSheetJS();}catch(e){return alert('No se pudo cargar el generador de Excel. Revisá la conexión.');}
+  const SA='(sin asignar)';
+  const data=rows.map(r=>({'Embajador':r.emb,'Puesto':r.pu,'Salón':r.sal,'Referido':r.ref,'Fecha consulta':r.fc,'Team':r.team,'Closer original':r.co===SA?'':r.co,'Closer actual':r.ca===SA?'Sin asignar':r.ca,'Transferido':(r.co!==r.ca&&r.ca!==SA&&r.co!==SA)?'Sí':'No','Estado':r.est}));
+  const ws=XLSX.utils.json_to_sheet(data);ws['!cols']=[28,14,20,26,20,26,24,24,12,28].map(w=>({wch:w}));
+  const aoa=[['Embajadores comerciales — referidos'],['Período',m.per||''],['Embajadores',m.emb],['Referidos',m.ref],['Generado',new Date().toLocaleString('es-AR')],[],['Llegaron al team','Referidos'],...(m.teams||[]),[],['Llegaron al closer','Referidos'],...(m.closers||[]).map(([k,n])=>[k===SA?'Sin asignar':k,n])];
+  const ws2=XLSX.utils.aoa_to_sheet(aoa);ws2['!cols']=[{wch:34},{wch:30}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Referidos');XLSX.utils.book_append_sheet(wb,ws2,'Resumen');
+  XLSX.writeFile(wb,'embajadores-comerciales_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
 /* ════ TOTAL EMBAJADORES + ROI ════ */
