@@ -491,8 +491,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div class="no-vista" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
         <span style="font-size:10px;color:var(--muted)">Ver</span>
         <div class="cl-ctrl" id="comVer" style="margin:0"></div>
-        <span style="font-size:10px;color:var(--muted);margin-left:10px">Puesto</span>
-        <div class="cl-ctrl" id="comPu" style="margin:0"></div>
+        <div class="cl-ctrl" id="comPu" style="display:none"></div>
       </div>
       <div id="comNote" style="font-size:14px;color:var(--cream);margin:4px 0 10px"></div>
       <div id="comSum" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"></div>
@@ -1875,7 +1874,7 @@ function paintCom(){
   $('comNote').innerHTML=rows.length?`<b style="color:var(--lime);font-size:22px">${embs.size}</b> embajador${embs.size===1?'':'es'} ${_comOnly?'comercial'+(embs.size===1?'':'es'):'empleado'+(embs.size===1?'':'s')} trajeron <b style="color:var(--lime);font-size:22px">${rows.length}</b> referido${rows.length===1?'':'s'}`:`<span style="color:var(--muted)">No hay referidos de ${_comOnly?'comerciales':'empleados'} en este per&iacute;odo.</span>`;
   const cnt=f=>{const m={};rows.forEach(r=>{const k=f(r);m[k]=(m[k]||0)+1;});return Object.entries(m).sort((x,y)=>y[1]-x[1]);};
   const chipRow=(lab,arr)=>`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--muted);min-width:90px">${lab}</span>${arr.map(([k,n])=>`<span class="tag-pu" style="background:var(--faint);border-color:var(--border);color:var(--cream)">${_h(k==='(sin asignar)'?'Sin asignar':k)} <b>${n}</b></span>`).join('')}</div>`;
-  $('comSum').innerHTML=rows.length?chipRow('LLEGARON AL TEAM',cnt(r=>r.team))+chipRow('LLEGARON AL CLOSER',cnt(r=>r.ca)):'';
+  $('comSum').innerHTML='';
   const ec={};rows.forEach(r=>{ec[r.emb]=(ec[r.emb]||0)+1;});
   rows.sort((x,y)=>ec[y.emb]-ec[x.emb]||x.emb.localeCompare(y.emb,'es')||(parseDate(y.fc)||0)-(parseDate(x.fc)||0)||String(y.fc).localeCompare(String(x.fc)));
   const perLbl={today:'Hoy',yesterday:'Ayer',week:'Esta semana',month:'Este mes'}[_comPer]||(()=>{const f=$('comFrom').value,t2=$('comTo').value;return 'Del '+(f?f.split('-').reverse().join('/'):'inicio')+' al '+(t2?t2.split('-').reverse().join('/'):'hoy');})();
