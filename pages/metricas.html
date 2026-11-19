@@ -432,6 +432,27 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
         <span id="roiNote" class="fn-s" style="margin:0"></span>
       </div>
     </div>
+    <!-- Referidos de embajadores comerciales -->
+    <div class="cbox" id="com-box" style="margin-bottom:16px;display:none;">
+      <div class="cbox-title">EMBAJADORES COMERCIALES &mdash; REFERIDOS QUE TRAJERON Y A QUI&Eacute;N LLEG&Oacute;</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0 8px">
+        <span style="font-size:10px;color:var(--muted)">Per&iacute;odo (fecha de consulta)</span>
+        <div class="cl-ctrl" id="comPer" style="margin:0"></div>
+        <span id="comCustom" style="display:none;align-items:center;gap:6px;font-size:10px;color:var(--muted)">
+          desde <input type="date" class="date-input" id="comFrom" onchange="paintCom()">
+          hasta <input type="date" class="date-input" id="comTo" onchange="paintCom()">
+        </span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <span style="font-size:10px;color:var(--muted)">Ver</span>
+        <div class="cl-ctrl" id="comVer" style="margin:0"></div>
+        <span style="font-size:10px;color:var(--muted);margin-left:10px">Puesto</span>
+        <div class="cl-ctrl" id="comPu" style="margin:0"></div>
+      </div>
+      <div id="comNote" style="font-size:14px;color:var(--cream);margin:4px 0 10px"></div>
+      <div id="comSum" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"></div>
+      <div style="overflow:auto;max-height:520px"><table class="mt" id="tCom"></table></div>
+    </div>
     <!-- Top embajadores por entregas -->
     <div class="cbox" id="top-box" style="margin-bottom:16px;display:none;">
       <div class="cbox-header">
@@ -1470,7 +1491,7 @@ function renderDash(k){
   $('kRef').textContent=n(k.totalPV||k.total);
   $('kRefS').textContent=`${n(k.totalPV)-n(k.sinVinc)} con prev · ${n(k.sinVinc)} sin prev (referidos)`;
   renderEstadosPanel(k.est||{}, k.estDet||{}, n(k.totalPV||k.total));
-  window._lastK=k;paintTotal(k);paintRoi(k);paintPuesto(k);
+  window._lastK=k;paintTotal(k);paintRoi(k);paintCom();paintPuesto(k);
   $('kEnt').textContent=n(k.totalEnt);
   $('kEntS').textContent=`${n(k.entSis)} del reporte + ${n(k.totalEnt)-n(k.entSis)} manuales`;
   $('kPag').textContent=n(k.pagados);
@@ -1771,6 +1792,51 @@ function paintPuesto(k){
     `<tr style="border-top:2px solid var(--l20)"><td class="name" style="color:var(--lime)">TOTAL</td><td class="r">${T.n}</td><td class="lime r">${T.ref}</td><td class="r">${T.prev}</td><td class="r"><span class="sale-dot">${T.ent}</span></td><td class="r" style="color:var(--muted)">${pct(T.ent,T.ref)}</td>${emb?`<td class="r">${T.paid}</td><td class="r">$${(T.ent*0.5).toFixed(1).replace(/\.0$/,'')}M</td>`:''}</tr>`;
   missing.sort((a,b)=>b[1]-a[1]||b[2]-a[2]);
   document.getElementById('puMiss').innerHTML=missing.length?`<details class="fn-rev"><summary>${missing.length} sin puesto identificado &mdash; revisar (no est&aacute;n en el Excel de puestos ni en el padr&oacute;n, o el nombre no coincide)</summary><table class="mt"><tr><th>Nombre</th><th class="r">Referidos</th><th class="r">Entregas</th></tr>${missing.map(m=>`<tr><td class="name">${_h(m[0])}</td><td class="r">${m[1]}</td><td class="r">${m[2]}</td></tr>`).join('')}</table></details>`:'';
+}
+
+
+/* ════ EMBAJADORES COMERCIALES — REFERIDOS Y A QUIÉN LLEGARON ════ */
+let _comPer='today',_comPu='all',_comOnly=true;
+const COMERCIALES=['Setter','Fisher','Closer','Zonal','Vendedor','Comprador','Responsable'];
+function setComPer(v){_comPer=v;paintCom();}
+function setComPu(v){_comPu=v;paintCom();}
+function setComOnly(v){_comOnly=v;_comPu='all';paintCom();}
+function comRange(){
+  const now=new Date(),y=now.getFullYear(),m=now.getMonth(),d=now.getDate(),D=n=>new Date(y,m,d+n);
+  if(_comPer==='today')return [D(0),D(1)];
+  if(_comPer==='yesterday')return [D(-1),D(0)];
+  if(_comPer==='week')return [mondayOf(now),D(1)];
+  if(_comPer==='month')return [new Date(y,m,1),D(1)];
+  const f=document.getElementById('comFrom').value,t2=document.getElementById('comTo').value;
+  const fd=f?_parseFe(f):new Date(0),td=t2?_parseFe(t2):D(0);td.setDate(td.getDate()+1);return [fd,td];
+}
+function paintCom(){
+  const box=document.getElementById('com-box'),raw=window._rawKPI;if(!box||!raw)return;
+  box.style.display='block';
+  const $=id=>document.getElementById(id);
+  $('comPer').innerHTML=[['today','Hoy'],['yesterday','Ayer'],['week','Esta semana'],['month','Este mes'],['custom','Personalizado']].map(([v,l])=>`<button class="cl-btn${_comPer===v?' active':''}" onclick="setComPer('${v}')">${l}</button>`).join('');
+  $('comCustom').style.display=_comPer==='custom'?'inline-flex':'none';
+  $('comVer').innerHTML=[[true,'Solo puestos comerciales'],[false,'Todos los empleados']].map(([v,l])=>`<button class="cl-btn${_comOnly===v?' active':''}" onclick="setComOnly(${v})">${l}</button>`).join('');
+  const tmap={};(raw._ref||[]).forEach(r=>{if(r._e)tmap[r._e]=r._t;});
+  const [a,b]=comRange(),SA='(sin asignar)';
+  let rows=(raw._pv||[]).filter(r=>{const d=parseDate(r['FECHA CONSULTA']);return d&&d>=a&&d<b&&(tmap[r._e]||'Empleado')!=='Externo';}).map(r=>{
+    const ca=((r._ca||r['CLOSER']||'').trim())||SA,co=((r._co||'').trim())||ca;
+    return {emb:r._e||'—',pu:puName(r._e),sal:(puestoDe(r._e)||{}).salon||'',ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`.trim(),fc:r['FECHA CONSULTA']||'',team:(r['PERFIL CRM']||'').trim()||'Sin team',ca,co,est:(r['Estado']||'').trim()};});
+  if(_comOnly)rows=rows.filter(r=>COMERCIALES.includes(r.pu));
+  const pus=[...new Set(rows.map(r=>r.pu))].sort((x,y)=>x.localeCompare(y,'es'));
+  chipsPu('comPu',_comPu,'setComPu',pus);
+  if(_comPu!=='all')rows=rows.filter(r=>r.pu===_comPu);
+  const embs=new Set(rows.map(r=>r.emb));
+  $('comNote').innerHTML=rows.length?`<b style="color:var(--lime);font-size:22px">${embs.size}</b> embajador${embs.size===1?'':'es'} ${_comOnly?'comercial'+(embs.size===1?'':'es'):'empleado'+(embs.size===1?'':'s')} trajeron <b style="color:var(--lime);font-size:22px">${rows.length}</b> referido${rows.length===1?'':'s'}`:`<span style="color:var(--muted)">No hay referidos de ${_comOnly?'comerciales':'empleados'} en este per&iacute;odo.</span>`;
+  const cnt=f=>{const m={};rows.forEach(r=>{const k=f(r);m[k]=(m[k]||0)+1;});return Object.entries(m).sort((x,y)=>y[1]-x[1]);};
+  const chipRow=(lab,arr)=>`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--muted);min-width:90px">${lab}</span>${arr.map(([k,n])=>`<span class="tag-pu" style="background:var(--faint);border-color:var(--border);color:var(--cream)">${_h(k==='(sin asignar)'?'Sin asignar':k)} <b>${n}</b></span>`).join('')}</div>`;
+  $('comSum').innerHTML=rows.length?chipRow('LLEGARON AL TEAM',cnt(r=>r.team))+chipRow('LLEGARON AL CLOSER',cnt(r=>r.ca)):'';
+  const ec={};rows.forEach(r=>{ec[r.emb]=(ec[r.emb]||0)+1;});
+  rows.sort((x,y)=>ec[y.emb]-ec[x.emb]||x.emb.localeCompare(y.emb,'es')||(parseDate(y.fc)||0)-(parseDate(x.fc)||0)||String(y.fc).localeCompare(String(x.fc)));
+  let last='';
+  $('tCom').innerHTML=rows.length?`<tr><th>Embajador</th><th>Puesto</th><th>Referido</th><th>Fecha consulta</th><th>Team</th><th>Closer original</th><th>Closer actual</th><th>Estado</th></tr>`+rows.map(r=>{
+    const first=r.emb!==last;last=r.emb;
+    return `<tr${first?' style="border-top:2px solid var(--border)"':''}><td class="name">${first?`${_h(r.emb)} <span class="sale-dot">${ec[r.emb]}</span>`:''}</td><td>${first?(COMERCIALES.includes(r.pu)||r.pu==='No comercial'?`<span class="tag-pu" title="${_h(r.sal)}">${_h(r.pu)}</span>`:`<span style="color:var(--muted);font-size:11px">${_h(r.pu)}</span>`):''}</td><td>${_h(r.ref)}</td><td style="font-size:11px">${_h(r.fc)}</td><td>${_h(r.team)}</td><td class="name">${r.co===SA?'<span style="color:var(--muted)">—</span>':_h(r.co)}</td><td class="name">${r.ca===SA?'<span style="color:var(--amber)">Sin asignar a&uacute;n</span>':_h(r.ca)}${r.co!==r.ca&&r.ca!==SA&&r.co!==SA?' <span class="tag-manual" title="Cambi&oacute; de closer">Transferido</span>':''}</td><td style="font-size:11px;color:var(--muted)">${_h(r.est)}</td></tr>`;}).join(''):'';
 }
 
 /* ════ TOTAL EMBAJADORES + ROI ════ */
