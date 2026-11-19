@@ -121,6 +121,7 @@ body.vista-com #comNote,body.vista-com #comSum{display:none!important;}
 .dv-top .bar{grid-column:2/4;height:6px;background:var(--faint);border-radius:3px;overflow:hidden;}.dv-top .bar div{height:100%;background:var(--lime);}
 @media(max-width:820px){.dv-grid{grid-template-columns:1fr;}.dv-hero .n{font-size:56px;}.dv-hero .c{padding:16px 10px;}}
 .only-vista{display:none;}
+.h-logo img{height:54px!important;}
 .big-kpis{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0;background:var(--ink1);border:1px solid var(--border);border-top:3px solid var(--lime);margin-bottom:12px;}
 .big-k{padding:26px 32px;text-align:center;}
 .big-l{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--muted);margin-bottom:8px;}
@@ -473,7 +474,8 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
         <div class="cbox-title">EMBAJADORES COMERCIALES &mdash; REFERIDOS QUE TRAJERON Y A QUI&Eacute;N LLEG&Oacute;</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn-add" onclick="descargarCom()">Descargar Excel</button>
-          <button class="btn-add no-vista" onclick="abrirVista()">Vista para direcci&oacute;n</button>
+          <button class="btn-add no-vista" onclick="publicarDir()">Publicar para direcci&oacute;n</button>
+          <button class="btn-add no-vista" onclick="abrirVista()">Ver p&aacute;gina de direcci&oacute;n</button>
           <button class="btn-add no-vista" onclick="copiarVista()">Copiar link</button>
         </div>
       </div>
@@ -1909,9 +1911,37 @@ function paintDir(rows,embs,perTxt){
   if(window.Chart){_dvChart=new Chart(document.getElementById('dvPie'),{type:'doughnut',data:{labels:est.map(e=>e[0]),datasets:[{data:est.map(e=>e[1]),backgroundColor:est.map((e,i)=>COL[i%COL.length]),borderWidth:2,borderColor:'#111'}]},options:{cutout:'58%',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+c.raw+' ('+Math.round(c.raw*100/n)+'%)'}}}}});}
 }
 
-function vistaUrl(){return location.origin+location.pathname+'?vista=comerciales';}
-function abrirVista(){window.open(vistaUrl(),'_blank');}
-function copiarVista(){navigator.clipboard.writeText(vistaUrl()).then(()=>alert('Link copiado. Quien lo abra necesita iniciar sesión con su usuario del programa.'));}
+
+function comCalc(per){
+  const raw=window._rawKPI;if(!raw)return null;
+  const o=[_comPer,_comOnly,_comPu];_comPer=per;_comOnly=true;_comPu='all';
+  try{
+    const tmap={};(raw._ref||[]).forEach(r=>{if(r._e)tmap[r._e]=r._t;});
+    const [a,b]=comRange(),SA='(sin asignar)';
+    let rows=(raw._pv||[]).filter(r=>{const d=parseDate(r['FECHA CONSULTA']);return d&&d>=a&&d<b&&(tmap[r._e]||'Empleado')!=='Externo';}).map(r=>({emb:r._e||'—',pu:puName(r._e),team:(r['PERFIL CRM']||'').trim()||'Sin team',ca:((r._ca||r['CLOSER']||'').trim())||SA,est:(r['Estado']||'').trim()||'Sin estado'}));
+    rows=rows.filter(r=>COMERCIALES.includes(r.pu));
+    const cnt=f=>{const m={};rows.forEach(r=>{const k=f(r);m[k]=(m[k]||0)+1;});return Object.entries(m).sort((x,y)=>y[1]-x[1]);};
+    const tm={};rows.forEach(r=>{(tm[r.emb]=tm[r.emb]||{e:r.emb,pu:r.pu,n:0}).n++;});
+    const f=d=>d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const now=new Date();let label;
+    if(per==='week'){const m=mondayOf(now),s=new Date(m);s.setDate(s.getDate()+6);label='Semana del '+f(m)+' al '+f(s);}
+    else{const mm=now.toLocaleDateString('es-AR',{month:'long',year:'numeric'});label=mm.charAt(0).toUpperCase()+mm.slice(1);}
+    return {label,ref:rows.length,emb:Object.keys(tm).length,estados:cnt(r=>r.est),top:Object.values(tm).sort((x,y)=>y.n-x.n||x.e.localeCompare(y.e,'es')).slice(0,10),teams:cnt(r=>r.team),closers:cnt(r=>r.ca===SA?'Sin asignar':r.ca)};
+  }finally{[_comPer,_comOnly,_comPu]=o;}
+}
+async function publicarDir(silent){
+  if(!window._rawKPI){alert('Primero cargá los reportes / esperá a que se muestre el dashboard.');return false;}
+  if(typeof _sb==='undefined'||!_sb){alert('Sin conexión a la nube.');return false;}
+  const rowsOut=['week','month'].map(p=>({periodo:p,data:comCalc(p),updated_at:new Date().toISOString()}));
+  const {error}=await _sb.from('emb_direccion').upsert(rowsOut);
+  if(error){alert('No se pudo publicar: '+error.message+'\n¿Corriste supabase_direccion.sql?');return false;}
+  if(!silent)alert('Publicado. Dirección ya ve: '+rowsOut.map(r=>r.data.label+' ('+r.data.ref+' referidos)').join(' · '));
+  return true;
+}
+
+function vistaUrl(){return new URL('direccion.html',location.href).href;}
+async function abrirVista(){const w=window.open('','_blank');const ok=await publicarDir(true);if(ok)w.location=vistaUrl();else w.close();}
+function copiarVista(){navigator.clipboard.writeText(vistaUrl()).then(()=>alert('Link copiado. Quien lo abra necesita iniciar sesión. Muestra lo último publicado (botón "Publicar para dirección").'));}
 (function(){
   try{if(new URLSearchParams(location.search).get('vista')==='comerciales')document.addEventListener('DOMContentLoaded',()=>{document.body.classList.add('vista-com');document.title='Embajadores comerciales — Grupo Randazzo';});}catch(e){}
 })();
