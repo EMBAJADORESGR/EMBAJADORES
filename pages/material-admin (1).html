@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Material — Administración | Embajadores</title>
+<link rel="stylesheet" href="../assets/common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+.pn{background:var(--ink1);border:1px solid var(--border);border-radius:6px;padding:20px 22px;margin-bottom:16px;}
+.pn-t{font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--muted);margin-bottom:14px;}
+.drop{border:2px dashed var(--l30);border-radius:8px;padding:34px 20px;text-align:center;cursor:pointer;transition:background .2s;}
+.drop:hover,.drop.over{background:var(--l10);}
+.drop b{color:var(--lime);}
+.drop small{display:block;color:var(--muted);margin-top:6px;font-size:12px;}
+.fld{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.fld label{font-size:11px;color:var(--muted);}
+.in{background:var(--faint);border:1px solid var(--border);border-radius:4px;padding:8px 10px;font-size:13px;color:var(--cream);font-family:var(--ff);outline:none;}
+.in:focus{border-color:var(--l30);}
+.btn{font-family:var(--ff);font-size:12px;font-weight:700;border-radius:4px;padding:9px 16px;cursor:pointer;border:1px solid var(--border);background:var(--faint);color:var(--cream);}
+.btn.pri{background:var(--lime);border-color:var(--lime);color:var(--ink);}
+.btn.red{color:#FCA5A5;border-color:rgba(239,68,68,.3);}
+.btn:disabled{opacity:.4;cursor:default;}
+table.t{width:100%;border-collapse:collapse;font-size:12px;}
+table.t th{text-align:left;font-size:10px;letter-spacing:.08em;color:var(--muted);padding:8px 6px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--ink1);}
+table.t td{padding:6px;border-bottom:1px solid var(--border);vertical-align:middle;}
+table.t img{height:54px;width:auto;border-radius:3px;display:block;}
+table.t .in{width:100%;padding:6px 8px;font-size:12px;}
+.sc{overflow:auto;max-height:560px;}
+.pg{height:6px;background:var(--faint);border-radius:3px;overflow:hidden;margin:10px 0;display:none;}
+.pg i{display:block;height:100%;width:0;background:var(--lime);transition:width .2s;}
+.msg{font-size:12px;color:var(--muted);margin-top:6px;}
+.box{background:var(--faint);border:1px solid var(--border);border-radius:4px;padding:12px 14px;font-size:13px;line-height:1.6;margin-bottom:10px;white-space:pre-wrap;}
+.warn{background:var(--a-bg);border:1px solid var(--a-bd);color:#FCD34D;border-radius:4px;padding:12px 14px;font-size:12px;line-height:1.6;margin-bottom:14px;display:none;}
+</style>
+</head>
+<body>
+<div id="auth-check"><div class="ac-spinner"></div></div>
+<div id="loader">
+  <div class="ld-logo"><img src="../logo.png" alt="Grupo Randazzo"></div>
+  <div><div class="ld-word" id="lWord"></div><div class="ld-line" style="animation-delay:1.3s"></div></div>
+</div>
+<div id="page">
+<header>
+  <a href="programa.html" class="h-logo"><img src="../logo.png" alt="Grupo Randazzo"></a>
+  <div class="h-tabs">
+    <a href="programa.html" class="h-tab">PROGRAMA</a>
+    <a href="metricas.html" class="h-tab">M&Eacute;TRICAS</a>
+    <a href="material-admin.html" class="h-tab active">MATERIAL</a>
+  </div>
+  <div class="h-right"><span class="h-user" id="navUser"></span><button class="btn-so" onclick="signOut()">Salir</button></div>
+</header>
+<main class="page-content">
+  <div class="s-kicker" style="margin-bottom:6px">Material para embajadores</div>
+  <h1 style="font-size:28px;font-weight:700;margin-bottom:18px">Subí flyers y promociones</h1>
+  <div class="warn" id="setupWarn">Falta crear o actualizar la tabla y el almacenamiento. Corré <b>supabase_material.sql</b> completo en Supabase (SQL Editor) una sola vez y recargá esta página.</div>
+
+  <div class="pn">
+    <div class="pn-t">1 · SUBIR MATERIAL NUEVO</div>
+    <div class="fld"><label>Campaña por defecto</label><input class="in" id="campDef" style="width:180px"><label style="margin-left:8px">(si el nombre del archivo empieza con el mes, ej. <b>11-0km-…</b>, se usa ese mes)</label></div>
+    <div class="drop" id="drop"><div><b>Arrastrá acá las imágenes</b> o hacé clic para elegirlas</div><small>Podés soltar muchas juntas (JPG, PNG, WebP). Marca, tipo de oferta (0KM, Plan de ahorro, Cupos), modelo y formato se completan solos con el nombre del archivo y los podés corregir antes de publicar.</small></div>
+    <input type="file" id="file" accept="image/*" multiple style="display:none">
+    <div id="pend" style="display:none;margin-top:16px">
+      <div class="sc" style="max-height:340px"><table class="t" id="tPend"></table></div>
+      <div class="pg" id="pg"><i id="pgi"></i></div>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center"><button class="btn pri" id="btnUp" onclick="uploadAll()">Publicar todo</button><button class="btn" onclick="clearPend()">Vaciar lista</button><span class="msg" id="upMsg"></span></div>
+    </div>
+  </div>
+
+  <div class="pn">
+    <div class="pn-t">2 · MATERIAL PUBLICADO</div>
+    <div class="fld">
+      <select class="in" id="fCamp" onchange="drawList()"></select>
+      <select class="in" id="fCat" onchange="drawList()"></select>
+      <input class="in" id="fQ" placeholder="Buscar…" oninput="drawList()" style="width:200px">
+      <span class="msg" id="listCnt" style="margin:0 0 0 auto"></span>
+    </div>
+    <div class="fld" id="bulk" style="display:none">
+      <span class="msg" style="margin:0" id="selCnt"></span>
+      <input class="in" id="bMarca" list="marcaList" placeholder="Marca…" style="width:120px">
+      <input class="in" id="bCat" list="catList" placeholder="Tipo de oferta…" style="width:150px">
+      <span class="msg" style="margin:0">Vigente hasta</span><input class="in" id="bVig" type="date">
+      <input class="in" id="bCamp" placeholder="Campaña…" style="width:150px">
+      <button class="btn" onclick="bulkApply()">Aplicar a seleccionadas</button>
+      <button class="btn" onclick="bulkVis(false)">Ocultar</button>
+      <button class="btn" onclick="bulkVis(true)">Mostrar</button>
+      <button class="btn red" onclick="bulkDel()">Eliminar</button>
+    </div>
+    <datalist id="marcaList"><option>Chevrolet</option><option>Renault</option><option>DFSK</option></datalist>
+    <datalist id="catList"><option>0KM</option><option>Plan de ahorro</option><option>Cupos</option><option>Adjudicación</option><option>Usados</option><option>Marcas</option><option>Otros</option></datalist>
+    <div class="sc"><table class="t" id="tList"></table></div>
+  </div>
+
+  <div class="pn">
+    <div class="pn-t">3 · CÓMO AVISARLE A LOS EMBAJADORES</div>
+    <div class="msg" style="margin:0 0 8px">Link público (no pide usuario ni contraseña):</div>
+    <div class="fld"><input class="in" id="pubUrl" readonly style="flex:1;min-width:260px"><button class="btn pri" onclick="cp('pubUrl')">Copiar link</button><a class="btn" id="pubOpen" target="_blank" href="#">Abrir galería</a></div>
+    <div class="msg" style="margin:10px 0 6px">Texto para el mensaje de bienvenida / mail:</div>
+    <div class="box" id="txtMail"></div><button class="btn" onclick="cp('txtMail',true)">Copiar texto</button>
+    <div class="msg" style="margin:16px 0 6px">Pedido para Sistemas (botón dentro de la web de REFERIDOS):</div>
+    <div class="box" id="txtSis"></div><button class="btn" onclick="cp('txtSis',true)">Copiar pedido</button>
+  </div>
+</main>
+</div>
+<script src="../assets/auth.js"></script>
+<script>
+const BUCKET='emb-material';
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+let PEND=[],LIST=[],SEL=new Set();
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const slug=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'x';
+document.addEventListener('DOMContentLoaded',async()=>{
+  const d=new Date();document.getElementById('campDef').value=MESES[d.getMonth()]+' '+d.getFullYear();
+  const url=location.origin+'/pages/material.html';
+  document.getElementById('pubUrl').value=url;document.getElementById('pubOpen').href='material.html';
+  document.getElementById('txtMail').textContent=`🎨 Material para promocionar\nEn este link encontrás todos los flyers e historias listos para compartir con tus contactos. Lo actualizamos todos los meses:\n${url}`;
+  document.getElementById('txtSis').textContent=`Necesitamos agregar en la web de REFERIDOS (donde el embajador ve sus estados) un botón o banner destacado "Material para promocionar" que abra este link en una pestaña nueva:\n${url}\nEs una página pública: no requiere login ni integración, solo el enlace.`;
+  const dz=document.getElementById('drop'),fi=document.getElementById('file');
+  dz.onclick=()=>fi.click();fi.onchange=()=>{addFiles([...fi.files]);fi.value='';};
+  ['dragover','dragenter'].forEach(e=>dz.addEventListener(e,ev=>{ev.preventDefault();dz.classList.add('over');}));
+  ['dragleave','drop'].forEach(e=>dz.addEventListener(e,ev=>{ev.preventDefault();dz.classList.remove('over');}));
+  dz.addEventListener('drop',ev=>addFiles([...ev.dataTransfer.files]));
+  await _sbReady;loadList();
+});
+function cp(id,txt){const el=document.getElementById(id);navigator.clipboard.writeText(txt?el.textContent:el.value).then(()=>alert('Copiado'));}
+
+/* ── nombre de archivo → campos ── */
+const MARCAS={DFSK:['dfsk','c35','c31','k01'],Chevrolet:['captiva','onix','montana','silverado','s10','sonic','spark','tracker','trailblazer','equinox','cruze','joy','groove','spin'],Renault:['kwid','kardian','kangoo','kango','master','boreal','niagara','duster','sandero','stepway','oroch','logan','koleos','arkana','clio']};
+function marcaDe(s){const l=String(s).toLowerCase();for(const [m,ks] of Object.entries(MARCAS))if(ks.some(k=>l.includes(k)))return m;return '';}
+function parseName(fn){
+  const base=fn.replace(/\.[^.]+$/,'');const low=base.toLowerCase();
+  let camp=null;const m=base.match(/^(\d{1,2})[-_ ]/);
+  if(m&&+m[1]>=1&&+m[1]<=12)camp=MESES[+m[1]-1]+' '+new Date().getFullYear();
+  let cat='Otros';
+  if(low.includes('cupo'))cat='Cupos';else if(low.includes('adjud'))cat='Adjudicación';else if(/0\s?km/.test(low))cat='0KM';else if(/(^|[-_ ])pda([-_ ]|$)/.test(low))cat='Plan de ahorro';
+  let t=base.replace(/^\d{1,2}[-_ ]/,'').replace(/(^|[-_ ])(pda|0km|cupos?)(?=[-_ ]|$)/ig,' ').replace(/(^|[-_ ])(9-16|1-1|4-5|16-9)$/,'').replace(/\(\d+\)|\s\d+$/g,'').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
+  t=t.replace(/\b\w/g,c=>c.toUpperCase());
+  return {camp,cat,titulo:t||base,marca:marcaDe(base)};
+}
+function fmtOf(r){if(Math.abs(r-.5625)<.04)return 'Historia 9:16';if(Math.abs(r-1)<.04)return 'Cuadrado 1:1';if(Math.abs(r-.8)<.04)return 'Vertical 4:5';if(r>1.3)return 'Horizontal';return 'Otro';}
+function loadImg(file){return new Promise((ok,ko)=>{const u=URL.createObjectURL(file),i=new Image();i.onload=()=>ok({img:i,url:u});i.onerror=ko;i.src=u;});}
+async function thumbOf(img,max=720){const s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);return new Promise(r=>c.toBlob(r,'image/jpeg',.82));}
+
+async function addFiles(files){
+  const def=document.getElementById('campDef').value.trim();
+  for(const f of files){
+    if(!f.type.startsWith('image/'))continue;
+    const p=parseName(f.name);let ratio=1,prev='';
+    try{const {img,url}=await loadImg(f);ratio=img.naturalWidth/img.naturalHeight;prev=url;}catch(e){}
+    PEND.push({file:f,titulo:p.titulo,marca:p.marca,categoria:p.cat,campana:p.camp||def,formato:fmtOf(ratio),ratio,prev});
+  }
+  drawPend();
+}
+function drawPend(){
+  document.getElementById('pend').style.display=PEND.length?'block':'none';
+  document.getElementById('tPend').innerHTML='<tr><th></th><th>Título</th><th>Marca</th><th>Tipo de oferta</th><th>Campaña</th><th>Formato</th><th></th></tr>'+PEND.map((p,i)=>`<tr><td><img src="${p.prev}"></td><td><input class="in" value="${esc(p.titulo)}" onchange="PEND[${i}].titulo=this.value"></td><td><input class="in" list="marcaList" value="${esc(p.marca)}" onchange="PEND[${i}].marca=this.value"></td><td><input class="in" list="catList" value="${esc(p.categoria)}" onchange="PEND[${i}].categoria=this.value"></td><td><input class="in" value="${esc(p.campana)}" onchange="PEND[${i}].campana=this.value"></td><td><input class="in" value="${esc(p.formato)}" onchange="PEND[${i}].formato=this.value"></td><td><button class="btn red" onclick="PEND.splice(${i},1);drawPend()">✕</button></td></tr>`).join('');
+  document.getElementById('upMsg').textContent=PEND.length+' archivo'+(PEND.length>1?'s':'')+' listo'+(PEND.length>1?'s':'')+' para publicar';
+}
+function clearPend(){PEND=[];drawPend();}
+async function uploadAll(){
+  if(!PEND.length)return;
+  const btn=document.getElementById('btnUp'),pg=document.getElementById('pg'),pgi=document.getElementById('pgi'),msg=document.getElementById('upMsg');
+  btn.disabled=true;pg.style.display='block';let done=0,fail=[];
+  const total=PEND.length,queue=[...PEND];
+  const work=async()=>{
+    while(queue.length){
+      const p=queue.shift();
+      try{
+        const {img}=await loadImg(p.file);const tb=await thumbOf(img);
+        const key=slug(p.campana)+'/'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+'-'+slug(p.file.name.replace(/\.[^.]+$/,''));
+        const ext=(p.file.name.match(/\.(\w+)$/)||[,'jpg'])[1].toLowerCase();
+        const path=key+'.'+ext,tpath='thumbs/'+key+'.jpg',st=_sb.storage.from(BUCKET);
+        let r=await st.upload(path,p.file,{contentType:p.file.type,cacheControl:'31536000'});if(r.error)throw r.error;
+        r=await st.upload(tpath,tb,{contentType:'image/jpeg',cacheControl:'31536000'});if(r.error)throw r.error;
+        const row={titulo:p.titulo,marca:p.marca||null,categoria:p.categoria,campana:p.campana,formato:p.formato,ratio:p.ratio,url:st.getPublicUrl(path).data.publicUrl,thumb_url:st.getPublicUrl(tpath).data.publicUrl,path,thumb_path:tpath,visible:true};
+        const ins=await _sb.from('emb_material').insert(row);if(ins.error)throw ins.error;
+      }catch(e){fail.push(p.file.name+': '+(e.message||e));}
+      done++;pgi.style.width=(done/total*100)+'%';msg.textContent=`Subiendo ${done} de ${total}…`;
+    }
+  };
+  await Promise.all([work(),work(),work()]);
+  btn.disabled=false;pg.style.display='none';
+  PEND=PEND.filter(p=>fail.some(f=>f.startsWith(p.file.name+': ')));drawPend();
+  msg.textContent=fail.length?`Se publicaron ${total-fail.length}; fallaron ${fail.length}: ${fail.slice(0,3).join(' | ')}`:`✓ Se publicaron ${total} piezas.`;
+  if(fail.some(f=>/relation|policy|bucket|not found|column/i.test(f)))document.getElementById('setupWarn').style.display='block';
+  loadList();
+}
+
+/* ── lista publicada ── */
+async function loadList(){
+  const {data,error}=await _sb.from('emb_material').select('*').order('created_at',{ascending:false}).limit(3000);
+  if(error){document.getElementById('setupWarn').style.display='block';return;}
+  LIST=data||[];SEL.clear();
+  const opt=(arr,all)=>`<option value="">${all}</option>`+arr.map(v=>`<option>${esc(v)}</option>`).join('');
+  const cu=k=>[...new Set(LIST.map(r=>r[k]||'Otros'))];
+  const c0=document.getElementById('fCamp').value,k0=document.getElementById('fCat').value;
+  document.getElementById('fCamp').innerHTML=opt(cu('campana'),'Todas las campañas');document.getElementById('fCat').innerHTML=opt(cu('categoria'),'Todas las categorías');
+  document.getElementById('fCamp').value=c0;document.getElementById('fCat').value=k0;
+  drawList();
+}
+function filtered(){const c=document.getElementById('fCamp').value,k=document.getElementById('fCat').value,q=document.getElementById('fQ').value.toLowerCase().trim();
+  return LIST.filter(r=>(!c||(r.campana||'Otros')===c)&&(!k||(r.categoria||'Otros')===k)&&(!q||[r.titulo,r.categoria,r.campana].join(' ').toLowerCase().includes(q)));}
+function drawList(){
+  const rows=filtered();
+  document.getElementById('listCnt').textContent=`${rows.length} de ${LIST.length} piezas · ${LIST.filter(r=>r.visible).length} visibles`;
+  document.getElementById('tList').innerHTML=`<tr><th><input type="checkbox" onchange="selAll(this.checked)"></th><th></th><th>Título</th><th>Marca</th><th>Tipo de oferta</th><th>Campaña</th><th>Formato</th><th>Vigente hasta</th><th>Visible</th><th></th></tr>`+
+   rows.map(r=>`<tr><td><input type="checkbox" ${SEL.has(r.id)?'checked':''} onchange="sel('${r.id}',this.checked)"></td><td><a href="${esc(r.url)}" target="_blank"><img src="${esc(r.thumb_url||r.url)}" loading="lazy"></a></td>
+   <td><input class="in" value="${esc(r.titulo)}" onchange="upd('${r.id}','titulo',this.value)"></td>
+   <td><input class="in" list="marcaList" value="${esc(r.marca)}" onchange="upd('${r.id}','marca',this.value)"></td>
+   <td><input class="in" list="catList" value="${esc(r.categoria)}" onchange="upd('${r.id}','categoria',this.value)"></td>
+   <td><input class="in" value="${esc(r.campana)}" onchange="upd('${r.id}','campana',this.value)"></td>
+   <td><input class="in" value="${esc(r.formato)}" onchange="upd('${r.id}','formato',this.value)"></td>
+   <td><input class="in" type="date" value="${esc(r.vigencia||'')}" onchange="upd('${r.id}','vigencia',this.value||null)"></td>
+   <td><input type="checkbox" ${r.visible?'checked':''} onchange="upd('${r.id}','visible',this.checked)"></td>
+   <td><button class="btn red" onclick="del('${r.id}')">Eliminar</button></td></tr>`).join('');
+  bulkUI();
+}
+function sel(id,on){on?SEL.add(id):SEL.delete(id);bulkUI();}
+function selAll(on){filtered().forEach(r=>on?SEL.add(r.id):SEL.delete(r.id));drawList();}
+function bulkUI(){document.getElementById('bulk').style.display=SEL.size?'flex':'none';document.getElementById('selCnt').textContent=SEL.size+' seleccionadas';}
+async function upd(id,k,v){const {error}=await _sb.from('emb_material').update({[k]:v}).eq('id',id);if(error)return alert('No se pudo guardar: '+error.message);const r=LIST.find(x=>x.id===id);if(r)r[k]=v;}
+async function removeRows(ids){
+  const rows=LIST.filter(r=>ids.includes(r.id));
+  const paths=rows.flatMap(r=>[r.path,r.thumb_path]).filter(Boolean);
+  if(paths.length)await _sb.storage.from(BUCKET).remove(paths);
+  const {error}=await _sb.from('emb_material').delete().in('id',ids);if(error)return alert('Error: '+error.message);
+  LIST=LIST.filter(r=>!ids.includes(r.id));ids.forEach(i=>SEL.delete(i));drawList();
+}
+function del(id){if(confirm('¿Eliminar esta pieza? Se borra también el archivo.'))removeRows([id]);}
+function bulkDel(){if(confirm(`¿Eliminar ${SEL.size} piezas? No se puede deshacer.`))removeRows([...SEL]);}
+async function bulkVis(v){const ids=[...SEL];const {error}=await _sb.from('emb_material').update({visible:v}).in('id',ids);if(error)return alert(error.message);LIST.forEach(r=>{if(SEL.has(r.id))r.visible=v;});drawList();}
+async function bulkApply(){const cat=document.getElementById('bCat').value.trim(),camp=document.getElementById('bCamp').value.trim(),mar=document.getElementById('bMarca').value.trim(),vig=document.getElementById('bVig').value;const p={};if(cat)p.categoria=cat;if(camp)p.campana=camp;if(mar)p.marca=mar;if(vig)p.vigencia=vig;if(!Object.keys(p).length)return alert('Completá al menos un dato para aplicar.');
+  const {error}=await _sb.from('emb_material').update(p).in('id',[...SEL]);if(error)return alert(error.message);LIST.forEach(r=>{if(SEL.has(r.id))Object.assign(r,p);});loadList();}
+</script>
+</body>
+</html>
