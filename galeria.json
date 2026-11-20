@@ -1,0 +1,16 @@
+{
+  "imagenes": [
+    {
+      "archivo": "hero-captiva.jpg",
+      "titulo": "Chevrolet Captiva"
+    },
+    {
+      "archivo": "hero-onix.jpg",
+      "titulo": "Chevrolet Onix"
+    },
+    {
+      "archivo": "hero-rombo.jpg",
+      "titulo": "Plan Rombo · Renault"
+    }
+  ]
+}
