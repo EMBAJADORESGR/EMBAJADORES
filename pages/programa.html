@@ -112,7 +112,7 @@
 .hero-top{display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap;}
 .hero-t{margin:0;}
 .hero-logo{display:block;height:clamp(120px,16vw,230px);width:auto;position:relative;z-index:3;}
-.h-logo img{height:54px!important;}
+.h-logo img{height:40px!important;width:auto!important;}
 @media(max-width:700px){.hero-logo{order:-1;}}
 @media(max-width:700px){.who-grid{grid-template-columns:1fr;}.hero-in{padding-left:20px;padding-right:20px;}.hero-gana{justify-content:center;}}
 /* Selector perfil (Reglamento) */
@@ -232,6 +232,13 @@ body,.who-s,.who-d,.faq-body-inner,.step-desc{font-family:var(--ff);}
 .ph img{object-position:50% 12%;}
 .ph-brand{grid-column:1/-1;}
 @media(max-width:600px){.collage{grid-template-columns:1fr 1fr;}.ph:nth-child(3){display:none;}}
+
+/* logo recortado y sin fondo (se procesa en JS) */
+.hero-logo{width:clamp(300px,32vw,560px);height:auto!important;max-width:100%;mix-blend-mode:normal;}
+.hero-logo:not([data-r]){opacity:0;}
+.hero-logo[data-r]{transition:opacity .4s;}
+.h-logo img{mix-blend-mode:normal;}
+@media(max-width:1000px){.hero-logo{width:clamp(240px,60vw,420px);}}
 </style>
 </head>
 <body>
@@ -544,6 +551,37 @@ document.querySelectorAll('.faq-q').forEach(btn=>{
     tiles.forEach(function(tile,i){var p=pool[i];if(!p)return;var im=tile.querySelector('img');im.alt=p.titulo||'';im.onerror=function(){tile.style.display='none';};im.src=BASE+encodeURI(p.archivo);tile.style.display='';tile.setAttribute('data-f',p.archivo);var sp=tile.querySelector('span');if(sp)sp.textContent=p.titulo||'';});
     start();
   }).catch(function(){});
+})();
+</script>
+<script>
+/* Recorta los márgenes negros del logo y vuelve transparente el fondo negro */
+(function(){
+  var imgs=[].slice.call(document.querySelectorAll('.hero-logo,.h-logo img,.ld-logo img'));
+  function done(){imgs.forEach(function(i){i.setAttribute('data-r','1');});}
+  var src=imgs.length&&imgs[0].getAttribute('src');if(!src){done();return;}
+  var o=new Image();
+  o.onload=function(){
+    try{
+      var w=o.naturalWidth,h=o.naturalHeight,c=document.createElement('canvas');c.width=w;c.height=h;
+      var x=c.getContext('2d');x.drawImage(o,0,0);var d=x.getImageData(0,0,w,h),a=d.data;
+      var x0=w,y0=h,x1=0,y1=0,X,Y;
+      for(Y=0;Y<h;Y++)for(X=0;X<w;X++){var k=(Y*w+X)*4,m=Math.max(a[k],a[k+1],a[k+2]);
+        if(a[k+3]>0&&m>60){if(X<x0)x0=X;if(X>x1)x1=X;if(Y<y0)y0=Y;if(Y>y1)y1=Y;}}
+      if(x1<=x0||y1<=y0)throw 0;
+      for(var i=0;i<a.length;i+=4){var mx=Math.max(a[i],a[i+1],a[i+2]);
+        if(mx<14){a[i+3]=0;continue;}
+        var al=Math.min(255,Math.round((mx-14)*255/150));
+        a[i]=Math.min(255,a[i]*255/mx);a[i+1]=Math.min(255,a[i+1]*255/mx);a[i+2]=Math.min(255,a[i+2]*255/mx);a[i+3]=al;}
+      x.putImageData(d,0,0);
+      var pad=Math.round((x1-x0)*0.02),sx=Math.max(0,x0-pad),sy=Math.max(0,y0-pad),sw=Math.min(w-sx,x1-x0+2*pad),sh=Math.min(h-sy,y1-y0+2*pad);
+      var c2=document.createElement('canvas');c2.width=sw;c2.height=sh;c2.getContext('2d').drawImage(c,sx,sy,sw,sh,0,0,sw,sh);
+      var u=c2.toDataURL('image/png');imgs.forEach(function(i){i.src=u;});
+    }catch(e){}
+    done();
+  };
+  o.onerror=done;
+  o.src=src;
+  setTimeout(done,2500);
 })();
 </script>
 </body>
