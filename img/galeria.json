@@ -1,16 +1,32 @@
 {
   "imagenes": [
     {
-      "archivo": "hero-captiva.jpg",
-      "titulo": "Chevrolet Captiva"
+      "archivo": "01 4-5.jpg",
+      "titulo": ""
     },
     {
-      "archivo": "hero-onix.jpg",
-      "titulo": "Chevrolet Onix"
+      "archivo": "02 4-5.jpg",
+      "titulo": ""
     },
     {
-      "archivo": "hero-rombo.jpg",
-      "titulo": "Plan Rombo · Renault"
+      "archivo": "04 4-5.jpg",
+      "titulo": ""
+    },
+    {
+      "archivo": "05 4-5.jpg",
+      "titulo": ""
+    },
+    {
+      "archivo": "06 4-5.jpg",
+      "titulo": ""
+    },
+    {
+      "archivo": "07 4-5.jpg",
+      "titulo": ""
+    },
+    {
+      "archivo": "08 4-5.jpg",
+      "titulo": ""
     }
   ]
 }
