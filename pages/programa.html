@@ -222,6 +222,16 @@ body,.who-s,.who-d,.faq-body-inner,.step-desc{font-family:var(--ff);}
 .ph span:empty{display:none;}
 .ph img{position:absolute;inset:0;transition:transform .7s cubic-bezier(.2,.8,.2,1),opacity 1s ease;}
 .ph img.nw{opacity:0;}
+
+/* logo con fondo negro: se funde con el fondo carbón */
+.hero-logo,.h-logo img{mix-blend-mode:lighten;}
+.hero-logo{height:clamp(130px,15vw,260px);}
+/* fotos verticales (4:5): no cortar cabezas */
+.collage{grid-template-columns:repeat(3,1fr);gap:12px;}
+.ph,.ph.wide{grid-column:auto;aspect-ratio:4/5;}
+.ph img{object-position:50% 12%;}
+.ph-brand{grid-column:1/-1;}
+@media(max-width:600px){.collage{grid-template-columns:1fr 1fr;}.ph:nth-child(3){display:none;}}
 </style>
 </head>
 <body>
