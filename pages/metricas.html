@@ -327,9 +327,46 @@ header{background:rgba(31,33,32,.94)!important;}
 .cbox,.upload-card,#novedades,#estados-panel,.gestion-panel{border-radius:2px;}
 .filter-btn,.snap-btn{border-radius:2px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
 th{letter-spacing:.1em;}
+
+/* ═════ Layout con lateral izquierdo desplegable ═════ */
+.mt-layout{display:flex;align-items:flex-start;min-height:calc(100vh - 56px);}
+.mt-main{flex:1;min-width:0;}
+#mtSide{width:290px;flex:0 0 290px;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;background:var(--ink1);border-right:1px solid var(--border);padding:18px 14px 30px;transition:margin-left .3s cubic-bezier(.2,.8,.2,1);}
+body.sd-off #mtSide{margin-left:-290px;}
+.sd-top{display:none;}
+.sd-g{border-bottom:1px solid var(--border);}
+.sd-h{width:100%;display:flex;align-items:center;gap:12px;background:none;border:none;cursor:pointer;color:#fff;font-family:var(--ff);font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;padding:16px 4px;text-align:left;}
+.sd-n{font-style:normal;width:26px;height:26px;background:var(--lime);color:#0b0b0a;display:flex;align-items:center;justify-content:center;font-size:14px;flex:none;transition:transform .3s;}
+.sd-h:hover .sd-n{transform:rotate(-8deg) scale(1.1);}
+.sd-c{margin-left:auto;width:9px;height:9px;border-right:2px solid var(--lime);border-bottom:2px solid var(--lime);transform:rotate(45deg);transition:transform .3s;margin-right:4px;}
+.sd-g.open .sd-c{transform:rotate(-135deg);}
+.sd-l{display:none;padding:0 0 14px;}
+.sd-g.open .sd-l{display:block;}
+.sd-i{display:block;position:relative;overflow:hidden;isolation:isolate;cursor:pointer;margin:0 0 4px 38px;padding:11px 14px;font-size:15px;font-weight:600;color:#fff;border:1px solid transparent;transition:color .25s,border-color .25s;}
+.sd-i::before{content:'';position:absolute;inset:0;z-index:-1;background:var(--lime);transform:scaleX(0);transform-origin:left;transition:transform .3s cubic-bezier(.2,.8,.2,1);}
+.sd-i small{display:block;font-size:11.5px;font-weight:500;color:var(--muted);margin-top:2px;line-height:1.35;transition:color .25s;}
+.sd-i:hover{border-color:var(--lime);}
+.sd-i:hover::before,.sd-i.on::before{transform:scaleX(1);}
+.sd-i:hover,.sd-i.on{color:#0b0b0a;}
+.sd-i:hover small,.sd-i.on small{color:rgba(11,11,10,.75);}
+.sd-tog{display:inline-flex;align-items:center;gap:8px;margin-bottom:14px;background:var(--lime);color:#0b0b0a;border:none;cursor:pointer;font-family:var(--ff);font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;padding:9px 16px;}
+.sd-tog svg{width:16px;height:16px;fill:none;stroke:#0b0b0a;stroke-width:2.4;stroke-linecap:round;}
+.sd-tog:hover{background:#fff;}
+.sd-bg{display:none;}
+.s-h{font-size:clamp(38px,3.8vw,68px);}
+body[data-view="dash"] [data-v]:not([data-v~="dash"]),body[data-view="com"] [data-v]:not([data-v~="com"]),body[data-view="est"] [data-v]:not([data-v~="est"]),body[data-view="traza"] [data-v]:not([data-v~="traza"]),body[data-view="closer"] [data-v]:not([data-v~="closer"]),body[data-view="carga"] [data-v]:not([data-v~="carga"]),body[data-view="man"] [data-v]:not([data-v~="man"]){display:none!important;}
+body.vista-com #mtSide,body.vista-com .sd-tog{display:none!important;}
+@media(max-width:900px){
+  #mtSide{position:fixed;left:0;top:0;bottom:0;height:auto;z-index:900;margin-left:-310px!important;width:290px;box-shadow:12px 0 40px rgba(0,0,0,.5);}
+  body.sd-open #mtSide{margin-left:0!important;}
+  .sd-top{display:flex;align-items:center;justify-content:space-between;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--lime);padding:0 4px 8px;}
+  .sd-x{background:none;border:none;color:#fff;font-size:30px;cursor:pointer;line-height:1;}
+  body.sd-open .sd-bg{display:block;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:850;}
+}
 </style>
 </head>
 <body>
+<script>(function(){var v=(location.hash||"#dash").slice(1);if(!/^(dash|com|est|traza|closer|carga|man)$/.test(v))v="dash";document.body.setAttribute("data-view",v);try{if(localStorage.getItem("mtSide")==="0")document.body.classList.add("sd-off");}catch(e){}})();</script>
 <div id="auth-check"><div class="ac-spinner"></div></div>
 <div id="loader">
   <div class="ld-logo"><img src="../logo.png" alt="Grupo Randazzo"></div>
@@ -350,12 +387,30 @@ th{letter-spacing:.1em;}
   </div>
 </header>
 
-<main class="page-content">
+<div class="mt-layout">
+<aside id="mtSide" aria-label="Menú de métricas">
+  <div class="sd-top"><span>Menú</span><button class="sd-x" onclick="mtToggle()" aria-label="Cerrar menú">&times;</button></div>
+  <div class="sd-g open"><button class="sd-h" onclick="mtGrp(this)"><i class="sd-n">1</i>Resumen<b class="sd-c"></b></button>
+    <div class="sd-l"><a class="sd-i" data-go="dash" onclick="mtView('dash')">Dashboard de métricas<small>KPIs, top embajadores, gráficos</small></a></div></div>
+  <div class="sd-g"><button class="sd-h" onclick="mtGrp(this)"><i class="sd-n">2</i>Embajadores<b class="sd-c"></b></button>
+    <div class="sd-l"><a class="sd-i" data-go="com" onclick="mtView('com')">Embajadores comerciales<small>Quién refirió y a quién llegó</small></a></div></div>
+  <div class="sd-g"><button class="sd-h" onclick="mtGrp(this)"><i class="sd-n">3</i>Trámites<b class="sd-c"></b></button>
+    <div class="sd-l"><a class="sd-i" data-go="est" onclick="mtView('est')">Seguimiento por estado<small>Trámites según su estado</small></a>
+    <a class="sd-i" data-go="traza" onclick="mtView('traza')">Trazabilidad<small>Embajador → referido → preventa → entrega → pago</small></a></div></div>
+  <div class="sd-g"><button class="sd-h" onclick="mtGrp(this)"><i class="sd-n">4</i>Ventas<b class="sd-c"></b></button>
+    <div class="sd-l"><a class="sd-i" data-go="closer" onclick="mtView('closer')">Control de closer<small>Referidos, preventas y entregas</small></a></div></div>
+  <div class="sd-g"><button class="sd-h" onclick="mtGrp(this)"><i class="sd-n">5</i>Datos<b class="sd-c"></b></button>
+    <div class="sd-l"><a class="sd-i" data-go="carga" onclick="mtView('carga')">Carga de datos<small>Subir reportes y procesar</small></a>
+    <a class="sd-i" data-go="man" onclick="mtView('man')">Ventas manuales<small>Vinculaciones y pagos</small></a></div></div>
+</aside>
+<div class="sd-bg" onclick="mtToggle()"></div>
+<main class="page-content mt-main">
   <div class="met-header">
     <div>
-      <div class="s-kicker">Seguimiento del Programa</div>
-      <h1 class="s-h">Dashboard de <em>M&eacute;tricas</em></h1>
-      <p class="s-sub" style="margin-bottom:0">Los datos se guardan en la nube y se comparten con todos los usuarios.</p>
+      <button class="sd-tog" onclick="mtToggle()"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>Men&uacute;</button>
+      <div class="s-kicker" id="mtKick">Seguimiento del Programa</div>
+      <h1 class="s-h" id="mtTit">Dashboard de <em>M&eacute;tricas</em></h1>
+      <p class="s-sub" id="mtSub" style="margin-bottom:0">Los datos se guardan en la nube y se comparten con todos los usuarios.</p>
     </div>
     <div id="cloudBadge" style="display:none">
       <div class="cloud-badge">
@@ -366,7 +421,7 @@ th{letter-spacing:.1em;}
   </div>
 
   <!-- SETUP SQL -->
-  <div class="setup-panel" id="setupPanel">
+  <div data-v="carga" class="setup-panel" id="setupPanel">
     <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:6px;">⚠ Primer uso — ejecut&aacute; este SQL en Supabase → SQL Editor</div>
     <div class="setup-sql" id="setupSQL">-- Pagos realizados
 CREATE TABLE IF NOT EXISTS emb_pagos (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), preventa TEXT NOT NULL, embajador TEXT, referido TEXT, sistema TEXT, fecha_pago TEXT, notas TEXT, created_at TIMESTAMPTZ DEFAULT NOW());
@@ -392,7 +447,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
   </div>
 
   <!-- UPLOAD -->
-  <div class="upload-grid">
+  <div data-v="carga" class="upload-grid">
     <div class="upload-card" id="uc-reg"><input class="uc-input" type="file" accept=".csv,.xls,.xlsx,.txt" onchange="loadMet(this,'reg')">
       <div class="uc-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
       <div class="uc-title">Registro de Embajadores</div>
@@ -430,7 +485,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
   <div class="filter-info" id="filterInfo"></div>
 
   <!-- ACTIONS -->
-  <div class="met-actions">
+  <div data-v="carga" class="met-actions">
     <button class="btn-action btn-process" id="btnProcess" onclick="metProcess()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
       Procesar datos
@@ -455,14 +510,14 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
   <!-- DASHBOARD -->
   <div id="met-dashboard">
     <!-- NOVEDADES DEL DÍA -->
-    <div id="novedades"></div>
+    <div data-v="dash" id="novedades"></div>
     <!-- KPIs -->
-    <div class="tot-box">
+    <div data-v="dash" class="tot-box">
       <div class="tot-main"><div class="big-l">TOTAL DE EMBAJADORES</div><div class="big-v lime" id="bkTot">&mdash;</div><div class="big-s" id="bkTotS">registrados en el programa</div></div>
       <div class="tot-side"><div class="big-l">NUESTROS</div><div class="big-v2" id="bkEmp">&mdash;</div><div class="big-s">empleados del grupo</div></div>
       <div class="tot-side"><div class="big-l">EXTERNOS</div><div class="big-v2" id="bkExt" style="color:#fff">&mdash;</div><div class="big-s">clientes y otros</div></div>
     </div>
-    <div class="kpi-strip" style="display:none">
+    <div data-v="dash" class="kpi-strip" style="display:none">
       <div class="kpi-cell k-lime"><div class="kpi-v lime" id="kReg">—</div><div class="kpi-l">Embajadores registrados</div><div class="kpi-sub" id="kRegS"></div></div>
       <div class="kpi-cell k-blue"><div class="kpi-v" id="kRef">—</div><div class="kpi-l">Referidos v&aacute;lidos</div><div class="kpi-sub" id="kRefS"></div></div>
       <div class="kpi-cell k-green"><div class="kpi-v green" id="kEnt">—</div><div class="kpi-l">Entregados totales</div><div class="kpi-sub" id="kEntS"></div></div>
@@ -470,14 +525,14 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div class="kpi-cell k-gray"><div class="kpi-v" id="kMonto" style="font-size:20px;margin-top:10px">—</div><div class="kpi-l">Pendiente de pago</div><div class="kpi-sub" id="kMontoS"></div></div>
     </div>
     <!-- Embudo referidos -> preventa -> entrega -->
-    <div class="cbox" id="embudo-box" style="margin-bottom:16px;display:none;">
+    <div class="cbox" id="embudo-box" data-v="dash" style="margin-bottom:16px;display:none;">
       <div class="cbox-title">EMBAJADORES &rarr; REFERIDOS &rarr; PREVENTA &rarr; ENTREGADOS</div>
       <div class="fn-grid fn-grid4" id="embudo-grid"></div>
       <div id="embudo-note" class="fn-s" style="margin-top:12px;line-height:1.6"></div>
       <div id="embudo-rev"></div>
     </div>
     <!-- Resultados e inversión -->
-    <div class="cbox" id="roi-box" style="margin-bottom:16px;display:none;">
+    <div class="cbox" id="roi-box" data-v="dash" style="margin-bottom:16px;display:none;">
       <div class="cbox-title">RESULTADOS E INVERSI&Oacute;N (ROI)</div>
       <div class="fn-grid fn-grid4" id="roi-grid"></div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
@@ -487,7 +542,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       </div>
     </div>
     <!-- Referidos de embajadores comerciales -->
-    <div class="cbox" id="com-box" style="margin-bottom:16px;display:none;">
+    <div class="cbox" id="com-box" data-v="com" style="margin-bottom:16px;display:none;">
       <div class="only-vista" style="margin-bottom:14px"><div class="s-kicker">Programa de Embajadores &middot; Grupo Randazzo</div><div style="font-size:11px;color:var(--muted)" id="comGen"></div></div>
       <div id="dirView" class="only-vista"></div>
       <div class="cbox-header">
@@ -518,7 +573,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div style="overflow:auto;max-height:520px"><table class="mt" id="tCom"></table></div>
     </div>
     <!-- Top embajadores por entregas -->
-    <div class="cbox" id="top-box" style="margin-bottom:16px;display:none;">
+    <div class="cbox" id="top-box" data-v="dash" style="margin-bottom:16px;display:none;">
       <div class="cbox-header">
         <div class="cbox-title">TOP EMBAJADORES &mdash; REFERIDOS Y ENTREGAS (INCLUYE VENTAS MANUALES)</div>
         <button class="btn-add" onclick="openModal()">
@@ -547,7 +602,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div style="overflow:auto;max-height:520px"><table class="mt" id="tTop"></table></div>
     </div>
     <!-- Por puesto -->
-    <div class="cbox" id="pu-box" style="margin-bottom:16px;display:none;">
+    <div class="cbox" id="pu-box" data-v="dash" style="margin-bottom:16px;display:none;">
       <div class="cbox-header">
         <div class="cbox-title">POR PUESTO &mdash; QUI&Eacute;N REFIERE Y QUI&Eacute;N CIERRA</div>
         <label class="btn-add" style="cursor:pointer">Cargar puestos (Excel de actividad)<input type="file" accept=".xls,.xlsx,.csv,.htm,.html" style="display:none" onchange="cargarPuestos(this)"></label>
@@ -558,32 +613,32 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div id="puMiss"></div>
     </div>
     <!-- Padrón de registrados -->
-    <div class="cbox" id="reg-box" style="margin-bottom:16px;display:none;">
+    <div class="cbox" id="reg-box" data-v="dash" style="margin-bottom:16px;display:none;">
       <div class="cbox-title">EMBAJADORES REGISTRADOS (PADR&Oacute;N DE LA WEB)</div>
       <div class="fn-grid" id="reg-grid"></div>
       <div id="reg-new"></div>
       <div id="reg-dup"></div>
     </div>
     <!-- Estados por trámite -->
-    <div id="estados-panel"></div>
+    <div data-v="est" id="estados-panel"></div>
     <!-- Charts row 1 -->
-    <div class="cg cg-3">
+    <div data-v="dash" class="cg cg-3">
       <div class="cbox"><div class="cbox-title">ESTADO DEL PIPELINE</div><div class="ch"><canvas id="cEstado"></canvas></div></div>
       <div class="cbox"><div class="cbox-title">MIX TIPO DE OPERACI&Oacute;N</div><div class="ch"><canvas id="cOp"></canvas></div></div>
       <div class="cbox"><div class="cbox-title">REFERIDOS POR TIPO DE EMBAJADOR</div><div class="ch"><canvas id="cTipo"></canvas></div></div>
     </div>
     <!-- Charts row 2 -->
-    <div class="cg cg-2">
+    <div data-v="dash" class="cg cg-2">
       <div class="cbox"><div class="cbox-title">ENTREGADOS POR SISTEMA</div><div class="ch"><canvas id="cSis"></canvas></div></div>
       <div class="cbox"><div class="cbox-title">TOP 10 EMBAJADORES — RANKING GENERAL</div><div class="ch tall"><canvas id="cTopEmp"></canvas></div></div>
     </div>
     <!-- Histórico -->
-    <div class="cbox" id="histBox" style="display:none;margin-bottom:10px;">
+    <div class="cbox" id="histBox" data-v="dash" style="display:none;margin-bottom:10px;">
       <div class="cbox-title">EVOLUCI&Oacute;N HIST&Oacute;RICA</div>
       <div class="ch hist"><canvas id="cHist"></canvas></div>
     </div>
     <!-- Vendedores (closers) -->
-    <div class="cbox" id="closers-box" style="margin-bottom:10px;display:none;">
+    <div class="cbox" id="closers-box" data-v="closer" style="margin-bottom:10px;display:none;">
       <div class="cbox-header">
         <div class="cbox-title">VENDEDORES (CLOSER) &mdash; REFERIDOS RECIBIDOS, PREVENTAS Y ENTREGAS</div>
         <div class="cl-ctrl">
@@ -612,7 +667,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       </div>
     </div>
     <!-- Trazabilidad completa: embajador → referido → preventa → entrega → pago -->
-    <div class="cbox" id="traza-box" style="margin-bottom:10px;display:none;">
+    <div class="cbox" id="traza-box" data-v="traza" style="margin-bottom:10px;display:none;">
       <div class="cbox-header">
         <div class="cbox-title">TRAZABILIDAD &mdash; EMBAJADOR &rarr; REFERIDO &rarr; PREVENTA &rarr; ENTREGA &rarr; PAGO</div>
         <button class="btn-add" onclick="openModal()">
@@ -627,14 +682,14 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div id="tzNote" class="fn-s" style="margin:0 0 10px;"></div>
       <div style="overflow:auto;max-height:560px"><table class="mt" id="tTraza"></table></div>
     </div>
-    <div class="cbox" id="vend-box" style="margin-bottom:10px;display:none;">
+    <div class="cbox" id="vend-box" data-v="closer" style="margin-bottom:10px;display:none;">
       <div class="cbox-title" style="margin-bottom:12px;">TOP VENDEDORES POR PREVENTA CERRADA</div>
       <div style="overflow-x:auto"><table class="mt" id="tVend"></table></div>
     </div>
     <!-- Tables -->
-    <div class="cbox" style="margin-bottom:10px;"><div class="cbox-title">POR TEAM (CRM)</div><div style="overflow-x:auto"><table class="mt" id="tTeams"></table></div></div>
+    <div data-v="closer" class="cbox" style="margin-bottom:10px;"><div class="cbox-title">POR TEAM (CRM)</div><div style="overflow-x:auto"><table class="mt" id="tTeams"></table></div></div>
     <!-- Manuales -->
-    <div class="gestion-panel" id="panelManuales">
+    <div data-v="man" class="gestion-panel" id="panelManuales">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <span style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted)">VINCULACIONES MANUALES</span>
         <span style="font-size:11px;color:var(--muted)" id="manCnt"></span>
@@ -643,6 +698,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     </div>
   </div>
 </main>
+</div>
 </div>
 
 <!-- MODAL MANUAL -->
@@ -2232,6 +2288,40 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(loadSupabaseData,500
   o.onerror=done;
   o.src=src;
   setTimeout(done,2500);
+})();
+</script>
+<script>
+/* Navegación lateral por vistas */
+(function(){
+  var V={
+    dash:['Seguimiento del Programa','Dashboard de <em>Métricas</em>','KPIs, top de embajadores y gráficos del programa.'],
+    com:['Embajadores','Embajadores <em>comerciales</em>','Qué referidos trajeron y a quién llegó cada uno.'],
+    est:['Trámites','Seguimiento de trámites <em>por estado</em>','En qué estado está cada trámite y cómo se movió.'],
+    traza:['Trámites','<em>Trazabilidad</em>','Embajador → Referido → Preventa → Entrega → Pago.'],
+    closer:['Ventas','Control de <em>closer</em>','Referidos recibidos, preventas y entregas por vendedor.'],
+    carga:['Datos','Carga de <em>datos</em>','Subí los reportes, procesalos y guardá en la nube.'],
+    man:['Datos','Ventas <em>manuales</em>','Vinculaciones y pagos cargados a mano.']
+  };
+  var isM=function(){return matchMedia('(max-width:900px)').matches;};
+  window.mtView=function(v){
+    if(!V[v])v='dash';
+    document.body.setAttribute('data-view',v);
+    [].forEach.call(document.querySelectorAll('#mtSide .sd-i'),function(a){var on=a.getAttribute('data-go')===v;a.classList.toggle('on',on);if(on){var g=a.closest('.sd-g');if(g)g.classList.add('open');}});
+    var k=document.getElementById('mtKick'),h=document.getElementById('mtTit'),s=document.getElementById('mtSub');
+    if(k)k.textContent=V[v][0];if(h)h.innerHTML=V[v][1];if(s)s.textContent=V[v][2];
+    try{history.replaceState(null,'','#'+v);}catch(e){}
+    document.body.classList.remove('sd-open');
+    window.scrollTo({top:0});
+    setTimeout(function(){window.dispatchEvent(new Event('resize'));},80);
+  };
+  window.mtGrp=function(b){b.parentNode.classList.toggle('open');};
+  window.mtToggle=function(){
+    if(isM()){document.body.classList.toggle('sd-open');return;}
+    var off=document.body.classList.toggle('sd-off');
+    try{localStorage.setItem('mtSide',off?'0':'1');}catch(e){}
+    setTimeout(function(){window.dispatchEvent(new Event('resize'));},350);
+  };
+  mtView(document.body.getAttribute('data-view')||'dash');
 })();
 </script>
 </body>
