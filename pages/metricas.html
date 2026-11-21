@@ -354,7 +354,7 @@ body.sd-off #mtSide{margin-left:-290px;}
 .sd-tog:hover{background:#fff;}
 .sd-bg{display:none;}
 .s-h{font-size:clamp(38px,3.8vw,68px);}
-body[data-view="dash"] [data-v]:not([data-v~="dash"]),body[data-view="com"] [data-v]:not([data-v~="com"]),body[data-view="est"] [data-v]:not([data-v~="est"]),body[data-view="traza"] [data-v]:not([data-v~="traza"]),body[data-view="closer"] [data-v]:not([data-v~="closer"]),body[data-view="carga"] [data-v]:not([data-v~="carga"]),body[data-view="man"] [data-v]:not([data-v~="man"]){display:none!important;}
+body[data-view="dash"] [data-v]:not([data-v~="dash"]),body[data-view="com"] [data-v]:not([data-v~="com"]),body[data-view="est"] [data-v]:not([data-v~="est"]),body[data-view="traza"] [data-v]:not([data-v~="traza"]),body[data-view="closer"] [data-v]:not([data-v~="closer"]),body[data-view="carga"] [data-v]:not([data-v~="carga"]),body[data-view="man"] [data-v]:not([data-v~="man"]),body[data-view="pu"] [data-v]:not([data-v~="pu"]){display:none!important;}
 body.vista-com #mtSide,body.vista-com .sd-tog{display:none!important;}
 @media(max-width:900px){
   #mtSide{position:fixed;left:0;top:0;bottom:0;height:auto;z-index:900;margin-left:-310px!important;width:290px;box-shadow:12px 0 40px rgba(0,0,0,.5);}
@@ -423,10 +423,32 @@ body[data-view="com"] #comNote,body[data-view="com"] #comSum{display:none!import
 .ep-bar-wrap{width:140px;}.ep-bar-track{height:6px;}
 .ep-dt{font-size:14px;}.ep-dt th{font-size:11px;padding:9px 16px;}.ep-dt td{padding:9px 16px;}
 .ep-emb-in,.ep-date-in{font-size:13px;padding:7px 10px;}
+
+/* ═════ v4: KPIs de ventas, top embajadores y vistas de ventas más claras ═════ */
+.vk{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);}
+#vk-box .vk{margin-top:14px;}
+.vk-c{background:var(--ink1);padding:20px 22px;}
+.vk-v{font-family:'Archivo','Arial Black',Impact,sans-serif;font-stretch:125%;font-weight:900;font-size:clamp(28px,2.8vw,46px);line-height:1.05;color:#fff;word-break:break-word;}
+.vk-v.lime{color:var(--lime);}.vk-v.amber{color:var(--amber);}.vk-v.green{color:var(--green);}
+.vk-l{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--muted);margin-top:10px;}
+.vk-s{font-size:13px;color:var(--muted);margin-top:4px;}
+.vk-leg{display:flex;gap:16px;font-size:13px;font-weight:700;color:#fff;}
+.vk-leg i{display:inline-block;width:14px;height:14px;margin-right:7px;vertical-align:-2px;}
+.topc{background:var(--ink2);border:1px solid var(--border);padding:16px 18px;}
+.topc-h{font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--lime);margin-bottom:8px;}
+.topc .ch.tall{height:460px;}
+body[data-view="closer"] .mt,body[data-view="pu"] .mt,body[data-view="traza"] .mt{font-size:15px;}
+body[data-view="closer"] .mt th,body[data-view="pu"] .mt th,body[data-view="traza"] .mt th{font-size:12px;letter-spacing:.08em;padding:12px 12px;}
+body[data-view="closer"] .mt td,body[data-view="pu"] .mt td,body[data-view="traza"] .mt td{padding:12px 12px;}
+body[data-view="closer"] .cbox-title,body[data-view="pu"] .cbox-title,body[data-view="traza"] .cbox-title{font-size:14px;letter-spacing:.1em;}
+body[data-view="closer"] .cl-btn,body[data-view="pu"] .cl-btn,body[data-view="traza"] .cl-btn{font-size:13px;padding:7px 14px;}
+#vk-dash{grid-template-columns:repeat(4,1fr);}#vk-closer{grid-template-columns:repeat(5,1fr);}#vk-traza{grid-template-columns:repeat(6,1fr);}
+@media(max-width:1200px){#vk-closer,#vk-traza{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:820px){.topc .ch.tall{height:380px;}#vk-dash,#vk-closer,#vk-traza{grid-template-columns:1fr 1fr;}}
 </style>
 </head>
 <body>
-<script>(function(){var v=(location.hash||"#dash").slice(1);if(!/^(dash|com|est|traza|closer|carga|man)$/.test(v))v="dash";document.body.setAttribute("data-view",v);try{if(localStorage.getItem("mtSide")==="0")document.body.classList.add("sd-off");}catch(e){}})();</script>
+<script>(function(){var v=(location.hash||"#dash").slice(1);if(!/^(dash|com|est|traza|closer|pu|carga|man)$/.test(v))v="dash";document.body.setAttribute("data-view",v);try{if(localStorage.getItem("mtSide")==="0")document.body.classList.add("sd-off");}catch(e){}})();</script>
 <div id="auth-check"><div class="ac-spinner"></div></div>
 <div id="loader">
   <div class="ld-logo"><img src="../logo.png" alt="Grupo Randazzo"></div>
@@ -455,10 +477,11 @@ body[data-view="com"] #comNote,body[data-view="com"] #comSum{display:none!import
   <div class="sd-g"><button class="sd-h sd-link" data-go="est" onclick="mtView('est')"><i class="sd-n">3</i>Seguimiento de trámites por estado</button></div>
   <div class="sd-g open"><button class="sd-h" onclick="mtGrp(this)"><i class="sd-n">4</i>Ventas<b class="sd-c"></b></button>
     <div class="sd-l"><a class="sd-i" data-go="closer" onclick="mtView('closer')">Control de closer<small>Referidos, preventas y entregas por vendedor</small></a>
+    <a class="sd-i" data-go="pu" onclick="mtView('pu')">Por puesto<small>Quién refiere y quién cierra</small></a>
     <a class="sd-i" data-go="traza" onclick="mtView('traza')">Trazabilidad<small>Embajador → referido → preventa → entrega → pago</small></a></div></div>
   <div class="sd-g"><button class="sd-h" onclick="mtGrp(this)"><i class="sd-n">5</i>Datos<b class="sd-c"></b></button>
     <div class="sd-l"><a class="sd-i" data-go="carga" onclick="mtView('carga')">Carga de datos<small>Subir reportes y procesar</small></a>
-    <a class="sd-i" data-go="man" onclick="mtView('man')">Ventas manuales<small>Vinculaciones y pagos</small></a></div></div>
+    <a class="sd-i" data-go="man" onclick="mtView('man')">Ventas manuales<small>Top con entregas, vinculaciones y pagos</small></a></div></div>
 </aside>
 <div class="sd-bg" onclick="mtToggle()"></div>
 <main class="page-content mt-main">
@@ -588,6 +611,10 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div id="embudo-note" class="fn-s" style="margin-top:12px;line-height:1.6"></div>
       <div id="embudo-rev"></div>
     </div>
+    <div data-v="dash" class="cbox" id="vk-box" style="margin-bottom:16px;">
+      <div class="cbox-title">VENTAS Y CONTROL &mdash; TODO LO DE LA HOJA DE VENTAS</div>
+      <div id="vk-dash" class="vk"></div>
+    </div>
     <!-- Resultados e inversión -->
     <div class="cbox" id="roi-box" data-v="dash" style="margin-bottom:16px;display:none;">
       <div class="cbox-title">RESULTADOS E INVERSI&Oacute;N (ROI)</div>
@@ -596,6 +623,14 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
         <span style="font-size:11px;color:var(--muted)">Ingreso o margen bruto promedio por entrega (AR$)</span>
         <input type="text" inputmode="numeric" class="roi-in" id="roiMargen" placeholder="ej: 3000000" oninput="roiInput()" autocomplete="off">
         <span id="roiNote" class="fn-s" style="margin:0"></span>
+      </div>
+    </div>
+    <div data-v="dash" class="cbox" id="topc-box" style="margin-bottom:16px;">
+      <div class="cbox-header"><div class="cbox-title">TOP EMBAJADORES &mdash; REFERIDOS Y PREVENTAS</div>
+        <div class="vk-leg"><span><i style="background:#D6FF52"></i>Referidos</span><span><i style="background:#fff"></i>Preventas</span></div></div>
+      <div class="cg cg-2" style="margin:12px 0 0">
+        <div class="topc"><div class="topc-h">EMPLEADOS</div><div class="ch tall"><canvas id="cTopE"></canvas></div></div>
+        <div class="topc"><div class="topc-h">EXTERNOS (CLIENTES)</div><div class="ch tall"><canvas id="cTopX"></canvas></div></div>
       </div>
     </div>
     <!-- Referidos de embajadores comerciales -->
@@ -630,7 +665,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div style="overflow:auto;max-height:520px"><table class="mt" id="tCom"></table></div>
     </div>
     <!-- Top embajadores por entregas -->
-    <div class="cbox" id="top-box" data-v="dash" style="margin-bottom:16px;display:none;">
+    <div class="cbox" id="top-box" data-v="man" style="margin-bottom:16px;display:none;">
       <div class="cbox-header">
         <div class="cbox-title">TOP EMBAJADORES &mdash; REFERIDOS Y ENTREGAS (INCLUYE VENTAS MANUALES)</div>
         <button class="btn-add" onclick="openModal()">
@@ -659,7 +694,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div style="overflow:auto;max-height:520px"><table class="mt" id="tTop"></table></div>
     </div>
     <!-- Por puesto -->
-    <div class="cbox" id="pu-box" data-v="dash" style="margin-bottom:16px;display:none;">
+    <div class="cbox" id="pu-box" data-v="pu" style="margin-bottom:16px;display:none;">
       <div class="cbox-header">
         <div class="cbox-title">POR PUESTO &mdash; QUI&Eacute;N REFIERE Y QUI&Eacute;N CIERRA</div>
         <label class="btn-add" style="cursor:pointer">Cargar puestos (Excel de actividad)<input type="file" accept=".xls,.xlsx,.csv,.htm,.html" style="display:none" onchange="cargarPuestos(this)"></label>
@@ -687,7 +722,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     <!-- Charts row 2 -->
     <div data-v="dash" class="cg cg-2">
       <div class="cbox"><div class="cbox-title">ENTREGADOS POR SISTEMA</div><div class="ch"><canvas id="cSis"></canvas></div></div>
-      <div class="cbox"><div class="cbox-title">TOP 10 EMBAJADORES — RANKING GENERAL</div><div class="ch tall"><canvas id="cTopEmp"></canvas></div></div>
+      <div class="cbox"><div class="cbox-title">REFERIDOS POR TEAM (CRM)</div><div style="overflow-x:auto"><table class="mt" id="tTeams"></table></div></div>
     </div>
     <!-- Histórico -->
     <div class="cbox" id="histBox" data-v="dash" style="display:none;margin-bottom:10px;">
@@ -695,6 +730,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div class="ch hist"><canvas id="cHist"></canvas></div>
     </div>
     <!-- Vendedores (closers) -->
+    <div id="vk-closer" data-v="closer" class="vk" style="margin-bottom:12px"></div>
     <div class="cbox" id="closers-box" data-v="closer" style="margin-bottom:10px;display:none;">
       <div class="cbox-header">
         <div class="cbox-title">VENDEDORES (CLOSER) &mdash; REFERIDOS RECIBIDOS, PREVENTAS Y ENTREGAS</div>
@@ -724,6 +760,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       </div>
     </div>
     <!-- Trazabilidad completa: embajador → referido → preventa → entrega → pago -->
+    <div id="vk-traza" data-v="traza" class="vk" style="margin-bottom:12px"></div>
     <div class="cbox" id="traza-box" data-v="traza" style="margin-bottom:10px;display:none;">
       <div class="cbox-header">
         <div class="cbox-title">TRAZABILIDAD &mdash; EMBAJADOR &rarr; REFERIDO &rarr; PREVENTA &rarr; ENTREGA &rarr; PAGO</div>
@@ -744,7 +781,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div style="overflow-x:auto"><table class="mt" id="tVend"></table></div>
     </div>
     <!-- Tables -->
-    <div data-v="closer" class="cbox" style="margin-bottom:10px;"><div class="cbox-title">POR TEAM (CRM)</div><div style="overflow-x:auto"><table class="mt" id="tTeams"></table></div></div>
+    
     <!-- Manuales -->
     <div data-v="man" class="gestion-panel" id="panelManuales">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -1687,7 +1724,6 @@ function renderDash(k){
   donut('cTipo',['Empleados','Externos'],[k.refEmp,k.refExt],[C.blue,C.lime]);
   // Barras
   barC('cSis',Object.keys(k.sis),Object.values(k.sis),'Entregas',C.lime,false);
-  barC('cTopEmp',k.topAll.map(x=>x[0]),k.topAll.map(x=>x[1]),'Refs',C.lA,true);
   // Teams
   const tms=Object.entries(k.tm).sort((a,b)=>b[1]-a[1]);
   $('tTeams').innerHTML=`<tr><th>#</th><th>Team</th><th class="r">Refs</th><th class="r">%</th></tr>`+
@@ -1696,7 +1732,53 @@ function renderDash(k){
   renderRegistro();addTips();
   renderClosers(k);
   renderGestion(k);
+  paintTopCharts(k);paintVentasKpi(k);
   renderHistChart();
+}
+
+
+/* ════ DASHBOARD: top embajadores (2 gráficos) + KPIs de ventas ════ */
+const _vLab={id:'vLab',afterDatasetsDraw(ch){const c=ch.ctx;c.save();c.fillStyle='#fff';c.font='700 12px "DIN Next LT Pro","Barlow",sans-serif';c.textBaseline='middle';
+  ch.data.datasets.forEach((ds,di)=>{ch.getDatasetMeta(di).data.forEach((b,i)=>{const v=ds.data[i];if(v==null)return;c.fillText(String(v),b.x+6,b.y);});});c.restore();}};
+function paintTopCharts(k){
+  const rbe=k.refByEmb||{},pbe=k.prevByEmb||{},etp=k.embTipoMap||{};
+  const mk=tipo=>Object.keys(rbe).filter(e=>(etp[e]||'Empleado')===tipo).map(e=>({e,r:rbe[e]||0,p:pbe[e]||0})).sort((a,b)=>b.r-a.r||b.p-a.p||a.e.localeCompare(b.e,'es')).slice(0,10);
+  const draw=(id,rows)=>{
+    const cv=document.getElementById(id);if(!cv)return;dc(id);
+    CH[id]=new Chart(cv,{type:'bar',data:{labels:rows.map(x=>x.e),datasets:[
+      {label:'Referidos',data:rows.map(x=>x.r),backgroundColor:'#D6FF52',borderRadius:2,borderSkipped:false,barPercentage:.9,categoryPercentage:.8},
+      {label:'Preventas',data:rows.map(x=>x.p),backgroundColor:'#ffffff',borderRadius:2,borderSkipped:false,barPercentage:.9,categoryPercentage:.8}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:30}},plugins:{legend:{display:false}},
+        scales:{x:{beginAtZero:true,grid:{color:'rgba(255,255,255,.07)'},ticks:{precision:0,font:{size:12}}},y:{grid:{display:false},ticks:{color:'#fff',font:{size:13,weight:'600'}}}}},plugins:[_vLab]});
+  };
+  draw('cTopE',mk('Empleado'));draw('cTopX',mk('Externo'));
+}
+function paintVentasKpi(k){
+  k=k||window._lastK;if(!k)return;
+  const cl=(k.closers||[]),SA='(sin asignar)',man=k.manEnt||0;
+  const con=cl.filter(c=>c.closer!==SA),sa=cl.find(c=>c.closer===SA);
+  const ref=cl.reduce((s,c)=>s+c.ref,0),prev=cl.reduce((s,c)=>s+c.prev,0)+man,ent=cl.reduce((s,c)=>s+c.ent,0)+man,out=cl.reduce((s,c)=>s+(c.out||0),0);
+  const pct=(a,b)=>b?Math.round(a/b*100)+'%':'—';
+  const best=con.slice().sort((a,b)=>b.ent-a.ent||b.prev-a.prev||b.ref-a.ref)[0];
+  const tms=Object.entries(k.tm||{}).sort((a,b)=>b[1]-a[1]);
+  // puestos
+  const pr={},pe={};con.forEach(c=>{const p=puName(c.closer);pe[p]=(pe[p]||0)+c.ent;});
+  const etp=k.embTipoMap||{};Object.entries(k.refByEmb||{}).forEach(([e,n])=>{if((etp[e]||'Empleado')==='Externo')return;const p=puName(e);pr[p]=(pr[p]||0)+n;});
+  const topP=o=>Object.entries(o).filter(x=>x[0]!=='Sin puesto').sort((a,b)=>b[1]-a[1])[0];
+  const tr=(typeof trazaRows==='function'&&window._prevDet)?trazaRows():[];
+  const t={all:tr.length,ent:tr.filter(r=>r.ent).length,sin:tr.filter(r=>!r.ent).length,paid:tr.filter(r=>r.paid).length,pend:tr.filter(r=>r.ent&&!r.paid).length,trf:tr.filter(r=>r.trf).length};
+  const K=(v,l,s,c)=>`<div class="vk-c"><div class="vk-v ${c||''}">${v}</div><div class="vk-l">${l}</div><div class="vk-s">${s||''}</div></div>`;
+  const closerK=[K(con.length,'VENDEDORES CON REFERIDOS','más '+(sa?sa.ref:0)+' referidos sin vendedor asignado','lime'),K(ref,'REFERIDOS RECIBIDOS','por todos los vendedores'),K(prev,'CON PREVENTA',pct(prev,ref)+' de los referidos'),K(ent,'CON ENTREGA',pct(ent,ref)+' de los referidos','lime'),
+    K(out,'CEDIDOS ENTRE VENDEDORES','referidos que pasaron a otro closer')];
+  const trazaK=[K(t.all,'REGISTROS','preventas + vinculaciones manuales'),K(t.ent,'ENTREGADOS',pct(t.ent,t.all)+' del total','lime'),K(t.sin,'SIN ENTREGA AÚN','preventas en curso','amber'),K(t.paid,'PAGADOS','beneficios pagados','green'),K(t.pend,'PENDIENTES DE PAGO','entregados sin pagar','amber'),K(t.trf,'TRANSFERIDOS ENTRE CLOSERS','comisión a dividir')];
+  const put=(id,arr)=>{const el=document.getElementById(id);if(el)el.innerHTML=arr.join('');};
+  put('vk-closer',closerK);put('vk-traza',trazaK);
+  const tp=topP(pe),rp=topP(pr);
+  put('vk-dash',[
+    K(con.length,'VENDEDORES ACTIVOS','con referidos recibidos','lime'),K(ref,'REFERIDOS RECIBIDOS',(sa?sa.ref:0)+' sin vendedor asignado'),K(prev,'PREVENTAS',pct(prev,ref)+' de los referidos'),K(ent,'ENTREGAS',pct(ent,ref)+' de los referidos','lime'),
+    K(best?_h(best.closer):'—','MEJOR VENDEDOR',best?best.ent+' entregas · '+best.prev+' preventas':'sin datos'),K(tms[0]?_h(tms[0][0]):'—','TEAM CON MÁS REFERIDOS',tms[0]?tms[0][1]+' de '+tms.length+' teams':''),
+    K(rp?_h(rp[0]):'—','PUESTO QUE MÁS REFIERE',rp?rp[1]+' referidos':''),K(tp?_h(tp[0]):'—','PUESTO QUE MÁS CIERRA',tp?tp[1]+' entregas':''),
+    K(out,'CEDIDOS ENTRE CLOSERS','referidos pasados a otro vendedor'),K(t.sin,'SIN ENTREGA AÚN','preventas en curso','amber'),K(t.paid,'BENEFICIOS PAGADOS',t.pend+' pendientes de pago','green'),K(t.trf,'TRANSFERIDOS','entre closers')]);
 }
 
 /* ════ EMBUDO + VENDEDORES ════ */
@@ -1807,6 +1889,7 @@ function trazaRows(){
 }
 function paintTraza(){
   const box=document.getElementById('traza-box');if(!box)return;
+  setTimeout(()=>{try{paintVentasKpi();}catch(e){}},0);
   const all=trazaRows();
   box.style.display=all.length?'block':'none';
   const vk=window._vendKey;
@@ -2361,8 +2444,9 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(loadSupabaseData,500
     est:['Trámites','Seguimiento de trámites <em>por estado</em>','En qué estado está cada trámite. Tocá un estado para ver el detalle.'],
     traza:['Ventas','<em>Trazabilidad</em>','Embajador → Referido → Preventa → Entrega → Pago.'],
     closer:['Ventas','Control de <em>closer</em>','Referidos recibidos, preventas y entregas por vendedor.'],
+    pu:['Ventas','Por <em>puesto</em>','Quién refiere y quién cierra, según el puesto que ocupa.'],
     carga:['Datos','Carga de <em>datos</em>','Subí los reportes, procesalos y guardá en la nube.'],
-    man:['Datos','Ventas <em>manuales</em>','Vinculaciones y pagos cargados a mano.']
+    man:['Datos','Ventas <em>manuales</em>','Top de embajadores con entregas, ventas cargadas a mano y pagos.']
   };
   var isM=function(){return matchMedia('(max-width:900px)').matches;};
   window.mtView=function(v){
