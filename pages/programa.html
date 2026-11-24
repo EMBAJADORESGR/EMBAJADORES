@@ -460,6 +460,30 @@ footer.site-f{background:var(--ink1);border-top:1px solid var(--border);padding:
 .pol-section-h,.tyc-section-title{font-weight:700;font-size:22px;letter-spacing:.1em;}
 .reg-index-l{font-weight:700;font-size:17px;letter-spacing:.16em;}
 @media(max-width:700px){.h-tab{font-size:15px;padding:7px 9px;letter-spacing:.05em;}.pol-btn{font-size:18px;}}
+
+/* ═════ hero: bloque de datos al costado del título, centrado ═════ */
+@media(min-width:1001px){
+  .hero-in{align-items:start;}
+  .hero-right{align-self:start;align-items:center;justify-content:flex-start;gap:clamp(16px,2vw,28px);padding-top:clamp(6px,1vw,16px);}
+  .hero-logo{margin:0 auto;}
+}
+.hero-facts{margin-left:auto;margin-right:auto;}
+.fact{text-align:center;}
+
+/* ═════ preguntas frecuentes: secundarias, más chicas y con sangría a los costados ═════ */
+.faq-wrap{max-width:900px;margin:0 auto;}
+.faq-h{font-size:clamp(30px,2.6vw,40px);margin:0 0 4px;}
+.faq-section-title{font-size:17px;margin:32px 0 4px;}
+.faq-q{padding:16px 0;gap:16px;}
+.faq-q-text{font-size:clamp(16px,1.2vw,19px);}
+.faq-icon{width:28px;height:28px;}
+.faq-icon svg{width:12px;height:12px;}
+.faq-body-inner{font-size:clamp(15px,1.05vw,17px);line-height:1.6;padding:2px 0 20px;max-width:none;}
+.faq-sub{font-size:15px;margin:14px 0 4px;}
+.pay-c{font-size:.92em;padding:14px 16px 16px;}
+.pay-c dt{font-size:15px;}
+.pol-btns{margin:32px 0 0;}
+.pol-btn{font-size:17px;padding:12px 20px;}
 </style>
 <noscript><style>#page{opacity:1!important;}html.js .stp-c{opacity:1;transform:none;}</style></noscript>
 </head>
@@ -559,6 +583,7 @@ footer.site-f{background:var(--ink1);border-top:1px solid var(--border);padding:
   </div>
 
   <div class="divider"></div>
+  <div class="faq-wrap">
   <h2 class="faq-h" id="faq">Preguntas <span>frecuentes</span></h2>
 
   <div class="faq-section-title">LO MÁS CONSULTADO</div>
@@ -586,6 +611,7 @@ footer.site-f{background:var(--ink1);border-top:1px solid var(--border);padding:
   <div class="pol-btns">
     <button class="pol-btn pol-btn-reg" type="button" onclick="openOverlay('reg')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Reglamento completo</button>
     <button class="pol-btn pol-btn-tyc" type="button" onclick="openOverlay('tyc')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>T&eacute;rminos y Condiciones</button>
+  </div>
   </div>
 </main>
 
