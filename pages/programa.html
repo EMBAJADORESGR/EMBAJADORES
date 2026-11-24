@@ -484,6 +484,17 @@ footer.site-f{background:var(--ink1);border-top:1px solid var(--border);padding:
 .pay-c dt{font-size:15px;}
 .pol-btns{margin:32px 0 0;}
 .pol-btn{font-size:17px;padding:12px 20px;}
+
+/* ═════ encabezado público: solo el logo, centrado ═════ */
+header.h-solo{justify-content:center;}
+
+/* ═════ "¿Sos cliente o empleado?" centrado, a todo el ancho del hero ═════ */
+.who-wrap{grid-column:1/-1;width:100%;max-width:1040px;margin:clamp(8px,2vw,28px) auto 0;text-align:center;}
+.who-wrap .who-h{margin-top:0;}
+.who-card{align-items:center;text-align:center;}
+.who-d{margin-left:auto;margin-right:auto;}
+.who-go{align-self:center;}
+@media(max-width:1000px){.hero-left{order:1;}.who-wrap{order:2;margin-top:0;}.hero-right{order:3;align-items:center;}}
 </style>
 <noscript><style>#page{opacity:1!important;}html.js .stp-c{opacity:1;transform:none;}</style></noscript>
 </head>
@@ -496,16 +507,8 @@ footer.site-f{background:var(--ink1);border-top:1px solid var(--border);padding:
 </div>
 <div id="page">
 
-<header>
+<header class="h-solo">
   <a href="programa.html" class="h-logo"><img src="../logo.png" alt="Grupo Randazzo"></a>
-  <div class="h-tabs">
-    <a href="programa.html" class="h-tab active">PROGRAMA</a>
-    <a href="metricas.html" class="h-tab">M&Eacute;TRICAS</a>
-    <a href="material-admin.html" class="h-tab">MATERIAL</a>
-  </div>
-  <div class="h-right">
-    <a href="metricas.html" class="btn-so" style="text-decoration:none">Acceso interno</a>
-  </div>
 </header>
 
 <!-- HERO -->
@@ -517,21 +520,6 @@ footer.site-f{background:var(--ink1);border-top:1px solid var(--border);padding:
     <div class="hero-gana"><i aria-hidden="true">+</i> GAN&Aacute; <i aria-hidden="true">+</i></div>
     <span class="hero-price">$500.000</span>
     <div class="hero-sub">Por cada operaci&oacute;n entregada.</div>
-
-    <h2 class="who-h">&iquest;Sos <span>cliente</span> o sos empleado?</h2>
-    <p class="who-s">Eleg&iacute; tu perfil y entr&aacute; directo.</p>
-    <div class="who-grid">
-      <a class="who-card main" href="https://embajadoresgr.gruporandazzo.com/Registro">
-        <div class="who-t">Soy<br>cliente</div>
-        <div class="who-d">Registrate gratis, recib&iacute; tu link de inmediato y empez&aacute; a referir.</div>
-        <span class="who-go">Quiero ser embajador</span>
-      </a>
-      <a class="who-card" href="https://embajadoresgr.gruporandazzo.com/Referidos">
-        <div class="who-t">Soy<br>empleado</div>
-        <div class="who-d">Ingres&aacute; con tu link de embajador para cargar tus referidos y seguir su estado.</div>
-        <span class="who-go">Ingresar</span>
-      </a>
-    </div>
     </div>
     <div class="hero-right">
       <img class="hero-logo" src="../logo.png" alt="Grupo Randazzo" onerror="this.style.display='none'">
@@ -540,6 +528,22 @@ footer.site-f{background:var(--ink1);border-top:1px solid var(--border);padding:
         <li class="fact"><b>Cobro en 7 d&iacute;as h&aacute;biles</b><span>Directo a tu cuenta bancaria, desde que se concreta la operaci&oacute;n.</span></li>
         <li class="fact"><b>Registro inmediato</b><span>Completás el formulario y recibís tu link al instante.</span></li>
       </ul>
+    </div>
+    <div class="who-wrap">
+      <h2 class="who-h">&iquest;Sos <span>cliente</span> o sos empleado?</h2>
+      <p class="who-s">Eleg&iacute; tu perfil y entr&aacute; directo.</p>
+      <div class="who-grid">
+        <a class="who-card main" href="https://embajadoresgr.gruporandazzo.com/Registro">
+          <div class="who-t">Soy<br>cliente</div>
+          <div class="who-d">Registrate gratis, recib&iacute; tu link de inmediato y empez&aacute; a referir.</div>
+          <span class="who-go">Quiero ser embajador</span>
+        </a>
+        <a class="who-card" href="https://embajadoresgr.gruporandazzo.com/Referidos">
+          <div class="who-t">Soy<br>empleado</div>
+          <div class="who-d">Ingres&aacute; con tu link de embajador para cargar tus referidos y seguir su estado.</div>
+          <span class="who-go">Ingresar</span>
+        </a>
+      </div>
     </div>
   </div>
 </section>
