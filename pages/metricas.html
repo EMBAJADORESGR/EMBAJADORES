@@ -354,7 +354,7 @@ body.sd-off #mtSide{margin-left:-290px;}
 .sd-tog:hover{background:#fff;}
 .sd-bg{display:none;}
 .s-h{font-size:clamp(38px,3.8vw,68px);}
-body[data-view="dash"] [data-v]:not([data-v~="dash"]),body[data-view="com"] [data-v]:not([data-v~="com"]),body[data-view="est"] [data-v]:not([data-v~="est"]),body[data-view="traza"] [data-v]:not([data-v~="traza"]),body[data-view="closer"] [data-v]:not([data-v~="closer"]),body[data-view="carga"] [data-v]:not([data-v~="carga"]),body[data-view="man"] [data-v]:not([data-v~="man"]),body[data-view="pu"] [data-v]:not([data-v~="pu"]){display:none!important;}
+body[data-view="dash"] [data-v]:not([data-v~="dash"]),body[data-view="com"] [data-v]:not([data-v~="com"]),body[data-view="est"] [data-v]:not([data-v~="est"]),body[data-view="traza"] [data-v]:not([data-v~="traza"]),body[data-view="closer"] [data-v]:not([data-v~="closer"]),body[data-view="carga"] [data-v]:not([data-v~="carga"]),body[data-view="man"] [data-v]:not([data-v~="man"]),body[data-view="ced"] [data-v]:not([data-v~="ced"]){display:none!important;}
 body.vista-com #mtSide,body.vista-com .sd-tog{display:none!important;}
 @media(max-width:900px){
   #mtSide{position:fixed;left:0;top:0;bottom:0;height:auto;z-index:900;margin-left:-310px!important;width:290px;box-shadow:12px 0 40px rgba(0,0,0,.5);}
@@ -437,7 +437,7 @@ body[data-view="com"] #comNote,body[data-view="com"] #comSum{display:none!import
 .topc{background:var(--ink2);border:1px solid var(--border);padding:16px 18px;}
 .topc-h{font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--lime);margin-bottom:8px;}
 .topc .ch.tall{height:460px;}
-body[data-view="closer"] .mt,body[data-view="pu"] .mt,body[data-view="traza"] .mt{font-size:15px;}
+body[data-view="closer"] .mt,body[data-view="pu"] .mt,body[data-view="traza"] .mt,body[data-view="ced"] .mt{font-size:15px;}
 body[data-view="closer"] .mt th,body[data-view="pu"] .mt th,body[data-view="traza"] .mt th{font-size:12px;letter-spacing:.08em;padding:12px 12px;}
 body[data-view="closer"] .mt td,body[data-view="pu"] .mt td,body[data-view="traza"] .mt td{padding:12px 12px;}
 body[data-view="closer"] .cbox-title,body[data-view="pu"] .cbox-title,body[data-view="traza"] .cbox-title{font-size:14px;letter-spacing:.1em;}
@@ -445,10 +445,18 @@ body[data-view="closer"] .cl-btn,body[data-view="pu"] .cl-btn,body[data-view="tr
 #vk-dash{grid-template-columns:repeat(4,1fr);}#vk-closer{grid-template-columns:repeat(5,1fr);}#vk-traza{grid-template-columns:repeat(6,1fr);}
 @media(max-width:1200px){#vk-closer,#vk-traza{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:820px){.topc .ch.tall{height:380px;}#vk-dash,#vk-closer,#vk-traza{grid-template-columns:1fr 1fr;}}
+
+/* v5 */
+body[data-view="com"] #filterBar,body[data-view="com"] #filterInfo,body[data-view="est"] #filterBar,body[data-view="est"] #filterInfo,body[data-view="man"] #filterBar,body[data-view="man"] #filterInfo,body[data-view="carga"] #filterBar,body[data-view="carga"] #filterInfo,
+body[data-view="est"] #snapBar,body[data-view="com"] #snapBar,body[data-view="man"] #snapBar,body[data-view="carga"] #snapBar{display:none!important;}
+.vk-c.click{cursor:pointer;position:relative;transition:background .2s;}
+.vk-c.click:hover{background:var(--ink2);box-shadow:inset 0 0 0 2px var(--lime);}
+.vk-go{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--lime);margin-top:10px;opacity:.75;}
+.vk-c.click:hover .vk-go{opacity:1;}
 </style>
 </head>
 <body>
-<script>(function(){var v=(location.hash||"#dash").slice(1);if(!/^(dash|com|est|traza|closer|pu|carga|man)$/.test(v))v="dash";document.body.setAttribute("data-view",v);try{if(localStorage.getItem("mtSide")==="0")document.body.classList.add("sd-off");}catch(e){}})();</script>
+<script>(function(){var v=(location.hash||"#dash").slice(1);if(!/^(dash|com|est|traza|closer|ced|carga|man)$/.test(v))v="dash";document.body.setAttribute("data-view",v);try{if(localStorage.getItem("mtSide")==="0")document.body.classList.add("sd-off");}catch(e){}})();</script>
 <div id="auth-check"><div class="ac-spinner"></div></div>
 <div id="loader">
   <div class="ld-logo"><img src="../logo.png" alt="Grupo Randazzo"></div>
@@ -477,7 +485,6 @@ body[data-view="closer"] .cl-btn,body[data-view="pu"] .cl-btn,body[data-view="tr
   <div class="sd-g"><button class="sd-h sd-link" data-go="est" onclick="mtView('est')"><i class="sd-n">3</i>Seguimiento de trámites por estado</button></div>
   <div class="sd-g open"><button class="sd-h" onclick="mtGrp(this)"><i class="sd-n">4</i>Ventas<b class="sd-c"></b></button>
     <div class="sd-l"><a class="sd-i" data-go="closer" onclick="mtView('closer')">Control de closer<small>Referidos, preventas y entregas por vendedor</small></a>
-    <a class="sd-i" data-go="pu" onclick="mtView('pu')">Por puesto<small>Quién refiere y quién cierra</small></a>
     <a class="sd-i" data-go="traza" onclick="mtView('traza')">Trazabilidad<small>Embajador → referido → preventa → entrega → pago</small></a></div></div>
   <div class="sd-g"><button class="sd-h" onclick="mtGrp(this)"><i class="sd-n">5</i>Datos<b class="sd-c"></b></button>
     <div class="sd-l"><a class="sd-i" data-go="carga" onclick="mtView('carga')">Carga de datos<small>Subir reportes y procesar</small></a>
@@ -550,7 +557,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
 
   <!-- FILTER -->
   <div class="filter-bar" id="filterBar" style="display:none">
-    <span class="filter-label">PER&Iacute;ODO</span>
+    <span class="filter-label">PER&Iacute;ODO &mdash; aplica a todos los KPI</span>
     <button class="filter-btn active" onclick="setFilter('all',this)">Todo</button>
     <button class="filter-btn" onclick="setFilter('30',this)">30 d&iacute;as</button>
     <button class="filter-btn" onclick="setFilter('60',this)">60 d&iacute;as</button>
@@ -730,6 +737,10 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div class="ch hist"><canvas id="cHist"></canvas></div>
     </div>
     <!-- Vendedores (closers) -->
+    <div class="cbox" id="ced-box" data-v="ced" style="margin-bottom:16px;">
+      <button class="sd-tog" id="cedBack" onclick="mtView(window._cedFrom==='dash'?'dash':'closer')" style="margin-bottom:12px">← Volver</button>
+      <div id="ced-body"></div>
+    </div>
     <div id="vk-closer" data-v="closer" class="vk" style="margin-bottom:12px"></div>
     <div class="cbox" id="closers-box" data-v="closer" style="margin-bottom:10px;display:none;">
       <div class="cbox-header">
@@ -1087,7 +1098,7 @@ function calcKPIs(ref,pv,reg){
   // Embajadores únicos con al menos una PREVENTA vinculada (distinto de "con entrega")
   const embConPrev = new Set(pv.filter(r=>r._v).map(r=>r._e)).size;
   // Vendedores (closer): referidos recibidos, preventas y entregas (según el reporte de Preventas)
-  const _cl={};
+  const _cl={};const _ced=[];
   const vendKey0=(()=>{for(const r of pv){const k=Object.keys(r).find(c=>/vend/i.test(c)&&!/closer/i.test(c));if(k)return k;}return null;})();
   pv.forEach(r=>{
     const c=((r['CLOSER']||'').trim())||((r._v&&vendKey0?(r[vendKey0]||'').trim():''))||'(sin asignar)';
@@ -1101,6 +1112,7 @@ function calcKPIs(ref,pv,reg){
     if(co&&co!==c&&c!=='(sin asignar)'){            // transferido: el original cedió, el actual recibió
       if(!_cl[co])_cl[co]={closer:co,ref:0,prev:0,ent:0,by:{},out:0,outEnt:0,inn:0,innEnt:0};
       _cl[co].out++;_cl[c].inn++;if(r._v&&r._fe){_cl[co].outEnt++;_cl[c].innEnt++;}
+      _ced.push({ref:`${(r['NOMBRE']||'').trim()} ${(r['APELLIDO']||'').trim()}`.trim(),emb:r._e||'—',fc:r['FECHA CONSULTA']||'',co:co,ca:c,v:!!r._v,pv:r._pv||'',fe:r._fe||'',est:(r['Estado']||'').trim()});
     }
   });
   if(rg)ent.forEach(r=>{            // con período: las entregas se cuentan por fecha de entrega (igual que el KPI)
@@ -1132,7 +1144,7 @@ function calcKPIs(ref,pv,reg){
     empEmb:emvs.filter(e=>e.t!=='Externo').length,extEmb:emvs.filter(e=>e.t==='Externo').length,
     refEmp:ref.filter(r=>r._t!=='Externo').length,refExt:ref.filter(r=>r._t==='Externo').length,
     totalEnt,pagados,montoPend,vincSF:vsf.length,sinVinc:pv.filter(r=>!r._v).length,
-    embConPV,embPagados,embConPrev,closers,revisar,prevDet,vendKey,vinc:pv.filter(r=>r._v).length,entSis:ent.length,
+    embConPV,embPagados,embConPrev,closers,cedDet:_ced,revisar,prevDet,vendKey,vinc:pv.filter(r=>r._v).length,entSis:ent.length,
     est,estDet,ops,tm,sis,topAll,topExt,manEnt:totalEnt-ent.length,entDet,entDetAll,pagSet,pagosPer:pagosPer.length,pagosPerEmb,rangoActivo:!!rg};
 }
 
@@ -1757,28 +1769,58 @@ function paintVentasKpi(k){
   k=k||window._lastK;if(!k)return;
   const cl=(k.closers||[]),SA='(sin asignar)',man=k.manEnt||0;
   const con=cl.filter(c=>c.closer!==SA),sa=cl.find(c=>c.closer===SA);
-  const ref=cl.reduce((s,c)=>s+c.ref,0),prev=cl.reduce((s,c)=>s+c.prev,0)+man,ent=cl.reduce((s,c)=>s+c.ent,0)+man,out=cl.reduce((s,c)=>s+(c.out||0),0);
+  const ref=cl.reduce((s,c)=>s+c.ref,0),prev=cl.reduce((s,c)=>s+c.prev,0)+man,ent=cl.reduce((s,c)=>s+c.ent,0)+man;
+  const ced=k.cedDet||[],nCed=ced.length,cedV=ced.filter(x=>x.v).length,cedE=ced.filter(x=>x.v&&x.fe).length;
   const pct=(a,b)=>b?Math.round(a/b*100)+'%':'—';
   const best=con.slice().sort((a,b)=>b.ent-a.ent||b.prev-a.prev||b.ref-a.ref)[0];
   const tms=Object.entries(k.tm||{}).sort((a,b)=>b[1]-a[1]);
-  // puestos
   const pr={},pe={};con.forEach(c=>{const p=puName(c.closer);pe[p]=(pe[p]||0)+c.ent;});
   const etp=k.embTipoMap||{};Object.entries(k.refByEmb||{}).forEach(([e,n])=>{if((etp[e]||'Empleado')==='Externo')return;const p=puName(e);pr[p]=(pr[p]||0)+n;});
   const topP=o=>Object.entries(o).filter(x=>x[0]!=='Sin puesto').sort((a,b)=>b[1]-a[1])[0];
   const tr=(typeof trazaRows==='function'&&window._prevDet)?trazaRows():[];
   const t={all:tr.length,ent:tr.filter(r=>r.ent).length,sin:tr.filter(r=>!r.ent).length,paid:tr.filter(r=>r.paid).length,pend:tr.filter(r=>r.ent&&!r.paid).length,trf:tr.filter(r=>r.trf).length};
-  const K=(v,l,s,c)=>`<div class="vk-c"><div class="vk-v ${c||''}">${v}</div><div class="vk-l">${l}</div><div class="vk-s">${s||''}</div></div>`;
+  const K=(v,l,s,c,go)=>`<div class="vk-c${go?' click':''}"${go?` onclick="${go}" role="button" tabindex="0"`:''}><div class="vk-v ${c||''}">${v}</div><div class="vk-l">${l}</div><div class="vk-s">${s||''}</div>${go?'<div class="vk-go">VER DETALLE &rarr;</div>':''}</div>`;
+  const cedS=`${cedV} con preventa (${pct(cedV,nCed)}) · ${cedE} con entrega`;
+  const goC=f=>`goCed('${f}')`;
   const closerK=[K(con.length,'VENDEDORES CON REFERIDOS','más '+(sa?sa.ref:0)+' referidos sin vendedor asignado','lime'),K(ref,'REFERIDOS RECIBIDOS','por todos los vendedores'),K(prev,'CON PREVENTA',pct(prev,ref)+' de los referidos'),K(ent,'CON ENTREGA',pct(ent,ref)+' de los referidos','lime'),
-    K(out,'CEDIDOS ENTRE VENDEDORES','referidos que pasaron a otro closer')];
-  const trazaK=[K(t.all,'REGISTROS','preventas + vinculaciones manuales'),K(t.ent,'ENTREGADOS',pct(t.ent,t.all)+' del total','lime'),K(t.sin,'SIN ENTREGA AÚN','preventas en curso','amber'),K(t.paid,'PAGADOS','beneficios pagados','green'),K(t.pend,'PENDIENTES DE PAGO','entregados sin pagar','amber'),K(t.trf,'TRANSFERIDOS ENTRE CLOSERS','comisión a dividir')];
+    K(nCed,'CEDIDOS ENTRE VENDEDORES',cedS,'',goC('closer'))];
+  const trazaK=[K(t.all,'REGISTROS','preventas + vinculaciones manuales','', "tzGo('all')"),K(t.ent,'ENTREGADOS',pct(t.ent,t.all)+' del total','lime',"tzGo('ent')"),K(t.sin,'SIN ENTREGA AÚN','preventas en curso','amber',"tzGo('sin')"),K(t.paid,'PAGADOS','beneficios pagados','green',"tzGo('paid')"),K(t.pend,'PENDIENTES DE PAGO','entregados sin pagar','amber',"tzGo('pend')"),
+    K(t.trf,'TRANSFERIDOS ENTRE CLOSERS','de '+nCed+' cedidos ('+pct(t.trf,nCed)+') llegaron a preventa · comisión a dividir','',"tzGo('trf')")];
   const put=(id,arr)=>{const el=document.getElementById(id);if(el)el.innerHTML=arr.join('');};
   put('vk-closer',closerK);put('vk-traza',trazaK);
   const tp=topP(pe),rp=topP(pr);
   put('vk-dash',[
-    K(con.length,'VENDEDORES ACTIVOS','con referidos recibidos','lime'),K(ref,'REFERIDOS RECIBIDOS',(sa?sa.ref:0)+' sin vendedor asignado'),K(prev,'PREVENTAS',pct(prev,ref)+' de los referidos'),K(ent,'ENTREGAS',pct(ent,ref)+' de los referidos','lime'),
-    K(best?_h(best.closer):'—','MEJOR VENDEDOR',best?best.ent+' entregas · '+best.prev+' preventas':'sin datos'),K(tms[0]?_h(tms[0][0]):'—','TEAM CON MÁS REFERIDOS',tms[0]?tms[0][1]+' de '+tms.length+' teams':''),
+    K(con.length,'VENDEDORES ACTIVOS','con referidos recibidos','lime',"mtGo('closer')"),K(ref,'REFERIDOS RECIBIDOS',(sa?sa.ref:0)+' sin vendedor asignado','',"mtGo('closer')"),K(prev,'PREVENTAS',pct(prev,ref)+' de los referidos','',"mtGo('closer')"),K(ent,'ENTREGAS',pct(ent,ref)+' de los referidos','lime',"mtGo('closer')"),
+    K(best?_h(best.closer):'—','MEJOR VENDEDOR',best?best.ent+' entregas · '+best.prev+' preventas':'sin datos','',"mtGo('closer')"),K(tms[0]?_h(tms[0][0]):'—','TEAM CON MÁS REFERIDOS',tms[0]?tms[0][1]+' de '+tms.length+' teams':''),
     K(rp?_h(rp[0]):'—','PUESTO QUE MÁS REFIERE',rp?rp[1]+' referidos':''),K(tp?_h(tp[0]):'—','PUESTO QUE MÁS CIERRA',tp?tp[1]+' entregas':''),
-    K(out,'CEDIDOS ENTRE CLOSERS','referidos pasados a otro vendedor'),K(t.sin,'SIN ENTREGA AÚN','preventas en curso','amber'),K(t.paid,'BENEFICIOS PAGADOS',t.pend+' pendientes de pago','green'),K(t.trf,'TRANSFERIDOS','entre closers')]);
+    K(nCed,'CEDIDOS ENTRE VENDEDORES',cedS,'',goC('dash')),K(t.sin,'SIN ENTREGA AÚN','preventas en curso','amber',"tzGo('sin')"),K(t.paid,'BENEFICIOS PAGADOS',t.pend+' pendientes de pago','green',"tzGo('paid')"),K(t.trf,'TRANSFERIDOS','de '+nCed+' cedidos llegaron a preventa','',"tzGo('trf')")]);
+  paintCed(k);
+}
+/* Navegación desde KPIs */
+window.mtGo=function(v){mtView(v);};
+window.tzGo=function(f){_tzFilter=f;mtView('traza');paintTraza();setTimeout(()=>{const b=document.getElementById('traza-box');if(b)b.scrollIntoView({behavior:'smooth',block:'start'});},120);};
+window.goCed=function(from){window._cedFrom=from||'closer';mtView('ced');paintCed();};
+let _cedF='all',_cedQ='';
+function setCedF(f){_cedF=f;paintCed();}
+function paintCed(k){
+  k=k||window._lastK;if(!k)return;
+  const ced=k.cedDet||[],el=document.getElementById('ced-body');if(!el)return;
+  const nV=ced.filter(x=>x.v).length,nE=ced.filter(x=>x.v&&x.fe).length,pct=(a,b)=>b?Math.round(a/b*100)+'%':'—';
+  const from=new Set(ced.map(x=>x.co)).size,to=new Set(ced.map(x=>x.ca)).size;
+  const K=(v,l,s,c)=>`<div class="vk-c"><div class="vk-v ${c||''}">${v}</div><div class="vk-l">${l}</div><div class="vk-s">${s||''}</div></div>`;
+  const pair={};ced.forEach(x=>{const key=x.co+'\u0001'+x.ca;const g=pair[key]||(pair[key]={co:x.co,ca:x.ca,n:0,v:0,e:0});g.n++;if(x.v)g.v++;if(x.v&&x.fe)g.e++;});
+  const pairs=Object.values(pair).sort((a,b)=>b.n-a.n||b.v-a.v);
+  const q=_cedQ.toLowerCase();
+  const list=ced.filter(x=>(_cedF==='all'||(_cedF==='prev'&&x.v)||(_cedF==='ent'&&x.v&&x.fe)||(_cedF==='sin'&&!x.v))&&(!q||[x.ref,x.emb,x.co,x.ca,x.pv,x.est].join(' ').toLowerCase().includes(q)));
+  const cnt={all:ced.length,prev:nV,ent:nE,sin:ced.length-nV};
+  const btn=(f,l)=>`<button class="cl-btn${_cedF===f?' active':''}" onclick="setCedF('${f}')">${l} (${cnt[f]})</button>`;
+  el.innerHTML=`<div class="vk" style="margin-bottom:16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${K(ced.length,'REFERIDOS CEDIDOS','pasaron de un vendedor a otro','lime')}${K(nV,'LLEGARON A PREVENTA',pct(nV,ced.length)+' de los cedidos','')}${K(nE,'LLEGARON A ENTREGA',pct(nE,ced.length)+' de los cedidos','green')}${K(ced.length-nV,'SIN PREVENTA AÚN','todavía no se concretaron','amber')}${K(from+' → '+to,'VENDEDORES','que ceden → que reciben','')}</div>
+  <div class="cbox-title" style="margin:6px 0 10px">QUIÉN CEDIÓ A QUIÉN</div>
+  <div style="overflow-x:auto;margin-bottom:22px"><table class="mt"><tr><th>Closer original</th><th></th><th>Closer actual</th><th class="r">Cedidos</th><th class="r">Con preventa</th><th class="r">Con entrega</th><th class="r">% a preventa</th></tr>${pairs.map(g=>`<tr><td class="name">${_h(g.co)}</td><td style="color:var(--lime)">&rarr;</td><td class="name">${_h(g.ca)}</td><td class="lime r">${g.n}</td><td class="r">${g.v}</td><td class="r">${g.e}</td><td class="r">${pct(g.v,g.n)}</td></tr>`).join('')||'<tr><td colspan="7" style="color:var(--muted);padding:14px">Sin transferencias en este período.</td></tr>'}</table></div>
+  <div class="cbox-title" style="margin:6px 0 10px">DETALLE REFERIDO POR REFERIDO</div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">${btn('all','Todos')}${btn('prev','Con preventa')}${btn('ent','Con entrega')}${btn('sin','Sin preventa')}<input type="text" class="ep-emb-in" style="width:280px;margin-left:auto" placeholder="Buscar referido, embajador, vendedor..." value="${_h(_cedQ)}" oninput="_cedQ=this.value;paintCed();{const i=document.querySelector('#ced-body input.ep-emb-in');i.focus();i.setSelectionRange(i.value.length,i.value.length);}" autocomplete="off"></div>
+  <div style="overflow:auto;max-height:560px"><table class="mt"><tr><th>Fecha consulta</th><th>Referido</th><th>Embajador</th><th>Closer original</th><th></th><th>Closer actual</th><th>Estado</th><th>Preventa</th><th>Entrega</th></tr>${list.map(x=>`<tr><td>${_h(x.fc)}</td><td class="name">${_h(x.ref)}</td><td>${_h(x.emb)}</td><td class="name">${_h(x.co)}</td><td style="color:var(--lime)">&rarr;</td><td class="name">${_h(x.ca)}</td><td>${_h(x.est||'—')}</td><td>${x.v?`<span class="lime">${_h(x.pv||'Sí')}</span>`:'<span style="color:var(--muted)">—</span>'}</td><td>${x.v&&x.fe?`<span class="sale-dot">${_h(x.fe)}</span>`:'<span style="color:var(--muted)">—</span>'}</td></tr>`).join('')||'<tr><td colspan="9" style="color:var(--muted);padding:14px">Sin resultados.</td></tr>'}</table></div>`;
+  const bk=document.getElementById('cedBack');if(bk)bk.textContent='← Volver '+(window._cedFrom==='dash'?'al dashboard':'a control de closer');
 }
 
 /* ════ EMBUDO + VENDEDORES ════ */
@@ -1896,7 +1938,7 @@ function paintTraza(){
   const cnt={all:all.length,ent:all.filter(r=>r.ent).length,sin:all.filter(r=>!r.ent).length,paid:all.filter(r=>r.paid).length,pend:all.filter(r=>r.ent&&!r.paid).length,trf:all.filter(r=>r.trf).length};
   const btn=(f,l)=>`<button class="cl-btn${_tzFilter===f?' active':''}" onclick="setTzF('${f}')">${l} (${cnt[f]})</button>`;
   document.getElementById('tzF').innerHTML=btn('all','Todas')+btn('ent','Entregadas')+btn('sin','Sin entrega')+btn('paid','Pagadas')+btn('pend','Pendientes de pago')+btn('trf','Transferidas entre closers');
-  document.getElementById('tzNote').innerHTML=`${cnt.all} registros (preventas + manuales) &middot; ${cnt.ent} entregados &middot; ${cnt.paid} pagadas &middot; ${cnt.pend} pendientes de pago. Las vinculaciones manuales (c&oacute;nyuge, otro nombre) llevan la marca <span class="tag-manual">Manual</span>.`;
+  document.getElementById('tzNote').innerHTML=(_tzFilter==='trf'?`<b style="color:var(--lime)">${cnt.trf} transferencias:</b> la comisión de cada una se divide entre el closer original y el closer actual.<br>`:'')+`${cnt.all} registros (preventas + manuales) &middot; ${cnt.ent} entregados &middot; ${cnt.paid} pagadas &middot; ${cnt.pend} pendientes de pago. Las vinculaciones manuales (c&oacute;nyuge, otro nombre) llevan la marca <span class="tag-manual">Manual</span>.`;
   const q=(document.getElementById('tzQ').value||'').toLowerCase().trim();
   const rows=all.filter(r=>(_tzFilter==='all'||(_tzFilter==='ent'&&r.ent)||(_tzFilter==='sin'&&!r.ent)||(_tzFilter==='paid'&&r.paid)||(_tzFilter==='pend'&&r.ent&&!r.paid)||(_tzFilter==='trf'&&r.trf))
       &&(!q||[r.pv,r.ref,r.emb,r.vend,r.co,r.vendPV,r.esp,r.sis,r.fe,r.ent?'entregada':'sin entrega',r.paid?'pagado':(r.ent?'pendiente':'')].join(' ').toLowerCase().includes(q)))
@@ -2444,7 +2486,7 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(loadSupabaseData,500
     est:['Trámites','Seguimiento de trámites <em>por estado</em>','En qué estado está cada trámite. Tocá un estado para ver el detalle.'],
     traza:['Ventas','<em>Trazabilidad</em>','Embajador → Referido → Preventa → Entrega → Pago.'],
     closer:['Ventas','Control de <em>closer</em>','Referidos recibidos, preventas y entregas por vendedor.'],
-    pu:['Ventas','Por <em>puesto</em>','Quién refiere y quién cierra, según el puesto que ocupa.'],
+    ced:['Ventas','Cedidos <em>entre vendedores</em>','Cómo fue cada transferencia de referidos entre closers y cuántas llegaron a preventa.'],
     carga:['Datos','Carga de <em>datos</em>','Subí los reportes, procesalos y guardá en la nube.'],
     man:['Datos','Ventas <em>manuales</em>','Top de embajadores con entregas, ventas cargadas a mano y pagos.']
   };
@@ -2452,7 +2494,7 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(loadSupabaseData,500
   window.mtView=function(v){
     if(!V[v])v='dash';
     document.body.setAttribute('data-view',v);
-    [].forEach.call(document.querySelectorAll('#mtSide .sd-i,#mtSide .sd-link'),function(a){var on=a.getAttribute('data-go')===v;a.classList.toggle('on',on);if(on&&a.classList.contains('sd-i')){var g=a.closest('.sd-g');if(g)g.classList.add('open');}});
+    [].forEach.call(document.querySelectorAll('#mtSide .sd-i,#mtSide .sd-link'),function(a){var on=a.getAttribute('data-go')===(v==='ced'?'closer':v);a.classList.toggle('on',on);if(on&&a.classList.contains('sd-i')){var g=a.closest('.sd-g');if(g)g.classList.add('open');}});
     var k=document.getElementById('mtKick'),h=document.getElementById('mtTit'),s=document.getElementById('mtSub');
     if(k)k.textContent=V[v][0];if(h)h.innerHTML=V[v][1];if(s)s.textContent=V[v][2];
     try{history.replaceState(null,'','#'+v);}catch(e){}
