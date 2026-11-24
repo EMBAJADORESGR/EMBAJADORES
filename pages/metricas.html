@@ -620,11 +620,14 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     <div data-v="dash" class="cbox" id="act-box" style="margin-bottom:16px;">
       <div class="cbox-header"><div class="cbox-title">ACTIVIDAD DE REFERIDOS &mdash; C&Oacute;MO VAMOS</div><div class="act-note">Siempre al d&iacute;a de hoy &middot; no cambia con el filtro de per&iacute;odo</div></div>
       <div class="act-k" id="act-k"></div>
-      <div class="topc"><div class="topc-h">REFERIDOS CARGADOS POR D&Iacute;A</div><div class="act-sub">&Uacute;ltimos 30 d&iacute;as. La l&iacute;nea blanca es el promedio de los 7 d&iacute;as anteriores a cada d&iacute;a; s&aacute;bados y domingos van m&aacute;s apagados.</div><div class="ch tall"><canvas id="cActDia"></canvas></div></div>
-      <div class="cg cg-2" style="margin:0">
-        <div class="topc" style="margin:0"><div class="topc-h">EMBAJADORES QUE CARGARON AL MENOS UNO</div><div class="act-sub">Por semana (lunes a domingo), &uacute;ltimas 8 semanas. La semana actual en verde.</div><div class="ch tall"><canvas id="cActEmb"></canvas></div></div>
-        <div class="topc" style="margin:0"><div class="topc-h">REFERIDOS CARGADOS Y CON PREVENTA</div><div class="act-sub">Por semana en que se carg&oacute; el referido. Las semanas recientes todav&iacute;a pueden sumar preventas.</div><div class="ch tall"><canvas id="cActPrev"></canvas></div></div>
-      </div>
+    <!-- Embudo referidos -> preventa -> entrega -->
+    <div class="cbox" id="embudo-box" data-v="dash" style="margin:0 0 14px;display:none;">
+      <div class="cbox-title">EMBAJADORES &rarr; REFERIDOS &rarr; PREVENTA &rarr; ENTREGADOS</div>
+      <div class="fn-grid fn-grid4" id="embudo-grid"></div>
+      <div id="embudo-note" class="fn-s" style="margin-top:12px;line-height:1.6"></div>
+      <div id="embudo-rev"></div>
+    </div>
+      <div class="topc"><div class="topc-h">REFERIDOS CARGADOS Y CON PREVENTA</div><div class="act-sub">Por semana en que se carg&oacute; el referido. Las semanas recientes todav&iacute;a pueden sumar preventas.</div><div class="ch tall"><canvas id="cActPrev"></canvas></div></div>
     </div>
     <div data-v="dash" class="kpi-strip" style="display:none">
       <div class="kpi-cell k-lime"><div class="kpi-v lime" id="kReg">—</div><div class="kpi-l">Embajadores registrados</div><div class="kpi-sub" id="kRegS"></div></div>
@@ -632,13 +635,6 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div class="kpi-cell k-green"><div class="kpi-v green" id="kEnt">—</div><div class="kpi-l">Entregados totales</div><div class="kpi-sub" id="kEntS"></div></div>
       <div class="kpi-cell k-amber"><div class="kpi-v amber" id="kPag">—</div><div class="kpi-l">Beneficios pagados</div><div class="kpi-sub" id="kPagS"></div></div>
       <div class="kpi-cell k-gray"><div class="kpi-v" id="kMonto" style="font-size:20px;margin-top:10px">—</div><div class="kpi-l">Pendiente de pago</div><div class="kpi-sub" id="kMontoS"></div></div>
-    </div>
-    <!-- Embudo referidos -> preventa -> entrega -->
-    <div class="cbox" id="embudo-box" data-v="dash" style="margin-bottom:16px;display:none;">
-      <div class="cbox-title">EMBAJADORES &rarr; REFERIDOS &rarr; PREVENTA &rarr; ENTREGADOS</div>
-      <div class="fn-grid fn-grid4" id="embudo-grid"></div>
-      <div id="embudo-note" class="fn-s" style="margin-top:12px;line-height:1.6"></div>
-      <div id="embudo-rev"></div>
     </div>
     <div data-v="dash" class="cbox" id="vk-box" style="margin-bottom:16px;">
       <div class="cbox-title">VENTAS Y CONTROL &mdash; TODO LO DE LA HOJA DE VENTAS</div>
@@ -1817,13 +1813,6 @@ function paintActividad(){
   const dv=days.map((_,j)=>cnt(29-j));
   const ma=days.map((_,j)=>{const i=29-j;return Math.round(sum(i+1,i+7)/7*10)/10;});
   const wend=days.map(d=>d.getDay()===0||d.getDay()===6);
-  dc('cActDia');
-  CH['cActDia']=new Chart(document.getElementById('cActDia'),{type:'bar',data:{labels:days.map(d=>fmtD(d)),datasets:[
-    {type:'bar',label:'Referidos cargados',data:dv,backgroundColor:wend.map(w=>w?'rgba(214,255,82,.35)':'#D6FF52'),borderRadius:2,borderSkipped:false,barPercentage:.8,categoryPercentage:.9,order:2},
-    {type:'line',label:'Promedio 7 días anteriores',data:ma,borderColor:'#fff',backgroundColor:'#fff',borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.3,order:1}]},
-    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:14}},
-      plugins:{legend:{display:true,position:'top',align:'end',labels:{color:'#fff',boxWidth:12,font:{size:12}}},tooltip:{callbacks:{title:it=>{const d=days[it[0].dataIndex];return DS[d.getDay()]+' '+fmtD(d);}}}},
-      scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.7)',font:{size:11},maxRotation:0,autoSkip:true,maxTicksLimit:15}},y:{beginAtZero:true,grace:'15%',grid:{color:'rgba(255,255,255,.07)'},ticks:{precision:0,font:{size:12}}}}},plugins:[_vLabV]});
   // ---- gráficos por semana (8 semanas) ----
   const wks=[];for(let i=7;i>=0;i--)wks.push(wk(i));
   const wl=wks.map((d,j)=>j===7?'Esta sem.':fmtD(d));
@@ -1833,9 +1822,6 @@ function paintActividad(){
   const baseOpt=(leg)=>({responsive:true,maintainAspectRatio:false,layout:{padding:{top:14}},
     plugins:{legend:{display:leg,position:'top',align:'end',labels:{color:'#fff',boxWidth:12,font:{size:12}}},tooltip:{callbacks:{title:it=>'Semana del '+fmtD(wks[it[0].dataIndex])}}},
     scales:{x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.7)',font:{size:11}}},y:{beginAtZero:true,grace:'15%',grid:{color:'rgba(255,255,255,.07)'},ticks:{precision:0,font:{size:12}}}}});
-  dc('cActEmb');
-  CH['cActEmb']=new Chart(document.getElementById('cActEmb'),{type:'bar',data:{labels:wl,datasets:[
-    {label:'Embajadores',data:wEmb,backgroundColor:wks.map((_,j)=>j===7?'#D6FF52':'rgba(255,255,255,.55)'),borderRadius:2,borderSkipped:false,barPercentage:.7,categoryPercentage:.85}]},options:baseOpt(false),plugins:[_vLabV]});
   dc('cActPrev');
   CH['cActPrev']=new Chart(document.getElementById('cActPrev'),{type:'bar',data:{labels:wl,datasets:[
     {label:'Referidos cargados',data:wRef,backgroundColor:'#D6FF52',borderRadius:2,borderSkipped:false,barPercentage:.9,categoryPercentage:.8},
