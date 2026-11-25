@@ -1535,21 +1535,27 @@ async function crDoPV(refs){
   const del=[...new Set([...stale,...solved])];
   const now=new Date().toISOString();
   keep.forEach(x=>{x.updated_at=now;});
+  keep.forEach(x=>{_vinc[x.referido_id]=x;});del.forEach(id=>delete _vinc[id]);   // se muestra aunque falle el guardado
+  let saveErr=null;
   if(_sbOk){
-    await _upsertChunks('emb_pv_vinculos',keep,'referido_id');
-    if(del.length)await _sb.from('emb_pv_vinculos').delete().in('referido_id',del);
+    try{
+      await _upsertChunks('emb_pv_vinculos',keep,'referido_id');
+      if(del.length)await _sb.from('emb_pv_vinculos').delete().in('referido_id',del);
+    }catch(e){saveErr=(e&&e.message)||String(e);}
   }
-  keep.forEach(x=>{_vinc[x.referido_id]=x;});del.forEach(id=>delete _vinc[id]);
-  return {...res.stats,pvCount:res.pvCount,nuevos:keep.length,quitados:del.length};
+  return {...res.stats,pvCount:res.pvCount,nuevos:keep.length,quitados:del.length,saveErr};
 }
 async function crDoLeads(refs){
   const res=crComputeLeads(refs,MF.lead,_ldDia);
+  _ldDia=res.dia;_ldRef=res.det;   // se muestra aunque falle el guardado
+  let saveErr=null;
   if(_sbOk){
-    await _upsertChunks('emb_leads_dia',res.dia,'fecha,sub_origen,tipo');
-    if(res.det.length)await _upsertChunks('emb_leads_ref',res.det.map(x=>({...x,updated_at:new Date().toISOString()})),'nro_tramite');
-    await loadCruce();
-  }else{_ldDia=res.dia;_ldRef=res.det;}
-  return res.stats;
+    try{
+      await _upsertChunks('emb_leads_dia',res.dia,'fecha,sub_origen,tipo');
+      if(res.det.length)await _upsertChunks('emb_leads_ref',res.det.map(x=>({...x,updated_at:new Date().toISOString()})),'nro_tramite');
+    }catch(e){saveErr=(e&&e.message)||String(e);}
+  }
+  return {...res.stats,saveErr};
 }
 async function procCruce(refs){
   const info={pv:null,leads:null,err:null};
@@ -1561,6 +1567,9 @@ async function procCruce(refs){
   const n=x=>(x||0).toLocaleString('es-AR');let m=[];
   if(info.pv)m.push(`<b>Preventas:</b> ${n(info.pv.eval)} referidos sin preventa revisados contra ${n(info.pv.pvCount)} preventas → <b style="color:var(--green)">${info.pv.alta} vinculados automáticamente</b>, <b style="color:var(--amber)">${info.pv.media+info.pv.baja} para revisar</b>, ${n(info.pv.sinMatch)} sin coincidencia.`);
   if(info.leads)m.push(`<b>Leads:</b> ${n(info.leads.total)} leads leídos (${n(info.leads.bad)} filas ignoradas) · ${n(info.leads.amb)} de embajadores, ${n(info.leads.linked)} ya figuran como referidos y ${n(info.leads.sin)} no.`);
+  const se=[info.pv&&info.pv.saveErr,info.leads&&info.leads.saveErr].filter(Boolean)[0];
+  if(se)m.push(`<span style="color:#f87171">Se calculó pero NO se pudo guardar en la nube: ${_h(se)}. Corré supabase_cruce.sql en Supabase y volvé a procesar.</span>`);
+  if(!info.pv&&!info.leads)m.push(`<span style="color:#f87171">No hay reportes de cruce cargados en esta sesión: subí "Preventas vinculadas" y/o "Leads" y tocá Procesar datos.</span>`);
   if(info.err)m.push(`<span style="color:var(--red,#f87171)">No se pudo guardar el cruce: ${_h(info.err)}. ¿Corriste supabase_cruce.sql?</span>`);
   const el=document.getElementById('cr-run');if(el)el.innerHTML=m.join('<br>');
   return m.length;
