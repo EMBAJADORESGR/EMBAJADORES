@@ -1450,11 +1450,11 @@ function crMatch(A,ix){
   A.t.forEach(k=>(ix.t.get(k)||[]).forEach(i=>add(i,'tel')));
   A.m.forEach(k=>(ix.m.get(k)||[]).forEach(i=>add(i,'mail')));
   const seen=new Set();A.n.forEach(t=>{if(t.length>=3)(ix.n.get(t)||[]).forEach(i=>seen.add(i));});
-  seen.forEach(i=>{const p=ix.p[i];if(crSub(A.n,p.n))add(i,'nom');else if(p.n2&&crSub(A.n,p.n2))add(i,'con');});
+  seen.forEach(i=>{const p=ix.p[i];if(crSub(A.n,p.n)){add(i,'nom');if(A.n.length>=2&&A.n.length===p.n.length)add(i,'nomx');}else if(p.n2&&crSub(A.n,p.n2))add(i,'con');});
   return cand;
 }
 // alta = DNI, o dos datos distintos coinciden · media = teléfono o mail solos · baja = solo nombre / cónyuge
-function crTier(f){if(f.dni)return 'alta';const k=(f.tel?1:0)+(f.mail?1:0)+(f.nom?1:0);if(k>=2)return 'alta';return(f.tel||f.mail)?'media':'baja';}
+function crTier(f){if(f.dni)return 'alta';const k=(f.tel?1:0)+(f.mail?1:0)+(f.nom?1:0);if(k>=2)return 'alta';return(f.tel||f.mail||f.nomx)?'media':'baja';}
 const crPor=f=>[f.dni&&'DNI',f.tel&&'Teléfono',f.mail&&'Mail',f.nom&&'Nombre',f.con&&'Cónyuge'].filter(Boolean).join(' + ');
 const crRefPerson=r=>crPerson({dni:[r['DNI']],tel:[r['TELEFONO']],mail:[r['MAIL']],nom:`${r['NOMBRE']||''} ${r['APELLIDO']||''}`});
 
