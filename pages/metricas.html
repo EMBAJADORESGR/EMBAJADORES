@@ -1327,6 +1327,7 @@ function refreshDash(){
   _pIdx=null;
   const f=applyFilter(raw);
   renderDash(calcKPIs(f._ref,f._pv,f._reg));
+  try{paintCruce();}catch(e){}
 }
 function openPvEdit(id){
   let row=null;Object.values(window._estDetFull||{}).forEach(rs=>rs.forEach(r=>{if(r.id===id&&!row)row=r;}));
@@ -1502,7 +1503,11 @@ function crComputeLeads(refs,parsed,prevDia){
   const ix=crIndex(refs.map(crRefPerson)),ids=refs.map(r=>+r['ID']);
   const prev={};(prevDia||[]).forEach(x=>{prev[x.fecha+'|'+x.sub_origen+'|'+x.tipo]=x.leads;});
   let linked=0,sin=0;
-  parsed.rows.forEach(l=>{
+  // un mismo trámite puede venir en varias filas del reporte: se cuenta una sola vez
+  const seen=new Set(),uniq=[];parsed.rows.forEach(l=>{if(seen.has(l.nro))return;seen.add(l.nro);uniq.push(l);});
+  const dup=parsed.rows.length-uniq.length;
+  const dts=uniq.map(l=>crDate(l.fecha)).filter(Boolean).map(crIso).sort(),fMin=dts[0],fMax=dts[dts.length-1];
+  uniq.forEach(l=>{
     const d=crDate(l.fecha);if(!d)return;
     const tp=crTipo(l.tipo),k=crIso(d)+'|'+l.sub+'|'+tp;dia.set(k,(dia.get(k)||0)+1);
     if(!CR_AMB.test(l.sub))return;
@@ -1513,8 +1518,8 @@ function crComputeLeads(refs,parsed,prevDia){
     rid?linked++:sin++;
     det.push({nro_tramite:l.nro,fecha:crIso(d),vendedor:l.vend,unidad:l.unidad,tipo:tp,estado:l.est,resultado:l.res.slice(0,80),cliente:l.cliente.slice(0,80),referido_id:rid,match_por:por});
   });
-  const diaRows=[];dia.forEach((n,k)=>{const [fecha,sub_origen,tipo]=k.split('|');diaRows.push({fecha,sub_origen,tipo,leads:Math.max(n,prev[k]||0)});});   // nunca baja: el 1.º y último día del reporte pueden venir cortados
-  return {dia:diaRows,det,stats:{total:parsed.rows.length,bad:parsed.bad,amb:det.length,linked,sin}};
+  const diaRows=[];dia.forEach((n,k)=>{const [fecha,sub_origen,tipo]=k.split('|');diaRows.push({fecha,sub_origen,tipo,leads:(fecha===fMin||fecha===fMax)?Math.max(n,prev[k]||0):n});});   // los días de adentro se pisan con el reporte nuevo; el 1.º y el último pueden venir cortados
+  return {dia:diaRows,det,stats:{total:uniq.length,dup,bad:parsed.bad,amb:det.length,linked,sin}};
 }
 
 /* Nube */
@@ -1582,7 +1587,7 @@ async function procCruce(refs){
   _cruceInfo=info;paintCruce();
   const n=x=>(x||0).toLocaleString('es-AR');let m=[];
   if(info.pv)m.push(`<b>Preventas:</b> ${n(info.pv.eval)} referidos sin preventa revisados contra ${n(info.pv.pvCount)} preventas → <b style="color:var(--green)">${info.pv.alta} vinculados automáticamente</b>, <b style="color:var(--amber)">${info.pv.media+info.pv.baja} para revisar</b>, ${n(info.pv.sinMatch)} sin coincidencia.`);
-  if(info.leads)m.push(`<b>Leads:</b> ${n(info.leads.total)} leads leídos (${n(info.leads.bad)} filas ignoradas) · ${n(info.leads.amb)} de embajadores, ${n(info.leads.linked)} ya figuran como referidos y ${n(info.leads.sin)} no.`);
+  if(info.leads)m.push(`<b>Leads:</b> ${n(info.leads.total)} leads únicos (${n(info.leads.dup||0)} filas repetidas descartadas, ${n(info.leads.bad)} ignoradas) · ${n(info.leads.amb)} de embajadores, ${n(info.leads.linked)} ya figuran como referidos y ${n(info.leads.sin)} no.`);
   const se=[info.pv&&info.pv.saveErr,info.leads&&info.leads.saveErr].filter(Boolean)[0];
   if(se)m.push(`<span style="color:#f87171">Se calculó pero NO se pudo guardar en la nube: ${_h(se)}. Corré supabase_cruce.sql en Supabase y volvé a procesar.</span>`);
   if(!info.pv&&!info.leads)m.push(`<span style="color:#f87171">No hay reportes de cruce cargados en esta sesión: subí "Preventas vinculadas" y/o "Leads" y tocá Procesar datos.</span>`);
@@ -1612,8 +1617,13 @@ async function crSet(id,estado){
   if(_sbOk){const {error}=await _sb.from('emb_pv_vinculos').update({estado,updated_at:new Date().toISOString()}).eq('referido_id',id);if(error){alert('No se pudo guardar: '+error.message);return;}}
   o.estado=estado;try{refreshDash();}catch(e){}paintCruce();
 }
+Object.defineProperty(window,'_ldDiaAll',{get:()=>_ldDia});Object.defineProperty(window,'_ldRefAll',{get:()=>_ldRef});
 function paintCruce(){
   const wrap=document.getElementById('cruce-wrap');if(!wrap)return;
+  // el período global (30 días, este mes, etc.) también rige para los leads
+  const rg=(typeof globalRange==='function')?globalRange():null;
+  const inR=iso=>{if(!rg)return true;const p=String(iso).split('-');if(p.length<3)return true;const d=new Date(+p[0],+p[1]-1,+p[2]);return (!rg[0]||d>=rg[0])&&(!rg[1]||d<rg[1]);};
+  const _ldDia=window._ldDiaAll.filter(x=>inR(x.fecha)),_ldRef=window._ldRefAll.filter(x=>inR(x.fecha));
   const V=Object.values(_vinc),n=x=>x.toLocaleString('es-AR');
   const cnt={rev:0,auto:0,confirmado:0,rechazado:0};V.forEach(v=>{const k=v.estado==='propuesto'?'rev':v.estado;if(k in cnt)cnt[k]++;});
   const tot=_ldDia.reduce((a,x)=>a+x.leads,0),amb=_ldDia.filter(x=>CR_AMB.test(x.sub_origen)).reduce((a,x)=>a+x.leads,0);
@@ -1622,7 +1632,7 @@ function paintCruce(){
   const dts=_ldDia.map(x=>x.fecha).sort(),per=dts.length?`${crFmt(crDate(dts[0].split('-').reverse().join('/')))} al ${crFmt(crDate(dts[dts.length-1].split('-').reverse().join('/')))}`:'sin datos';
   const K=(v,l,s,c)=>`<div class="vk-c"><div class="vk-v ${c||''}">${v}</div><div class="vk-l">${l}</div><div class="vk-s">${s||''}</div></div>`;
   document.getElementById('vk-cruce').innerHTML=[
-    K(n(tot),'LEADS EN EL PERÍODO',per,''),
+    K(n(tot),'LEADS EN EL PERÍODO',per+(rg?' · filtrado':''),''),
     K(n(amb),'LEADS DE EMBAJADORES',tot?(amb/tot*100).toFixed(1).replace('.',',')+'% del total':'','lime'),
     K(n(sinRef),'SIN REFERIDO EN EL SITIO','entraron como "Referido" al CRM y no están cargados','amber'),
     K(n(cnt.auto+cnt.confirmado),'PREVENTAS RECUPERADAS','vinculadas automáticamente o confirmadas','green'),
