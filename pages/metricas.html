@@ -1524,7 +1524,8 @@ async function loadCruce(){
   try{_ident={};(await _fetchAll('emb_ref_ident')).forEach(x=>_ident[x.referido_id]=x);}catch(e){_ident={};}
   try{_ldDia=await _fetchAll('emb_leads_dia');_ldRef=await _fetchAll('emb_leads_ref');}catch(e){_ldDia=[];_ldRef=[];}
 }
-async function _upsertChunks(t,rows,conflict){for(let i=0;i<rows.length;i+=500){const {error}=await _sb.from(t).upsert(rows.slice(i,i+500),{onConflict:conflict});if(error)throw error;}}
+async function _upsertChunks(t,rows,conflict){const ks=conflict.split(','),u=new Map();rows.forEach(r=>u.set(ks.map(k=>r[k]).join('|'),r));rows=[...u.values()];   // sin claves repetidas en el mismo envío
+  for(let i=0;i<rows.length;i+=500){const {error}=await _sb.from(t).upsert(rows.slice(i,i+500),{onConflict:conflict});if(error)throw error;}}
 async function crDoPV(refs){
   const res=crComputePV(refs,MF.pvv,_pvMan);
   const keep=res.rows.filter(x=>{const o=_vinc[x.referido_id];return !(o&&(o.estado==='confirmado'||(o.estado==='rechazado'&&o.preventa===x.preventa)));});   // respeta lo que decidió una persona
