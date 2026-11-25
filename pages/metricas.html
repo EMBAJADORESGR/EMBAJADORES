@@ -569,7 +569,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     <div class="upload-card" id="uc-pvv"><input class="uc-input" type="file" accept=".csv,.xls,.txt" onchange="loadMet(this,'pvv')">
       <div class="uc-icon"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg></div>
       <div class="uc-title">Preventas vinculadas <span style="font-size:9px;color:var(--muted);font-weight:400">opcional</span></div>
-      <div class="uc-desc">Reporte_PV_Vinculadas.xls · para recuperar preventas perdidas</div>
+      <div class="uc-desc">Reporte_PV_Vinculadas.xls · se cruza con los referidos ya cargados</div>
       <div class="uc-name" id="uc-pvv-n"></div>
     </div>
     <div class="upload-card" id="uc-lead"><input class="uc-input" type="file" accept=".csv,.xls,.txt" onchange="loadMet(this,'lead')">
@@ -936,7 +936,7 @@ async function loadSupabaseData() {
     _tramites = r4.data||[];
     _sbOk     = true;
     await loadExtras();
-    try{paintCruce();}catch(e){}
+    try{paintCruce();const el=document.getElementById('cr-run');if(el&&!el.innerHTML){try{el.innerHTML=localStorage.getItem('crLast')||'';}catch(e){}}}catch(e){}
     // Intentar cargar dataset guardado
     if(r3.data&&r3.data.length>0){
       const ds = r3.data[0];
@@ -1054,10 +1054,8 @@ function loadMet(inp,k){
   const done=()=>{
     document.getElementById('uc-'+k).classList.add('loaded');
     document.getElementById('uc-'+k+'-n').textContent='✓ '+f.name;
-    if(MF.pv){
-      document.getElementById('btnProcess').classList.add('vis');
-      document.getElementById('filterBar').style.display='flex';
-    }
+    if(MF.pv||MF.pvv||MF.lead)document.getElementById('btnProcess').classList.add('vis');
+    if(MF.pv)document.getElementById('filterBar').style.display='flex';
   };
   if(k==='reg'){      // el padrón se lee con el lector flexible (xlsx / html / csv / tsv)
     readTable(f).then(rows=>{
@@ -1418,7 +1416,7 @@ function closeGloss(){document.getElementById('glossModal').style.display='none'
    - emb_pv_vinculos : 1 fila por referido con la preventa que le corresponde (sin DNI/teléfono/mail)
    - emb_leads_dia   : conteo por día × origen × tipo (clave natural → re-subir no duplica)
    - emb_leads_ref   : detalle solo de los leads que entraron como "Referido" (embajadores)           */
-let _vinc={},_ldDia=[],_ldRef=[],_cruceInfo=null,_crF='rev',_crQ='';
+let _vinc={},_ldDia=[],_ldRef=[],_ident={},_cruceInfo=null,_crF='rev',_crQ='';
 const CR_AMB=/^referido/i;                         // Sub Origen que usa el CRM para los leads de embajadores
 const crNa=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z ]/g,' ');
 const crToks=s=>[...new Set(crNa(s).split(/\s+/).filter(t=>t.length>1))];
@@ -1523,6 +1521,7 @@ function crComputeLeads(refs,parsed,prevDia){
 async function _fetchAll(t){const out=[];for(let p=0;p<60;p++){const {data,error}=await _sb.from(t).select('*').range(p*1000,p*1000+999);if(error)throw error;out.push(...(data||[]));if(!data||data.length<1000)break;}return out;}
 async function loadCruce(){
   try{_vinc={};(await _fetchAll('emb_pv_vinculos')).forEach(x=>_vinc[x.referido_id]=x);}catch(e){_vinc={};window._crErr=e;}
+  try{_ident={};(await _fetchAll('emb_ref_ident')).forEach(x=>_ident[x.referido_id]=x);}catch(e){_ident={};}
   try{_ldDia=await _fetchAll('emb_leads_dia');_ldRef=await _fetchAll('emb_leads_ref');}catch(e){_ldDia=[];_ldRef=[];}
 }
 async function _upsertChunks(t,rows,conflict){for(let i=0;i<rows.length;i+=500){const {error}=await _sb.from(t).upsert(rows.slice(i,i+500),{onConflict:conflict});if(error)throw error;}}
@@ -1557,9 +1556,25 @@ async function crDoLeads(refs){
   }
   return {...res.stats,saveErr};
 }
+// Guarda (normalizados) DNI, teléfono, mail y nro de trámite de cada referido: así el cruce funciona sin volver a subir el reporte de referidos
+async function crSaveIdent(rows){
+  const out=[];
+  rows.forEach(r=>{const id=+r['ID'];if(!id||(r['DNI']==null&&r['TELEFONO']==null&&r['MAIL']==null))return;
+    const x={referido_id:id,dni:crDni(r['DNI']),tel:crTel(r['TELEFONO']),mail:crMail(r['MAIL']),nro_crm:String(r['NRO TRAMITE CRM']||'').trim()},o=_ident[id];
+    if(o&&o.dni===x.dni&&o.tel===x.tel&&o.mail===x.mail&&o.nro_crm===x.nro_crm)return;
+    out.push(x);});
+  if(!out.length)return 0;
+  out.forEach(x=>{_ident[x.referido_id]=x;});
+  if(_sbOk)await _upsertChunks('emb_ref_ident',out.map(x=>({...x,updated_at:new Date().toISOString()})),'referido_id');
+  return out.length;
+}
+// completa cada referido con los datos de contacto ya guardados
+const crFill=rows=>rows.map(r=>{const o=_ident[+r['ID']];return o?{...r,'DNI':r['DNI']||o.dni,'TELEFONO':r['TELEFONO']||o.tel,'MAIL':r['MAIL']||o.mail,'NRO TRAMITE CRM':r['NRO TRAMITE CRM']||o.nro_crm}:r;});
 async function procCruce(refs){
-  const info={pv:null,leads:null,err:null};
+  const info={pv:null,leads:null,err:null,ident:0};
   try{
+    try{info.ident=await crSaveIdent(refs);}catch(e){info.identErr=(e&&e.message)||String(e);}
+    refs=crFill(refs);
     if(MF.pvv&&MF.pvv.length)info.pv=await crDoPV(refs);
     if(MF.lead&&MF.lead.rows.length)info.leads=await crDoLeads(refs);
   }catch(e){console.warn('cruce',e);info.err=(e&&e.message)||String(e);}
@@ -1570,8 +1585,14 @@ async function procCruce(refs){
   const se=[info.pv&&info.pv.saveErr,info.leads&&info.leads.saveErr].filter(Boolean)[0];
   if(se)m.push(`<span style="color:#f87171">Se calculó pero NO se pudo guardar en la nube: ${_h(se)}. Corré supabase_cruce.sql en Supabase y volvé a procesar.</span>`);
   if(!info.pv&&!info.leads)m.push(`<span style="color:#f87171">No hay reportes de cruce cargados en esta sesión: subí "Preventas vinculadas" y/o "Leads" y tocá Procesar datos.</span>`);
+  if(info.identErr)m.push(`<span style="color:#f87171">No se pudieron guardar los datos de contacto de referidos: ${_h(info.identErr)}. ¿Corriste supabase_cruce.sql actualizado?</span>`);
   if(info.err)m.push(`<span style="color:var(--red,#f87171)">No se pudo guardar el cruce: ${_h(info.err)}. ¿Corriste supabase_cruce.sql?</span>`);
-  const el=document.getElementById('cr-run');if(el)el.innerHTML=m.join('<br>');
+  const stamp=new Date().toLocaleString('es-AR');
+  const nid=Object.keys(_ident).length;
+  const slot=`Referidos con datos de contacto guardados: ${nid.toLocaleString('es-AR')}${nid?'':' (subí una vez el reporte de referidos para guardarlos)'} · archivos en esta carga: referidos ${MF.pv?MF.pv.length:0} filas · preventas vinculadas ${MF.pvv?MF.pvv.length:'NO cargado'} · leads ${MF.lead?MF.lead.rows.length:'NO cargado'}`;
+  const html=`<span style="color:var(--lime)">Último procesamiento ${stamp}</span><br>${slot}<br>${m.join('<br>')}`;
+  try{localStorage.setItem('crLast',html);}catch(e){}
+  const el=document.getElementById('cr-run');if(el)el.innerHTML=html;
   return m.length;
 }
 
@@ -1633,6 +1654,11 @@ function paintCruce(){
 
 /* ════ PROCESS ════ */
 async function metProcess(){
+  if(!MF.pv){   // solo preventas vinculadas y/o leads: se cruzan contra los referidos que ya tiene la página
+    const base=(window._rawKPI&&window._rawKPI._pv)||[];
+    if(!base.length){alert('La página todavía no tiene referidos cargados. Subí una vez el reporte de referidos.');return;}
+    await procCruce(base);try{refreshDash();}catch(e){}mtView('cruce');return;
+  }
   const reg=MF.reg||[];
   const newRef=cleanRef(MF.pv), newPV=cleanPV(MF.pv);
   // Closer original / actual: salen del Reporte de embajadores (por ID); si no está cargado, se usa la columna CLOSER del reporte de preventas
@@ -1663,7 +1689,7 @@ async function metProcess(){
     }catch(e){console.warn('merge cloud err',e);}
   }
 
-  await procCruce(newPV);   // cruce con preventas vinculadas y leads (si se subieron)
+  await procCruce(mergedPV);   // cruce con preventas vinculadas y leads (si se subieron)
   window._rawKPI={_ref:mergedRef,_pv:mergedPV,_reg:{length:mergedRegCount}};
 
   // Detectar novedades vs estado guardado en Supabase
