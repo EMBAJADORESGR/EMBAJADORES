@@ -79,7 +79,8 @@ main.page-content{max-width:none!important;width:100%!important;margin-left:0!im
 @media(max-width:700px){main.page-content{padding-left:12px!important;padding-right:12px!important;}}
 #met-dashboard{display:none;}
 #met-dashboard.vis{display:block;}
-.tot-box{display:grid;grid-template-columns:1.4fr 1fr 1fr;background:var(--ink1);border:1px solid var(--border);border-top:3px solid var(--lime);margin-bottom:12px;}
+.dash-more{margin:6px 0 16px;}.dash-more>summary{cursor:pointer;list-style:none;padding:12px 16px;border:1px solid var(--border);background:var(--ink1);color:var(--lime);font-size:12px;font-weight:700;letter-spacing:.06em;margin-bottom:12px;}.dash-more>summary::-webkit-details-marker{display:none;}.dash-more>summary::before{content:"\25B8  ";}.dash-more[open]>summary::before{content:"\25BE  ";}
+.tot-box{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.1fr;background:var(--ink1);border:1px solid var(--border);border-top:3px solid var(--lime);margin-bottom:12px;}
 .tot-main,.tot-side{padding:26px 32px;text-align:center;}
 .tot-side{border-left:1px solid var(--border);}
 .big-v2{font-size:56px;font-weight:700;line-height:1;letter-spacing:-.03em;color:var(--lime);}
@@ -87,7 +88,6 @@ main.page-content{max-width:none!important;width:100%!important;margin-left:0!im
 .fn-grid4{grid-template-columns:repeat(4,1fr);}
 .fn-grid4 .fn-v{font-size:44px;}.fn-grid4 .fn-cell{padding:22px 24px;}
 @media(max-width:900px){.fn-grid4{grid-template-columns:repeat(2,1fr);}}
-.roi-in{background:var(--faint);border:1px solid var(--border);border-radius:3px;padding:6px 10px;font-size:13px;font-family:var(--ff);color:var(--cream);outline:none;width:150px;}
 .tag-pu{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:3px;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.3);color:#93C5FD;white-space:nowrap;}
 body.vista-com .page-content>*:not(#met-dashboard){display:none!important;}
 body.vista-com #met-dashboard>*:not(#com-box){display:none!important;}
@@ -653,6 +653,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div class="tot-main"><div class="big-l">TOTAL DE EMBAJADORES</div><div class="big-v lime" id="bkTot">&mdash;</div><div class="big-s" id="bkTotS">registrados en el programa</div></div>
       <div class="tot-side"><div class="big-l">NUESTROS</div><div class="big-v2" id="bkEmp">&mdash;</div><div class="big-s">empleados del grupo</div></div>
       <div class="tot-side"><div class="big-l">EXTERNOS</div><div class="big-v2" id="bkExt" style="color:#fff">&mdash;</div><div class="big-s">clientes y otros</div></div>
+      <div class="tot-side" style="background:rgba(214,255,82,.07);cursor:pointer" onclick="var e=document.getElementById('reg-box');if(e)e.scrollIntoView({behavior:'smooth',block:'start'})"><div class="big-l">NUEVOS REGISTROS</div><div class="big-v2" id="bkNew" style="color:var(--green)">&mdash;</div><div class="big-s" id="bkNewS">en el per&iacute;odo elegido</div></div>
     </div>
     <!-- ACTIVIDAD DE REFERIDOS -->
     <div data-v="dash" class="cbox" id="act-box" style="margin-bottom:16px;">
@@ -673,20 +674,6 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div class="kpi-cell k-green"><div class="kpi-v green" id="kEnt">—</div><div class="kpi-l">Entregados totales</div><div class="kpi-sub" id="kEntS"></div></div>
       <div class="kpi-cell k-amber"><div class="kpi-v amber" id="kPag">—</div><div class="kpi-l">Beneficios pagados</div><div class="kpi-sub" id="kPagS"></div></div>
       <div class="kpi-cell k-gray"><div class="kpi-v" id="kMonto" style="font-size:20px;margin-top:10px">—</div><div class="kpi-l">Pendiente de pago</div><div class="kpi-sub" id="kMontoS"></div></div>
-    </div>
-    <div data-v="dash" class="cbox" id="vk-box" style="margin-bottom:16px;">
-      <div class="cbox-title">VENTAS Y CONTROL &mdash; TODO LO DE LA HOJA DE VENTAS</div>
-      <div id="vk-dash" class="vk"></div>
-    </div>
-    <!-- Resultados e inversión -->
-    <div class="cbox" id="roi-box" data-v="dash" style="margin-bottom:16px;display:none;">
-      <div class="cbox-title">RESULTADOS E INVERSI&Oacute;N (ROI)</div>
-      <div class="fn-grid fn-grid4" id="roi-grid"></div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
-        <span style="font-size:11px;color:var(--muted)">Ingreso o margen bruto promedio por entrega (AR$)</span>
-        <input type="text" inputmode="numeric" class="roi-in" id="roiMargen" placeholder="ej: 3000000" oninput="roiInput()" autocomplete="off">
-        <span id="roiNote" class="fn-s" style="margin:0"></span>
-      </div>
     </div>
     <div data-v="dash" class="cbox" id="topc-box" style="margin-bottom:16px;">
       <div class="cbox-header"><div class="cbox-title">TOP EMBAJADORES &mdash; REFERIDOS Y PREVENTAS</div>
@@ -776,6 +763,11 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
     </div>
     <!-- Estados por trámite -->
     <div data-v="est" id="estados-panel"></div>
+    <details data-v="dash" id="dash-more" class="dash-more"><summary>M&aacute;s detalle: ventas y control, gr&aacute;ficos por estado, tipo, sistema y team, evoluci&oacute;n</summary>
+    <div data-v="dash" class="cbox" id="vk-box" style="margin-bottom:16px;">
+      <div class="cbox-title">VENTAS Y CONTROL</div>
+      <div id="vk-dash" class="vk"></div>
+    </div>
     <!-- Charts row 1 -->
     <div data-v="dash" class="cg cg-3">
       <div class="cbox"><div class="cbox-title">ESTADO DEL PIPELINE</div><div class="ch"><canvas id="cEstado"></canvas></div></div>
@@ -792,6 +784,7 @@ CREATE POLICY "auth_all" ON emb_tramites FOR ALL TO authenticated USING (true) W
       <div class="cbox-title">EVOLUCI&Oacute;N HIST&Oacute;RICA</div>
       <div class="ch hist"><canvas id="cHist"></canvas></div>
     </div>
+    </details>
     <!-- Vendedores (closers) -->
     <div class="cbox" id="ced-box" data-v="ced" style="margin-bottom:16px;">
       <button class="sd-tog" id="cedBack" onclick="mtView(window._cedFrom==='dash'?'dash':'closer')" style="margin-bottom:12px">← Volver</button>
@@ -980,12 +973,18 @@ function reconstruct(ds) {
 }
 
 /* ════ CSV ════ */
+// El reporte de consultas cambió de columnas (se agregó COMENTARIO) y a veces trae nombres con errores de tipeo (EMIAL, AISGNO):
+// se leen por nombre, con alias, y un ';' dentro del comentario no corre el resto de la fila.
+const HDR_ALIAS={'EMIAL':'MAIL','E-MAIL':'MAIL','EMAIL':'MAIL','CORREO':'MAIL','FECHA AISGNO CRM':'FECHA ASIGNO CRM','FECHA ASIGNACION CRM':'FECHA ASIGNO CRM','COMENTARIOS':'COMENTARIO','OBSERVACION':'COMENTARIO','OBSERVACIONES':'COMENTARIO'};
 function parseCSV(t){
   const l=t.replace(/\r/g,'').split('\n');let s=0;
   if(l[0].startsWith('sep='))s=1;
-  const h=l[s].split(';').map(v=>v.trim().replace(/"/g,''));
+  const h=l[s].split(';').map(v=>{v=v.trim().replace(/"/g,'');const u=v.toUpperCase();return HDR_ALIAS[u]||v;});
+  const ic=h.indexOf('COMENTARIO'),extra=cnt=>cnt-h.length;
   return l.slice(s+1).filter(r=>r.trim().length>3).map(r=>{
-    const c=r.split(';').map(v=>v.trim().replace(/"/g,''));
+    let c=r.split(';').map(v=>v.trim().replace(/"/g,''));
+    const ex=extra(c.length);
+    if(ex>0&&ic>=0)c.splice(ic,ex+1,c.slice(ic,ic+ex+1).join('; '));   // ';' dentro del comentario
     const o={};h.forEach((k,j)=>o[k]=c[j]||'');return o;
   });
 }
@@ -1214,7 +1213,7 @@ function calcKPIs(ref,pv,reg){
 
 
 /* ════ PADRÓN DE REGISTRADOS — nuevos (semana lun→dom) y repetidos ════ */
-let _regDb=[],_regPer='week',_pvMan={};
+let _regDb=[],_pvMan={};
 const dniNorm=v=>{const d=String(v||'').replace(/\D/g,'');return d.length===11?d.slice(2,10):d;};
 const regTipo=t=>/^\s*cliente\b/i.test(t||'')?'Externo':'Empleado';
 const regNom=r=>`${(r.nombre||'').trim()} ${(r.apellido||'').trim()}`.trim();
@@ -1256,24 +1255,28 @@ async function syncRegistrados(rows){
     await fetchRegistrados();
   }catch(e){console.warn('padron',e);}
 }
-function regRange(per){
+function regRange(per){   // lunes→domingo (solo para el resumen por semana)
   const now=new Date(),mon=mondayOf(now),next=new Date(mon);next.setDate(mon.getDate()+7);
-  if(per==='week')return [mon,next];
   if(per==='prev'){const pm=new Date(mon);pm.setDate(mon.getDate()-7);return [pm,mon];}
-  if(per==='30'){const f=new Date(now);f.setDate(now.getDate()-30);return [f,next];}
-  return [new Date(0),next];
+  return [mon,next];
 }
+// Nuevos registrados: siguen el período elegido arriba (30 días, este mes, fechas a mano…)
 function regNuevos(per){
-  const [f,t]=regRange(per);
+  const rg=(per==='week'||per==='prev')?regRange(per):(typeof globalRange==='function'?globalRange():null);
+  const f=rg&&rg[0]?rg[0]:new Date(0),t=rg&&rg[1]?rg[1]:new Date(8.64e15);
   return _regDb.filter(r=>!r.es_base&&r.primera_vez&&new Date(r.primera_vez)>=f&&new Date(r.primera_vez)<t)
     .sort((a,b)=>new Date(b.primera_vez)-new Date(a.primera_vez));
+}
+function regPerLabel(){
+  const rg=(typeof globalRange==='function')?globalRange():null;if(!rg)return 'desde que se empez\u00f3 a medir';
+  const f=rg[0],t=rg[1]?new Date(rg[1].getTime()-864e5):new Date();
+  return (f?fmtD(f):'inicio')+' \u2192 '+fmtD(t);
 }
 function regStats(rows){
   const g={};rows.forEach(r=>{const k=dniNorm(r.dni)||('pk:'+r.pkey);(g[k]=g[k]||[]).push(r);});
   return {total:rows.length,unicos:Object.keys(g).length,dups:Object.values(g).filter(a=>a.length>1),
     emp:rows.filter(r=>r.tipo!=='Externo').length,ext:rows.filter(r=>r.tipo==='Externo').length};
 }
-function setRegPer(v){_regPer=v;renderRegistro();const d=document.getElementById('regNewDet');if(d)d.open=true;}
 function renderRegistro(){
   const box=document.getElementById('reg-box');if(!box)return;
   box.style.display='block';
@@ -1285,24 +1288,22 @@ function renderRegistro(){
   paintTotal(window._lastK);
   const st=regStats(_regDb);
   const [mon,next]=regRange('week');const dom=new Date(next);dom.setDate(next.getDate()-1);
-  const wk=regNuevos('week').length,pw=regNuevos('prev').length;
+  const wk=regNuevos('week').length,pw=regNuevos('prev').length,nu=regNuevos('per');
+  const bn=document.getElementById('bkNew');if(bn){bn.textContent='+'+nu.length;document.getElementById('bkNewS').textContent=regPerLabel();}
   grid.innerHTML=
    `<div class="fn-cell"><div class="fn-v lime">${st.total}</div><div class="fn-l">FILAS EN EL PADR&Oacute;N</div><div class="fn-s">${st.emp} empleados &middot; ${st.ext} externos</div></div>
     <div class="fn-cell"><div class="fn-v">${st.unicos}</div><div class="fn-l">PERSONAS &Uacute;NICAS</div><div class="fn-s">por DNI (el CUIL se reduce a su DNI)</div></div>
-    <div class="fn-cell" style="background:rgba(214,255,82,.07)"><div class="fn-v green">+${wk}</div><div class="fn-l">NUEVOS REGISTROS DE LA SEMANA</div><div class="fn-s">lun ${fmtD(mon)} &rarr; dom ${fmtD(dom)} &middot; semana pasada: ${pw}</div></div>
+    <div class="fn-cell" style="background:rgba(214,255,82,.07)"><div class="fn-v green">+${nu.length}</div><div class="fn-l">NUEVOS REGISTROS DEL PER&Iacute;ODO</div><div class="fn-s">${regPerLabel()} &middot; esta semana: ${wk} &middot; semana pasada: ${pw}</div></div>
     <div class="fn-cell"><div class="fn-v amber">${st.dups.length}</div><div class="fn-l">REGISTRADOS M&Aacute;S DE UNA VEZ</div><div class="fn-s">${st.total-st.unicos} fila${st.total-st.unicos===1?'':'s'} de m&aacute;s</div></div>`;
   // Nuevos
-  const nu=regNuevos(_regPer);
-  const opt=(v,l)=>`<option value="${v}"${_regPer===v?' selected':''}>${l}</option>`;
   // historial por semana
   const wks={};_regDb.filter(r=>!r.es_base&&r.primera_vez).forEach(r=>{const m=mondayOf(new Date(r.primera_vez));const k=m.getTime();wks[k]=(wks[k]||0)+1;});
   const wkRows=Object.keys(wks).sort((a,b)=>b-a).slice(0,8).map(k=>{const m=new Date(+k),d=new Date(m);d.setDate(m.getDate()+6);return `<span style="display:inline-block;margin:2px 10px 2px 0;">${fmtD(m)}&ndash;${fmtD(d)}: <b style="color:var(--cream)">${wks[k]}</b></span>`;}).join('');
   document.getElementById('reg-new').innerHTML=
-   `<details class="fn-rev" id="regNewDet" style="border-color:var(--border);background:transparent;"><summary style="color:var(--green);">Ver qui&eacute;nes son los nuevos registrados</summary>
-    <div style="margin:8px 0;"><select onchange="setRegPer(this.value)" style="background:var(--ink1);color:var(--cream);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:11px;">${opt('week','Esta semana (lun&ndash;dom)')}${opt('prev','Semana pasada')}${opt('30','&Uacute;ltimos 30 d&iacute;as')}${opt('all','Todos desde que se empez&oacute; a medir')}</select>
-    <span style="margin-left:10px;">${nu.length} registro${nu.length===1?'':'s'}</span></div>
+   `<details class="fn-rev" id="regNewDet" open style="border-color:var(--border);background:transparent;"><summary style="color:var(--green);">Qui&eacute;nes son los nuevos registrados &mdash; ${regPerLabel()} (${nu.length})</summary>
     <div style="margin:4px 0 8px;">Por semana: ${wkRows||'&mdash;'}</div>
     <table class="mt"><tr><th>Detectado</th><th>Nombre</th><th>Tipo</th><th>Unidad</th><th>Puesto</th></tr>`+
+    (nu.length?'':'<tr><td colspan="5" style="color:var(--muted);padding:12px 10px">Nadie nuevo se registr&oacute; en este per&iacute;odo.</td></tr>')+
     nu.map(r=>`<tr><td>${fmtD(new Date(r.primera_vez))}</td><td class="name">${_h(regNom(r))}</td><td>${_h(r.tipo||'')}</td><td>${_h(r.unidad||'—')}</td><td>${_h(r.puesto||'—')}</td></tr>`).join('')+`</table></details>`;
   // Repetidos
   document.getElementById('reg-dup').innerHTML=st.dups.length?
@@ -1322,6 +1323,7 @@ function applyPvOv(pv){
     if(v&&(v.estado==='auto'||v.estado==='confirmado')&&!r._v)return {...r,_pv:v.preventa,_v:true,_vinc:true};
     return r;});
 }
+document.addEventListener('toggle',function(e){if(e.target&&e.target.id==='dash-more'&&e.target.open){try{Object.values(CH).forEach(c=>c&&c.resize&&c.resize());}catch(x){}}},true);
 function refreshDash(){
   const raw=window._rawKPI;if(!raw)return;
   _pIdx=null;
@@ -2047,7 +2049,7 @@ function renderDash(k){
   $('kRef').textContent=n(k.totalPV||k.total);
   $('kRefS').textContent=`${n(k.totalPV)-n(k.sinVinc)} con prev · ${n(k.sinVinc)} sin prev (referidos)`;
   renderEstadosPanel(k.est||{}, k.estDet||{}, n(k.totalPV||k.total));
-  window._lastK=k;paintTotal(k);paintRoi(k);paintCom();paintPuesto(k);
+  window._lastK=k;paintTotal(k);paintCom();paintPuesto(k);
   $('kEnt').textContent=n(k.totalEnt);
   $('kEntS').textContent=`${n(k.entSis)} del reporte + ${n(k.totalEnt)-n(k.entSis)} manuales`;
   $('kPag').textContent=n(k.pagados);
@@ -2177,10 +2179,14 @@ function paintVentasKpi(k){
   put('vk-closer',closerK);put('vk-traza',trazaK);
   const tp=topP(pe),rp=topP(pr);
   put('vk-dash',[
-    K(con.length,'VENDEDORES ACTIVOS','con referidos recibidos','lime',"mtGo('closer')"),K(ref,'REFERIDOS RECIBIDOS',(sa?sa.ref:0)+' sin vendedor asignado','',"mtGo('closer')"),K(prev,'PREVENTAS',pct(prev,ref)+' de los referidos','',"mtGo('closer')"),K(ent,'ENTREGAS',pct(ent,ref)+' de los referidos','lime',"mtGo('closer')"),
-    K(best?_h(best.closer):'—','MEJOR VENDEDOR',best?best.ent+' entregas · '+best.prev+' preventas':'sin datos','',"mtGo('closer')"),K(tms[0]?_h(tms[0][0]):'—','TEAM CON MÁS REFERIDOS',tms[0]?tms[0][1]+' de '+tms.length+' teams':''),
-    K(rp?_h(rp[0]):'—','PUESTO QUE MÁS REFIERE',rp?rp[1]+' referidos':''),K(tp?_h(tp[0]):'—','PUESTO QUE MÁS CIERRA',tp?tp[1]+' entregas':''),
-    K(nCed,'CEDIDOS ENTRE VENDEDORES',cedS,'',goC('dash')),K(t.sin,'SIN ENTREGA AÚN','preventas en curso','amber',"tzGo('sin')"),K(t.paid,'BENEFICIOS PAGADOS',t.pend+' pendientes de pago','green',"tzGo('paid')"),K(t.trf,'TRANSFERIDOS','de '+nCed+' cedidos llegaron a preventa','',"tzGo('trf')")]);
+    K(con.length,'VENDEDORES ACTIVOS','con referidos recibidos · '+(sa?sa.ref:0)+' sin vendedor asignado','lime',"mtGo('closer')"),
+    K(best?_h(best.closer):'—','MEJOR VENDEDOR',best?best.ent+' entregas · '+best.prev+' preventas':'sin datos','',"mtGo('closer')"),
+    K(tms[0]?_h(tms[0][0]):'—','TEAM CON MÁS REFERIDOS',tms[0]?tms[0][1]+' de '+tms.length+' teams':''),
+    K(rp?_h(rp[0]):'—','PUESTO QUE MÁS REFIERE',rp?rp[1]+' referidos':''),
+    K(tp?_h(tp[0]):'—','PUESTO QUE MÁS CIERRA',tp?tp[1]+' entregas':''),
+    K(nCed,'CEDIDOS ENTRE VENDEDORES',cedS+' · '+t.trf+' llegaron a preventa','',goC('dash')),
+    K(t.sin,'SIN ENTREGA AÚN','preventas en curso','amber',"tzGo('sin')"),
+    K(t.paid,'BENEFICIOS PAGADOS',t.pend+' pendientes de pago','green',"tzGo('paid')")]);
   paintCed(k);
 }
 /* Navegación desde KPIs */
@@ -2634,24 +2640,6 @@ function paintTotal(k){
   if(typeof _regDb!=='undefined'&&_regDb.length)$('bkTotS').textContent='registrados en el programa (sin duplicados por DNI)';
 }
 const _fmt$=v=>'$'+Math.round(v).toLocaleString('es-AR');
-function roiInput(){try{localStorage.setItem('emb_margen',document.getElementById('roiMargen').value);}catch(e){}paintRoi(window._lastK);}
-function paintRoi(k){
-  const g=document.getElementById('roi-grid');if(!g||!k)return;
-  window._lastK=k;
-  document.getElementById('roi-box').style.display='block';
-  const inp=document.getElementById('roiMargen');
-  if(!inp.dataset.init){inp.dataset.init='1';try{inp.value=localStorage.getItem('emb_margen')||'';}catch(e){}}
-  const ent=k.totalEnt||0,pag=k.pagados||0,inv=ent*COSTO_EMB,invPag=pag*COSTO_EMB;
-  const margen=parseFloat(String(inp.value).replace(/[^\d]/g,''))||0;
-  const ing=ent*margen,roi=inv>0&&margen?((ing-inv)/inv*100):null;
-  g.innerHTML=
-   `<div class="fn-cell"><div class="fn-v green">${ent}</div><div class="fn-l">ENTREGADOS</div><div class="fn-s">${k.rangoActivo?'en el período':'en total'}</div></div>
-    <div class="fn-cell"><div class="fn-v amber">${pag}</div><div class="fn-l">PAGADOS</div><div class="fn-s">${pag} de ${ent} entregas con beneficio pagado</div></div>
-    <div class="fn-cell"><div class="fn-v" style="font-size:30px">${_fmt$(inv)}</div><div class="fn-l">INVERSIÓN</div><div class="fn-s">${ent} entregas × ${_fmt$(COSTO_EMB)} &middot; pagado hasta hoy ${_fmt$(invPag)}</div></div>
-    <div class="fn-cell"><div class="fn-v ${roi==null?'':roi>=0?'green':'amber'}">${roi==null?'&mdash;':(roi>=0?'+':'')+roi.toFixed(0)+'%'}</div><div class="fn-l">ROI</div><div class="fn-s">${roi==null?'Cargá el ingreso por entrega para calcularlo':`ingreso ${_fmt$(ing)} &middot; $${(ing/inv).toFixed(1).replace('.',',')} por cada $1 invertido`}</div></div>`;
-  document.getElementById('roiNote').textContent=margen?'ROI = (ingreso − inversión) / inversión. La inversión cuenta $500.000 por entrega.':'';
-}
-
 /* ════ GESTIÓN PAGOS ════ */
 function renderGestion(k){
   window._refByEmb=k.refByEmb||{};window._embTipo=k.embTipoMap||{};window._entDet=k.entDet||[];window._entDetAll=k.entDetAll||k.entDet||[];window._pagSet=k.pagSet||new Set();
