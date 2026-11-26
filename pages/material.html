@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Material de promoción — Grupo Randazzo Embajadores</title>
 <link rel="stylesheet" href="../assets/common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 .pol-btns{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:48px;}
@@ -546,6 +547,16 @@ header.h-solo{justify-content:flex-start;}
 .hero-cta:hover{background:var(--lime);color:#0b0b0a;}
 .hero-cta::after{content:' \2193';letter-spacing:0;}
 #material{scroll-margin-top:56px;}
+.hero{position:relative;}
+.hero-scroll{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:4;font-family:'Barlow Condensed','Arial Narrow',Impact,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.18em;font-size:15px;color:var(--lime);text-decoration:none;opacity:.85;animation:scrollBob 2s ease-in-out infinite;}
+.hero-scroll:hover{opacity:1;}
+@keyframes scrollBob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,5px)}}
+@media(max-width:1000px){.hero-scroll{display:none;}}
+@media(prefers-reduced-motion:reduce){.hero-scroll{animation:none;}}
+.hero-usados{display:block;width:100%;max-width:560px;margin:clamp(10px,1.2vw,16px) auto 0;text-align:center;text-decoration:none;background:#fff;color:#0b0b0a;padding:clamp(12px,1.2vw,18px) 18px;font-family:'Barlow Condensed','Arial Narrow',Impact,sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:clamp(20px,1.8vw,30px);line-height:1.05;transition:transform .18s,background .18s;}
+.hero-usados span{display:block;margin-top:5px;font-size:.62em;letter-spacing:.16em;}
+.hero-usados:hover{transform:translateY(-3px);background:var(--lime);}
+@media(max-width:1000px){.hero-usados{max-width:none;}}
 .m-h1{font-family:'Barlow Condensed','Arial Narrow',Impact,sans-serif;font-weight:800;text-transform:uppercase;font-size:clamp(40px,5.4vw,84px);line-height:.9;color:#fff;margin-bottom:10px;}
 .m-h1 b{color:var(--lime);}
 .m-lab{font-family:'Barlow Condensed','Arial Narrow',Impact,sans-serif;}
@@ -585,9 +596,10 @@ header.h-solo{justify-content:flex-start;}
         <li class="fact"><b>Novedades cada mes</b><span>Promos y ofertas de nuestras marcas, siempre al d&iacute;a.</span></li>
         <li class="fact"><b>Sin saber de precios</b><span>Cada pieza ya trae la oferta: solo elegila y compartila.</span></li>
       </ul>
-      <a class="hero-cta" href="#material">Ver el material</a>
+      <a class="hero-usados" href="https://www.gruporandazzo.com/usados" target="_blank" rel="noopener">&iquest;Te interesa saber el stock de usados y precios?<span>Ver usados &rarr;</span></a>
     </div>
   </div>
+  <a class="hero-scroll" href="#material">Ver el material &darr;</a>
 </section>
 <div class="m-wrap" id="material">
   <h2 class="m-h1">Material para <b>promocionar</b></h2>
@@ -622,7 +634,7 @@ async function init(){
     _sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
     const {data,error}=await _sb.from('emb_material').select('*').eq('visible',true).order('created_at',{ascending:false}).limit(2000);
     if(error)throw error;ALL=(data||[]).filter(r=>!r.vigencia||r.vigencia>=hoy());   // las promos vencidas se ocultan solas
-  }catch(e){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='No se pudo cargar el material. Probá de nuevo en unos minutos.';return;}
+  }catch(e){try{console.error('material:',e);}catch(_){}document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='No se pudo cargar el material. Probá de nuevo en unos minutos.';return;}
   // campaña más reciente por defecto
   const camps=campList();F.camp=camps.length?camps[0][0]:'';
   if(navigator.share)document.getElementById('lbS').style.display='';
